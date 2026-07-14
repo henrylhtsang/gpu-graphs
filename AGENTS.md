@@ -18,6 +18,8 @@
   `make png-force`.
 - Before finishing work that changes SVGs, confirm `git status` includes the
   expected PNG changes.
+- When finishing work that modifies an SVG and its PNG companion, always list
+  the absolute paths to both files as clickable links so the user can open them.
 - Keep SVG text as text when practical, embed required styles, include a
   meaningful `<title>` and `<desc>`, and use a `viewBox` so the graph scales.
 

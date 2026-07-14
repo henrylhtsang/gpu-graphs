@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="920" viewBox="0 0 1800 920" role="img" aria-labelledby="title desc">
+<title id="title">FlashAttention-4 forward: Blackwell overlap and dependencies</title>
+<desc id="desc">A swimlane dependency graph showing loads, QK and PV matrix operations, two softmax warp groups, and output correction during the FlashAttention-4 forward pass.</desc>
+<defs><style>
+.t{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:35px;font-weight:700;fill:#14232e}.s{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:18px;font-weight:500;fill:#435763}.l{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:17px;font-weight:700;fill:#263844}.ls{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:15px;font-weight:500;fill:#435763}.x{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:16px;font-weight:600;fill:#172630;text-anchor:middle;dominant-baseline:middle}.n{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;fill:#405461;text-anchor:middle}.g{stroke:#d9e2e8;stroke-width:1}.b{stroke:#263844;stroke-width:1.6;rx:9}.a{stroke:#536f7d;stroke-width:2.3;fill:none;marker-end:url(#m)}.dep{stroke:#b27b1e;stroke-width:2.5;fill:none;marker-end:url(#gold)}
+</style><marker id="m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#536f7d"/></marker><marker id="gold" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#b27b1e"/></marker></defs>
+<rect width="1800" height="920" fill="#fbfcfd"/>
+<text x="60" y="60" class="t">FlashAttention-4 forward · Blackwell overlap and dependencies</text>
+<text x="60" y="96" class="s">q_stage=2. Simplified steady state: correction always rescales. One warp issues all QK and PV MMAs.</text>
+<text x="60" y="125" class="s">For each Q stage: softmax produces P, correction rescales the accumulated O, then the MMA warp may issue PV and the next QK.</text>
+
+<g transform="translate(60 165)">
+ <g class="g"><path d="M285 0V650M405 0V650M525 0V650M645 0V650M765 0V650M885 0V650M1005 0V650M1125 0V650M1245 0V650M1365 0V650M1485 0V650M1605 0V650M1725 0V650"/><path d="M0 0H1725M0 85H1725M0 210H1725M0 335H1725M0 460H1725M0 585H1725M0 650H1725"/></g>
+ <text x="10" y="36" class="l">Warp 14 · load</text><text x="10" y="60" class="ls">Q₀, Q₁ and streamed K/V</text>
+ <text x="10" y="145" class="l">Warp 12 · MMA issuer</text><text x="10" y="170" class="ls">one row for all UMMA issue</text>
+ <text x="10" y="270" class="l">Warps 0–3 · softmax Q₀</text><text x="10" y="295" class="ls">S₀ → P₀ and rescale factor</text>
+ <text x="10" y="395" class="l">Warps 4–7 · softmax Q₁</text><text x="10" y="420" class="ls">S₁ → P₁ and rescale factor</text>
+ <text x="10" y="520" class="l">Warps 8–11 · correction</text><text x="10" y="545" class="ls">rescale accumulated O₀ / O₁</text>
+ <text x="10" y="625" class="l">Critical dependency</text>
+
+ <!-- loads -->
+ <rect x="285" y="18" width="105" height="49" class="b" fill="#d6e5f0"/><text x="337" y="43" class="x">Load Q₀</text>
+ <rect x="400" y="18" width="105" height="49" class="b" fill="#e4d9ee"/><text x="452" y="43" class="x">Load Q₁</text>
+ <rect x="515" y="18" width="105" height="49" class="b" fill="#cde8df"/><text x="567" y="43" class="x">Load Kⱼ</text>
+ <rect x="630" y="18" width="105" height="49" class="b" fill="#cde8df"/><text x="682" y="43" class="x">Load Vⱼ</text>
+ <rect x="745" y="18" width="120" height="49" class="b" fill="#cde8df"/><text x="805" y="43" class="x">Load Kⱼ₊₁</text>
+ <rect x="875" y="18" width="120" height="49" class="b" fill="#cde8df"/><text x="935" y="43" class="x">Load Vⱼ₊₁</text>
+
+ <!-- single MMA row -->
+ <rect x="515" y="113" width="145" height="60" class="b" fill="#67c4a7"/><text x="587" y="143" class="x">Q₀Kⱼ → S₀</text>
+ <rect x="670" y="113" width="145" height="60" class="b" fill="#a47fc3"/><text x="742" y="143" class="x">Q₁Kⱼ → S₁</text>
+ <rect x="1040" y="113" width="145" height="60" class="b" fill="#67c4a7"/><text x="1112" y="143" class="x">P₀Vⱼ → O₀</text>
+ <rect x="1195" y="113" width="165" height="60" class="b" fill="#67c4a7"/><text x="1277" y="143" class="x">Q₀Kⱼ₊₁ → S₀</text>
+ <rect x="1370" y="113" width="145" height="60" class="b" fill="#a47fc3"/><text x="1442" y="143" class="x">P₁Vⱼ → O₁</text>
+ <rect x="1525" y="113" width="165" height="60" class="b" fill="#a47fc3"/><text x="1607" y="143" class="x">Q₁Kⱼ₊₁ → S₁</text>
+
+ <!-- softmax -->
+ <rect x="650" y="238" width="235" height="60" class="b" fill="#86ceb8"/><text x="767" y="268" class="x">Softmax S₀ → P₀, α₀</text>
+ <rect x="805" y="363" width="235" height="60" class="b" fill="#b092cb"/><text x="922" y="393" class="x">Softmax S₁ → P₁, α₁</text>
+ <path d="M660 143H680V238" class="a"/><path d="M815 143H835V363" class="a"/>
+
+ <!-- correction -->
+ <rect x="830" y="488" width="220" height="60" class="b" fill="#f1d194"/><text x="940" y="518" class="x">O₀ ← α₀ · O₀</text>
+ <rect x="1060" y="488" width="220" height="60" class="b" fill="#f1d194"/><text x="1170" y="518" class="x">O₁ ← α₁ · O₁</text>
+ <path d="M767 298V465H940V488" class="a"/><path d="M922 423V445H1170V488" class="a"/>
+
+ <!-- direct readiness deps into PV -->
+ <path d="M885 268H985V195H1112V173" class="dep"/><text x="985" y="222" class="n">P₀ ready</text>
+ <path d="M940 488V205H1080V173" class="dep"/><text x="1010" y="470" class="n">O₀ rescaled</text>
+ <path d="M1040 393H1325V205H1442V173" class="dep"/><text x="1260" y="365" class="n">P₁ ready</text>
+ <path d="M1170 488V225H1405V173" class="dep"/><text x="1280" y="470" class="n">O₁ rescaled</text>
+
+ <!-- serial issue ordering -->
+ <path d="M1185 143H1195" class="a"/><path d="M1515 143H1525" class="a"/>
+ <text x="1277" y="196" class="n">PV₀ precedes next QK₀</text><text x="1607" y="196" class="n">PV₁ precedes next QK₁</text>
+
+ <path d="M590 620H1600" class="a"/><text x="1095" y="644" class="n">Softmax produces P + α → correction rescales O → PV may issue → next QK may issue</text>
+</g>
+</svg>

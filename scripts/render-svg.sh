@@ -17,16 +17,19 @@ fi
 
 mkdir -p "$(dirname "$output")"
 
-if command -v resvg >/dev/null 2>&1; then
-  resvg "$input" "$output"
-elif command -v rsvg-convert >/dev/null 2>&1; then
+if command -v rsvg-convert >/dev/null 2>&1; then
   rsvg-convert --format=png --output="$output" "$input"
+elif command -v resvg >/dev/null 2>&1; then
+  resvg "$input" "$output"
 elif command -v inkscape >/dev/null 2>&1; then
   inkscape "$input" --export-type=png --export-filename="$output"
 elif command -v magick >/dev/null 2>&1; then
   magick -background none "$input" "$output"
 elif command -v convert >/dev/null 2>&1; then
   convert -background none "$input" "$output"
+elif command -v sips >/dev/null 2>&1; then
+  # Built into macOS; explicit format avoids relying on the file extension.
+  sips --setProperty format png "$input" --out "$output" >/dev/null
 else
   echo "No SVG renderer found." >&2
   echo "Install resvg, librsvg (rsvg-convert), Inkscape, or ImageMagick." >&2

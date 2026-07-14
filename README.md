@@ -40,11 +40,12 @@ them.
 
 ## Rendering prerequisites
 
-The render script uses the first available command from `resvg`,
-`rsvg-convert`, Inkscape, or ImageMagick. On macOS, the smallest setup is:
+The render script uses the first available command from `rsvg-convert`, `resvg`,
+Inkscape, ImageMagick, or macOS `sips`. macOS works without additional setup;
+for the most faithful CSS and font rendering, install librsvg:
 
 ```sh
-brew install resvg
+brew install librsvg
 make png
 ```
 

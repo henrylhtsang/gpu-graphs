@@ -1,0 +1,195 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="980" viewBox="0 0 1800 980" role="img" aria-labelledby="title desc">
+  <title id="title">FlashAttention-3 forward: Hopper ping-pong and intra-warpgroup overlap</title>
+  <desc id="desc">A swimlane dependency graph showing one producer warpgroup and two consumer warpgroups. Each consumer holds one score fragment, one reusable probability fragment, and a persistent output accumulator.</desc>
+
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8.5" refY="5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#496273"/>
+    </marker>
+    <marker id="arrow-teal" markerWidth="10" markerHeight="10" refX="8.5" refY="5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#16877f"/>
+    </marker>
+    <marker id="arrow-purple" markerWidth="10" markerHeight="10" refX="8.5" refY="5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#7354a1"/>
+    </marker>
+    <filter id="shadow" x="-10%" y="-20%" width="120%" height="140%">
+      <feDropShadow dx="0" dy="1" stdDeviation="1.2" flood-color="#152735" flood-opacity="0.10"/>
+    </filter>
+    <style>
+      .bg { fill: #fbfcfd; }
+      .grid { stroke: #dbe5eb; stroke-width: 1.3; }
+      .title { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 36px; font-weight: 700; fill: #172735; }
+      .subtitle { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 18px; font-weight: 400; fill: #314a5d; }
+      .lane-title { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 18px; font-weight: 700; fill: #203543; }
+      .lane-sub { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 15px; font-weight: 400; fill: #3d5668; }
+      .box-text { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 16px; font-weight: 650; fill: #17303d; text-anchor: middle; dominant-baseline: middle; }
+      .small { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 600; fill: #3b5363; }
+      .tiny { font-family: "Helvetica Neue", Helvetica, Arial,sans-serif; font-size: 13px; font-weight: 600; fill: #3b5363; }
+      .teal-box { fill: #b9e2d9; stroke: #294754; stroke-width: 1.7; }
+      .purple-box { fill: #d8c6ea; stroke: #3f3a59; stroke-width: 1.7; }
+      .load-box { fill: #dce8ef; stroke: #294754; stroke-width: 1.7; }
+      .reg-box { fill: #f4d899; stroke: #294754; stroke-width: 1.7; }
+      .wait-box { fill: #eef4f6; stroke: #496273; stroke-width: 1.5; stroke-dasharray: 5 4; }
+      .edge { fill: none; stroke: #496273; stroke-width: 2; marker-end: url(#arrow); }
+      .teal-edge { fill: none; stroke: #16877f; stroke-width: 2; marker-end: url(#arrow-teal); }
+      .purple-edge { fill: none; stroke: #7354a1; stroke-width: 2; marker-end: url(#arrow-purple); }
+      .loop { fill: none; stroke-width: 1.8; stroke-dasharray: 6 5; }
+      .bracket { fill: none; stroke-width: 2; }
+    </style>
+  </defs>
+
+  <rect class="bg" width="1800" height="980"/>
+
+  <text class="title" x="60" y="62">FlashAttention-3 forward · Hopper ping-pong and intra-warpgroup overlap</text>
+  <text class="subtitle" x="60" y="101">One CTA owns one Q tile. Two consumer warpgroups split its Q rows and stream the same K/V tiles.</text>
+  <text class="subtitle" x="60" y="132">Steady state iterates backward: softmax runs in Sⱼ; only after PVⱼ₊₁ completes is the result packed into reusable Pⱼ.</text>
+
+  <!-- Main swimlane frame -->
+  <rect x="40" y="168" width="1720" height="730" fill="none" class="grid"/>
+  <line x1="330" y1="168" x2="330" y2="898" class="grid"/>
+  <line x1="40" y1="286" x2="1760" y2="286" class="grid"/>
+  <line x1="40" y1="470" x2="1760" y2="470" class="grid"/>
+  <line x1="40" y1="654" x2="1760" y2="654" class="grid"/>
+  <line x1="40" y1="806" x2="1760" y2="806" class="grid"/>
+  <line x1="500" y1="168" x2="500" y2="898" class="grid" opacity="0.7"/>
+  <line x1="670" y1="168" x2="670" y2="898" class="grid" opacity="0.7"/>
+  <line x1="840" y1="168" x2="840" y2="898" class="grid" opacity="0.7"/>
+  <line x1="1010" y1="168" x2="1010" y2="898" class="grid" opacity="0.7"/>
+  <line x1="1180" y1="168" x2="1180" y2="898" class="grid" opacity="0.7"/>
+  <line x1="1350" y1="168" x2="1350" y2="898" class="grid" opacity="0.7"/>
+  <line x1="1520" y1="168" x2="1520" y2="898" class="grid" opacity="0.7"/>
+
+  <!-- Lane labels -->
+  <text class="lane-title" x="66" y="210">Producer WG · TMA loads</text>
+  <text class="lane-sub" x="66" y="238">Q once; 2-stage circular K/V buffer</text>
+
+  <text class="lane-title" x="66" y="328">Consumer WG 0 · Q rows 0–63</text>
+  <text class="lane-sub" x="66" y="356">one S, one reusable P, persistent O₀</text>
+
+  <text class="lane-title" x="66" y="512">Consumer WG 1 · Q rows 64–127</text>
+  <text class="lane-sub" x="66" y="540">same pipeline, staggered by</text>
+  <text class="lane-sub" x="66" y="562">scheduler barriers</text>
+
+  <text class="lane-title" x="66" y="695">Register / memory placement</text>
+  <text class="lane-sub" x="66" y="723">SS-WGMMA: Q,K in SMEM</text>
+  <text class="lane-sub" x="66" y="749">RS-WGMMA: P in registers, V in SMEM</text>
+
+  <text class="lane-title" x="66" y="852">Critical steady-state dependency</text>
+
+  <!-- Producer boxes -->
+  <g filter="url(#shadow)">
+    <rect class="load-box" x="365" y="197" width="175" height="58" rx="10"/>
+    <rect class="load-box" x="605" y="197" width="230" height="58" rx="10"/>
+    <rect class="load-box" x="920" y="197" width="210" height="58" rx="10"/>
+    <rect class="load-box" x="1240" y="197" width="230" height="58" rx="10"/>
+  </g>
+  <text class="box-text" x="452" y="226">Load Qᵢ</text>
+  <text class="box-text" x="720" y="226">Load Kⱼ₊₁, Vⱼ₊₁</text>
+  <text class="box-text" x="1025" y="226">Load Kⱼ, Vⱼ</text>
+  <text class="box-text" x="1355" y="226">Load Kⱼ₋₁, Vⱼ₋₁</text>
+
+  <!-- Ping/pong overlap bands -->
+  <rect x="775" y="302" width="245" height="335" rx="14" fill="#ccece7" opacity="0.30" stroke="#16877f" stroke-width="1.5" stroke-dasharray="6 5"/>
+  <text x="890" y="628" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif" font-size="20" font-weight="700" fill="#16877f">ping</text>
+  <rect x="1095" y="302" width="255" height="335" rx="14" fill="#e8ddf2" opacity="0.35" stroke="#7354a1" stroke-width="1.5" stroke-dasharray="6 5"/>
+  <text x="1222" y="628" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif" font-size="20" font-weight="700" fill="#7354a1">pong</text>
+
+  <!-- WG0 first steady-state step -->
+  <g filter="url(#shadow)">
+    <rect class="teal-box" x="360" y="357" width="128" height="62" rx="9"/>
+    <rect class="teal-box" x="515" y="326" width="178" height="62" rx="9"/>
+    <rect class="teal-box" x="555" y="397" width="178" height="62" rx="9"/>
+    <rect class="wait-box" x="747" y="350" width="108" height="86" rx="9"/>
+    <rect class="teal-box" x="895" y="350" width="192" height="70" rx="9"/>
+    <rect class="wait-box" x="1115" y="350" width="136" height="70" rx="9"/>
+    <rect class="teal-box" x="1280" y="350" width="150" height="70" rx="9"/>
+    <rect class="wait-box" x="1452" y="350" width="130" height="70" rx="9"/>
+  </g>
+  <text class="box-text" x="424" y="388">P₀,ⱼ₊₁ ready</text>
+  <text class="box-text" x="604" y="357">① Q₀Kⱼᵀ → S₀,ⱼ</text>
+  <text class="box-text" x="644" y="428">② P₀,ⱼ₊₁Vⱼ₊₁ → O₀</text>
+  <text class="box-text" x="801" y="372">wait</text>
+  <text class="box-text" x="801" y="397">QKⱼ</text>
+  <text class="box-text" x="991" y="372">Softmax S₀,ⱼ</text>
+  <text class="box-text" x="991" y="397">in place</text>
+  <text class="box-text" x="1183" y="372">wait until</text>
+  <text class="box-text" x="1183" y="397">PV₀,ⱼ₊₁ done</text>
+  <text class="box-text" x="1355" y="372">pack / write</text>
+  <text class="box-text" x="1355" y="397">P₀,ⱼ buffer</text>
+  <text class="box-text" x="1517" y="372">rescale O₀</text>
+  <text class="box-text" x="1517" y="397">next j−1</text>
+
+  <!-- WG0 issue bracket -->
+  <path d="M511 315 Q511 306 521 306 H727 Q737 306 737 315" class="bracket" stroke="#16877f"/>
+  <text x="624" y="298" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" fill="#16877f">issue async WGMMA · ordered left to right</text>
+
+  <!-- WG0 edges and loop -->
+  <path d="M488 388 H502" class="teal-edge"/>
+  <path d="M693 357 H735" class="teal-edge"/>
+  <path d="M733 428 C740 428 740 410 747 410" class="teal-edge"/>
+  <path d="M855 385 H883" class="teal-edge"/>
+  <path d="M1087 385 H1103" class="teal-edge"/>
+  <path d="M1251 385 H1268" class="teal-edge"/>
+  <path d="M1430 385 H1440" class="teal-edge"/>
+  <path d="M1582 385 H1615 V446 H424 V431" class="loop" stroke="#16877f" marker-end="url(#arrow-teal)"/>
+  <text class="tiny" x="1530" y="440" fill="#16877f">P₀,ⱼ is now reusable</text>
+
+  <!-- WG1 staggered steady-state step -->
+  <g filter="url(#shadow)">
+    <rect class="purple-box" x="430" y="540" width="128" height="62" rx="9"/>
+    <rect class="purple-box" x="585" y="509" width="178" height="62" rx="9"/>
+    <rect class="purple-box" x="625" y="580" width="178" height="62" rx="9"/>
+    <rect class="wait-box" x="817" y="533" width="108" height="86" rx="9"/>
+    <rect class="purple-box" x="965" y="533" width="192" height="70" rx="9"/>
+    <rect class="wait-box" x="1185" y="533" width="136" height="70" rx="9"/>
+    <rect class="purple-box" x="1350" y="533" width="150" height="70" rx="9"/>
+    <rect class="wait-box" x="1522" y="533" width="130" height="70" rx="9"/>
+  </g>
+  <text class="box-text" x="494" y="571">P₁,ⱼ₊₁ ready</text>
+  <text class="box-text" x="674" y="540">① Q₁Kⱼᵀ → S₁,ⱼ</text>
+  <text class="box-text" x="714" y="611">② P₁,ⱼ₊₁Vⱼ₊₁ → O₁</text>
+  <text class="box-text" x="871" y="555">wait</text>
+  <text class="box-text" x="871" y="580">QKⱼ</text>
+  <text class="box-text" x="1061" y="555">Softmax S₁,ⱼ</text>
+  <text class="box-text" x="1061" y="580">in place</text>
+  <text class="box-text" x="1253" y="555">wait until</text>
+  <text class="box-text" x="1253" y="580">PV₁,ⱼ₊₁ done</text>
+  <text class="box-text" x="1425" y="555">pack / write</text>
+  <text class="box-text" x="1425" y="580">P₁,ⱼ buffer</text>
+  <text class="box-text" x="1587" y="555">rescale O₁</text>
+  <text class="box-text" x="1587" y="580">next j−1</text>
+
+  <!-- WG1 issue bracket -->
+  <path d="M581 498 Q581 489 591 489 H797 Q807 489 807 498" class="bracket" stroke="#7354a1"/>
+  <text x="694" y="481" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" fill="#7354a1">issue async WGMMA · ordered left to right</text>
+
+  <!-- WG1 edges and loop -->
+  <path d="M558 571 H572" class="purple-edge"/>
+  <path d="M763 540 H805" class="purple-edge"/>
+  <path d="M803 611 C810 611 810 593 817 593" class="purple-edge"/>
+  <path d="M925 568 H953" class="purple-edge"/>
+  <path d="M1157 568 H1173" class="purple-edge"/>
+  <path d="M1321 568 H1338" class="purple-edge"/>
+  <path d="M1500 568 H1510" class="purple-edge"/>
+  <path d="M1652 568 H1685 V638 H494 V614" class="loop" stroke="#7354a1" marker-end="url(#arrow-purple)"/>
+  <text class="tiny" x="1570" y="632" fill="#7354a1">P₁,ⱼ is now reusable</text>
+
+  <!-- Register / memory boxes -->
+  <g filter="url(#shadow)">
+    <rect class="load-box" x="365" y="692" width="230" height="68" rx="9"/>
+    <rect class="reg-box" x="625" y="692" width="265" height="68" rx="9"/>
+    <rect class="reg-box" x="920" y="692" width="330" height="68" rx="9"/>
+    <rect class="reg-box" x="1280" y="692" width="310" height="68" rx="9"/>
+  </g>
+  <text class="box-text" x="480" y="726">Q, K, V · SMEM</text>
+  <text class="box-text" x="757" y="726">Sⱼ · one FP32 score fragment</text>
+  <text class="box-text" x="1085" y="726">Pⱼ₊₁ · one packed FP16/BF16 fragment</text>
+  <text class="box-text" x="1435" y="726">O · persistent FP32 accumulator</text>
+  <text x="980" y="786" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" fill="#263f4f">large live state ≈ O + S + old P; old P remains live until PV completes</text>
+
+  <!-- Critical dependency -->
+  <line x1="390" y1="850" x2="1615" y2="850" stroke="#496273" stroke-width="2.2" marker-end="url(#arrow)"/>
+  <text x="1000" y="882" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="650" fill="#314a5d">issue QKⱼ → issue PVⱼ₊₁ → wait QKⱼ → softmax in Sⱼ → wait PVⱼ₊₁ → pack/write Pⱼ → rescale O → next j−1</text>
+
+  <text x="1740" y="943" text-anchor="end" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif" font-size="13" fill="#607685">FA3 Hopper forward · simplified steady state</text>
+</svg>
