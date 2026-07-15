@@ -20,6 +20,8 @@
   expected PNG changes.
 - When finishing work that modifies an SVG and its PNG companion, always list
   the absolute paths to both files as clickable links so the user can open them.
+  Put each absolute path on its own line; do not place SVG and PNG links on the
+  same line.
 - Keep SVG text as text when practical, embed required styles, include a
   meaningful `<title>` and `<desc>`, and use a `viewBox` so the graph scales.
 

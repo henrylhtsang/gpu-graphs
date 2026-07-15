@@ -1,0 +1,167 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1000" viewBox="0 0 1800 1000" role="img" aria-labelledby="title desc">
+  <title id="title">FA3-CuTe FlashAttention-4 SM90 forward overlap for head dimension 128</title>
+  <desc id="desc">A timeline of the CuTeDSL Hopper forward kernel. A TMA producer fills a two-stage K and V pipeline. Two consumer warpgroups alternate a named-barrier issue token. Within each consumer warpgroup, a new QK WGMMA overlaps an older PV WGMMA; wait-group one exposes the completed scores while PV remains in flight, then wait-group zero gates probability conversion and output rescaling.</desc>
+  <defs>
+    <style>
+      text { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #172734; }
+      .title { font-size: 34px; font-weight: 750; }
+      .subtitle { font-size: 17px; fill: #425869; }
+      .lane-title { font-size: 16px; font-weight: 720; }
+      .lane-note { font-size: 13px; fill: #425869; }
+      .box-text { font-size: 15px; font-weight: 700; text-anchor: middle; dominant-baseline: middle; }
+      .small { font-size: 12px; font-weight: 650; fill: #425869; }
+      .code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; }
+      .grid { stroke: #dce5eb; stroke-width: 1.2; }
+      .outline { stroke: #273e4e; stroke-width: 1.6; }
+      .load { fill: #d8ebe5; }
+      .mma0 { fill: #68c3ad; }
+      .mma1 { fill: #a987c6; }
+      .soft { fill: #8bcbb8; }
+      .wait { fill: #e8eef2; }
+      .rescale { fill: #f2d293; }
+      .token { fill: #fff7df; stroke: #b97808; stroke-width: 1.8; }
+      .arrow { fill: none; stroke: #526d7c; stroke-width: 2.2; marker-end: url(#arrow); }
+      .token-arrow { fill: none; stroke: #b97808; stroke-width: 2.4; marker-end: url(#arrow-token); }
+      .async { fill: none; stroke: #465f70; stroke-width: 2; stroke-dasharray: 7 5; marker-end: url(#arrow); }
+      .bracket { fill: none; stroke: #7b8f9c; stroke-width: 1.6; stroke-dasharray: 5 4; }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="#526d7c"/></marker>
+    <marker id="arrow-token" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="#b97808"/></marker>
+  </defs>
+
+  <rect width="1800" height="1000" fill="#f8fafb"/>
+  <text class="title" x="60" y="58">FA3-CuTe (FlashAttention-4 SM90) forward · D = 128</text>
+  <text class="subtitle" x="60" y="94">Dense TMA path · blockM = 128 · two consumer warpgroups · register-sourced PV · two-stage circular K/V</text>
+  <text class="subtitle" x="60" y="122">CuTeDSL function shown: <tspan class="code">mma_one_n_block_intrawg_overlap()</tspan></text>
+
+  <rect x="50" y="155" width="1700" height="770" rx="8" fill="#ffffff" stroke="#d4e0e7" stroke-width="1.4"/>
+  <line class="grid" x1="330" y1="155" x2="330" y2="925"/>
+  <line class="grid" x1="50" y1="275" x2="1750" y2="275"/>
+  <line class="grid" x1="50" y1="450" x2="1750" y2="450"/>
+  <line class="grid" x1="50" y1="625" x2="1750" y2="625"/>
+  <line class="grid" x1="50" y1="800" x2="1750" y2="800"/>
+
+  <text class="lane-title" x="70" y="190">Producer WG · warp 0</text>
+  <text class="lane-note" x="70" y="216">TMA load issue; other producer</text>
+  <text class="lane-note" x="70" y="235">threads are inactive on this path</text>
+
+  <text class="lane-title" x="70" y="314">Consumer WG0 · rows 0–63</text>
+  <text class="lane-note" x="70" y="340">WGMMA issue pair, then</text>
+  <text class="lane-note" x="70" y="359">scheduler token handoff</text>
+
+  <text class="lane-title" x="70" y="489">Consumer WG1 · rows 64–127</text>
+  <text class="lane-note" x="70" y="515">same loop body, staggered</text>
+  <text class="lane-note" x="70" y="534">behind WG0's issue token</text>
+
+  <text class="lane-title" x="70" y="664">Inside either consumer WG</text>
+  <text class="lane-note" x="70" y="690">wait-group semantics expose</text>
+  <text class="lane-note" x="70" y="709">software work between MMAs</text>
+
+  <text class="lane-title" x="70" y="839">Meaning of “ping-pong”</text>
+  <text class="lane-note" x="70" y="865">scheduler-token alternation,</text>
+  <text class="lane-note" x="70" y="884">not K/V buffer alternation</text>
+
+  <!-- Producer and the independent two-stage K/V pipeline. -->
+  <rect class="load outline" x="365" y="185" width="150" height="58" rx="9"/>
+  <text class="box-text" x="440" y="214">TMA Q once</text>
+  <rect class="load outline" x="550" y="185" width="188" height="58" rx="9"/>
+  <text class="box-text" x="644" y="207">K<tspan baseline-shift="sub" font-size="11">j</tspan> → stage s</text>
+  <text class="small" x="644" y="230" text-anchor="middle">producer acquire / commit</text>
+  <rect class="load outline" x="755" y="185" width="188" height="58" rx="9"/>
+  <text class="box-text" x="849" y="207">V<tspan baseline-shift="sub" font-size="11">j</tspan> → stage s</text>
+  <text class="small" x="849" y="230" text-anchor="middle">producer acquire / commit</text>
+  <rect class="load outline" x="980" y="185" width="270" height="58" rx="9"/>
+  <text class="box-text" x="1115" y="207">next K/V → stage 1 − s</text>
+  <text class="small" x="1115" y="230" text-anchor="middle">two-stage circular pipeline</text>
+  <path class="arrow" d="M515 214 H548"/>
+  <path class="arrow" d="M738 214 H753"/>
+  <path class="arrow" d="M943 214 H978"/>
+  <path class="async" d="M1250 214 H1605"/>
+  <text class="small" x="1427" y="202" text-anchor="middle">continues independently of consumer token</text>
+
+  <!-- Consumer WG0 issue window. -->
+  <rect class="token" x="365" y="324" width="118" height="48" rx="24"/>
+  <text class="box-text" x="424" y="348">token WG0</text>
+  <rect class="wait outline" x="520" y="315" width="135" height="66" rx="9"/>
+  <text class="box-text" x="587" y="340">wait K<tspan baseline-shift="sub" font-size="11">j</tspan></text>
+  <text class="small" x="587" y="365" text-anchor="middle">consumer_wait</text>
+  <rect class="mma0 outline" x="690" y="315" width="210" height="66" rx="9"/>
+  <text class="box-text" x="795" y="339">issue QK<tspan baseline-shift="sub" font-size="11">j</tspan>ᵀ async</text>
+  <text class="small" x="795" y="365" text-anchor="middle">wg_wait = −1</text>
+  <rect class="wait outline" x="935" y="315" width="150" height="66" rx="9"/>
+  <text class="box-text" x="1010" y="340">wait old V</text>
+  <text class="small" x="1010" y="365" text-anchor="middle">stage before advance</text>
+  <rect class="mma1 outline" x="1120" y="315" width="230" height="66" rx="9"/>
+  <text class="box-text" x="1235" y="339">issue P<tspan baseline-shift="sub" font-size="11">j+1</tspan>V<tspan baseline-shift="sub" font-size="11">j+1</tspan> async</text>
+  <text class="small" x="1235" y="365" text-anchor="middle">wg_wait = −1 · P in registers</text>
+  <rect class="token" x="1390" y="324" width="185" height="48" rx="24"/>
+  <text class="box-text" x="1482" y="348">handoff → WG1</text>
+  <path class="token-arrow" d="M483 348 H518"/>
+  <path class="arrow" d="M655 348 H688"/>
+  <path class="arrow" d="M900 348 H933"/>
+  <path class="arrow" d="M1085 348 H1118"/>
+  <path class="token-arrow" d="M1350 348 H1388"/>
+
+  <!-- Consumer WG1, offset to make alternation visible. -->
+  <rect class="token" x="520" y="499" width="118" height="48" rx="24"/>
+  <text class="box-text" x="579" y="523">token WG1</text>
+  <rect class="wait outline" x="675" y="490" width="135" height="66" rx="9"/>
+  <text class="box-text" x="742" y="515">wait K<tspan baseline-shift="sub" font-size="11">j</tspan></text>
+  <text class="small" x="742" y="540" text-anchor="middle">consumer_wait</text>
+  <rect class="mma0 outline" x="845" y="490" width="210" height="66" rx="9"/>
+  <text class="box-text" x="950" y="514">issue QK<tspan baseline-shift="sub" font-size="11">j</tspan>ᵀ async</text>
+  <text class="small" x="950" y="540" text-anchor="middle">wg_wait = −1</text>
+  <rect class="wait outline" x="1090" y="490" width="150" height="66" rx="9"/>
+  <text class="box-text" x="1165" y="515">wait old V</text>
+  <text class="small" x="1165" y="540" text-anchor="middle">stage before advance</text>
+  <rect class="mma1 outline" x="1275" y="490" width="230" height="66" rx="9"/>
+  <text class="box-text" x="1390" y="514">issue P<tspan baseline-shift="sub" font-size="11">j+1</tspan>V<tspan baseline-shift="sub" font-size="11">j+1</tspan> async</text>
+  <text class="small" x="1390" y="540" text-anchor="middle">wg_wait = −1 · P in registers</text>
+  <rect class="token" x="1540" y="499" width="175" height="48" rx="24"/>
+  <text class="box-text" x="1627" y="523">handoff → WG0</text>
+  <path class="token-arrow" d="M638 523 H673"/>
+  <path class="arrow" d="M810 523 H843"/>
+  <path class="arrow" d="M1055 523 H1088"/>
+  <path class="arrow" d="M1240 523 H1273"/>
+  <path class="token-arrow" d="M1505 523 H1538"/>
+  <path class="token-arrow" d="M1482 372 V430 H579 V497"/>
+  <path class="token-arrow" d="M1627 547 V585 H424 V374"/>
+  <text class="small" x="963" y="424" text-anchor="middle">named-barrier issue token</text>
+
+  <!-- Detailed per-WG overlap after the issue pair. -->
+  <rect class="wait outline" x="365" y="665" width="175" height="72" rx="9"/>
+  <text class="box-text" x="452" y="688">wait_group(1)</text>
+  <text class="small" x="452" y="715" text-anchor="middle">QK done · PV may run</text>
+  <rect class="soft outline" x="575" y="665" width="245" height="72" rx="9"/>
+  <text class="box-text" x="697" y="688">mask + online softmax</text>
+  <text class="small" x="697" y="715" text-anchor="middle">S<tspan baseline-shift="sub" font-size="10">j</tspan> → row scale α<tspan baseline-shift="sub" font-size="10">j</tspan></text>
+  <rect class="wait outline" x="855" y="665" width="175" height="72" rx="9"/>
+  <text class="box-text" x="942" y="688">wait_group(0)</text>
+  <text class="small" x="942" y="715" text-anchor="middle">old PV complete</text>
+  <rect class="soft outline" x="1065" y="665" width="205" height="72" rx="9"/>
+  <text class="box-text" x="1167" y="688">convert S<tspan baseline-shift="sub" font-size="11">j</tspan> → P<tspan baseline-shift="sub" font-size="11">j</tspan></text>
+  <text class="small" x="1167" y="715" text-anchor="middle">FP32 → FP16/BF16 registers</text>
+  <rect class="rescale outline" x="1305" y="665" width="200" height="72" rx="9"/>
+  <text class="box-text" x="1405" y="688">O ← α<tspan baseline-shift="sub" font-size="11">j</tspan> · O</text>
+  <text class="small" x="1405" y="715" text-anchor="middle">D=128: after P conversion</text>
+  <rect class="mma1 outline" x="1540" y="665" width="175" height="72" rx="9"/>
+  <text class="box-text" x="1627" y="688">next loop uses P<tspan baseline-shift="sub" font-size="11">j</tspan></text>
+  <text class="small" x="1627" y="715" text-anchor="middle">for P<tspan baseline-shift="sub" font-size="10">j</tspan>V<tspan baseline-shift="sub" font-size="10">j</tspan></text>
+  <path class="arrow" d="M540 701 H573"/>
+  <path class="arrow" d="M820 701 H853"/>
+  <path class="arrow" d="M1030 701 H1063"/>
+  <path class="arrow" d="M1270 701 H1303"/>
+  <path class="arrow" d="M1505 701 H1538"/>
+  <path class="async" d="M1235 381 V605 H452 V663"/>
+  <text class="small" x="842" y="594" text-anchor="middle">QK and old PV were both issued; waits retire them in order</text>
+
+  <!-- Definition strip. -->
+  <rect x="365" y="832" width="540" height="58" rx="9" fill="#fff7df" stroke="#b97808" stroke-width="1.6"/>
+  <text class="box-text" x="635" y="854">WG0 issue token ⇄ WG1 issue token</text>
+  <text class="small" x="635" y="878" text-anchor="middle">named barriers serialize each ordered QK→PV issue pair</text>
+  <text x="960" y="851" font-size="24" font-weight="700" fill="#8798a3">≠</text>
+  <rect class="load outline" x="1005" y="832" width="565" height="58" rx="9"/>
+  <text class="box-text" x="1287" y="854">K/V stage 0 ⇄ K/V stage 1</text>
+  <text class="small" x="1287" y="878" text-anchor="middle">independent circular shared-memory pipeline managed by producer/consumer states</text>
+  <text class="small code" x="1730" y="915" text-anchor="end">flash_attn/cute/flash_fwd_sm90.py</text>
+</svg>
