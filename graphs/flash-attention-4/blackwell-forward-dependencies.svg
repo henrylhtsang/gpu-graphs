@@ -1,9 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="920" viewBox="0 0 1800 920" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1750" viewBox="0 0 2400 1750" role="img" aria-labelledby="title desc">
 <title id="title">FlashAttention-4 forward: Blackwell overlap and dependencies</title>
 <desc id="desc">A swimlane dependency graph showing loads, QK and PV matrix operations, two softmax warp groups, and output correction during the FlashAttention-4 forward pass.</desc>
 <defs><style>
 .t{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:35px;font-weight:700;fill:#14232e}.s{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:18px;font-weight:500;fill:#435763}.l{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:17px;font-weight:700;fill:#263844}.ls{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:15px;font-weight:500;fill:#435763}.x{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:16px;font-weight:600;fill:#172630;text-anchor:middle;dominant-baseline:middle}.n{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;fill:#405461;text-anchor:middle}.g{stroke:#d9e2e8;stroke-width:1}.b{stroke:#263844;stroke-width:1.6;rx:9}.a{stroke:#536f7d;stroke-width:2.3;fill:none;marker-end:url(#m)}.dep{stroke:#b27b1e;stroke-width:2.5;fill:none;marker-end:url(#gold)}
 </style><marker id="m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#536f7d"/></marker><marker id="gold" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#b27b1e"/></marker></defs>
+<rect width="2400" height="1750" fill="#f8fafb"/>
+<g transform="translate(48 10) scale(1.28)">
 <rect width="1800" height="920" fill="#fbfcfd"/>
 <text x="60" y="60" class="t">FlashAttention-4 forward · Blackwell overlap and dependencies</text>
 <text x="60" y="96" class="s">q_stage=2, dense TMA path. One warp issues all QK and PV MMAs; correction rescales only when α &lt; 1.</text>
@@ -64,4 +66,16 @@
 
  <path d="M590 620H1600" class="a"/><text x="1095" y="644" class="n">α branches to correction ∥ P generation → ¾ P + corrected O start PV → final ¼ unblocks PV → next QK</text>
 </g>
+ </g>
+ <text x="70" y="1260" font-size="20" font-weight="780" fill="#526a79" letter-spacing="1.2">ON-CHIP MEMORY PARTITION</text>
+ <rect x="60" y="1285" width="2280" height="385" rx="12" fill="#fff" stroke="#d4e0e7" stroke-width="1.5"/>
+ <text x="90" y="1350" font-size="20" font-weight="760">SMEM</text>
+ <rect x="235" y="1315" width="475" height="100" rx="11" fill="#d8ebe5" stroke="#273e4e" stroke-width="1.5"/><text x="472" y="1358" text-anchor="middle" font-size="19" font-weight="730">Q stages</text><text x="472" y="1388" text-anchor="middle" font-size="16" fill="#526a79">q_stage-partitioned tiles</text>
+ <rect x="730" y="1315" width="475" height="100" rx="11" fill="#d8ebe5" stroke="#273e4e" stroke-width="1.5"/><text x="967" y="1358" text-anchor="middle" font-size="19" font-weight="730">K / V stage rings</text><text x="967" y="1388" text-anchor="middle" font-size="16" fill="#526a79">load-warp ownership</text>
+ <rect x="1225" y="1315" width="475" height="100" rx="11" fill="#d8ebe5" stroke="#273e4e" stroke-width="1.5"/><text x="1462" y="1358" text-anchor="middle" font-size="19" font-weight="730">P + scale handoff</text><text x="1462" y="1388" text-anchor="middle" font-size="16" fill="#526a79">softmax / correction signals</text>
+ <rect x="1720" y="1315" width="570" height="100" rx="11" fill="#d8ebe5" stroke="#273e4e" stroke-width="1.5"/><text x="2005" y="1358" text-anchor="middle" font-size="19" font-weight="730">output / barrier storage</text><text x="2005" y="1388" text-anchor="middle" font-size="16" fill="#526a79">epilogue and stage ownership</text>
+ <text x="90" y="1507" font-size="20" font-weight="760">TMEM</text>
+ <rect x="235" y="1470" width="650" height="100" rx="11" fill="#cfe9df" stroke="#273e4e" stroke-width="1.5"/><text x="560" y="1513" text-anchor="middle" font-size="19" font-weight="730">QK score partitions</text><text x="560" y="1543" text-anchor="middle" font-size="16" fill="#526a79">softmax-consumed columns</text>
+ <rect x="905" y="1470" width="650" height="100" rx="11" fill="#cfe9df" stroke="#273e4e" stroke-width="1.5"/><text x="1230" y="1513" text-anchor="middle" font-size="19" font-weight="730">PV / O accumulators</text><text x="1230" y="1543" text-anchor="middle" font-size="16" fill="#526a79">correction-visible slices</text>
+ <rect x="1575" y="1470" width="715" height="100" rx="11" fill="#cfe9df" stroke="#273e4e" stroke-width="1.5"/><text x="1932" y="1513" text-anchor="middle" font-size="19" font-weight="730">stage-dependent reuse</text><text x="1932" y="1543" text-anchor="middle" font-size="16" fill="#526a79">columns released after consumers finish</text>
 </svg>

@@ -3,6 +3,17 @@
 ## Purpose and organization
 
 - This repository explains GPU concepts through diagrams.
+- Treat the warp / warp-group role timeline as a primary design artifact. It is
+  critical for understanding how a kernel assigns work and overlaps producer,
+  MMA, epilogue, and auxiliary roles; show role ownership and synchronization
+  over time whenever the kernel uses warp specialization.
+- When the kernel uses shared memory (SMEM) or tensor memory (TMEM), include a
+  clearly labeled sub-figure showing the applicable memory partition: operands,
+  pipeline stages, accumulators, scale factors, epilogue buffers, and any
+  intentional aliasing or reuse. State explicitly when TMEM is not available.
+- Make diagrams large enough for role and memory labels to remain legible when
+  opened directly; prefer a canvas at least 2400 pixels wide for new or redrawn
+  timeline figures.
 - Put graph topics under `graphs/<topic>/`; do not add topic directories at the
   repository root.
 - Use lowercase kebab-case for directory and file names.

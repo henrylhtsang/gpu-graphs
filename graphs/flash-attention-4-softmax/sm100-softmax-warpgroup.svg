@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1040" viewBox="0 0 1800 1040" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1750" viewBox="0 0 2400 1750" role="img" aria-labelledby="title desc">
   <title id="title">What the FlashAttention-4 SM100 softmax warpgroup does</title>
   <desc id="desc">For head dimension 128 and q stage 2, four softmax warps wait for a score tile in tensor memory, load scores into registers, apply score modifications and masking, update the online row maximum, publish the accumulator rescale factor to a separate correction warpgroup, exponentiate and convert probabilities, store the first three quarters of P to tensor memory so PV can begin, store the final quarter, then update the online row sum. A second four-warp group runs the same program for the other Q stage.</desc>
   <defs>
@@ -30,6 +30,8 @@
     <marker id="arrow-early" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#bb7500"/></marker>
     <marker id="arrow-late" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#7953a5"/></marker>
   </defs>
+  <rect width="2400" height="1750" fill="#f8fafb"/>
+  <g transform="translate(48 10) scale(1.22)">
 
   <rect width="1800" height="1040" fill="#f8fafb"/>
   <text class="title" x="60" y="58">What does the FA4 softmax warpgroup do on SM100?</text>
@@ -150,4 +152,15 @@
   <rect class="stat outline" x="1200" y="922" width="460" height="38" rx="9"/>
   <text class="box-text" x="1430" y="941">α<tspan baseline-shift="sub" font-size="11">i</tspan> rescales O when m<tspan baseline-shift="sub" font-size="11">i</tspan> increases</text>
   <text class="small code" x="1725" y="1007" text-anchor="end">flash_attn/cute/flash_fwd_sm100.py · softmax_loop / softmax_step</text>
+  </g>
+  <text x="70" y="1332" font-size="20" font-weight="780" fill="#526a79" letter-spacing="1.2">ON-CHIP MEMORY PARTITION</text>
+  <rect x="60" y="1355" width="2280" height="315" rx="12" fill="#fff" stroke="#d4e0e7" stroke-width="1.5"/>
+  <text x="90" y="1412" font-size="20" font-weight="760">SMEM</text>
+  <rect x="235" y="1378" width="650" height="92" rx="11" fill="#d8ebe5" stroke="#273e4e" stroke-width="1.5"/><text x="560" y="1418" text-anchor="middle" font-size="19" font-weight="730">Q / K / V stage ring</text><text x="560" y="1447" text-anchor="middle" font-size="16" fill="#526a79">TMA producer-owned operands</text>
+  <rect x="905" y="1378" width="650" height="92" rx="11" fill="#d8ebe5" stroke="#273e4e" stroke-width="1.5"/><text x="1230" y="1418" text-anchor="middle" font-size="19" font-weight="730">P handoff / reduction scratch</text><text x="1230" y="1447" text-anchor="middle" font-size="16" fill="#526a79">softmax → PV synchronization</text>
+  <rect x="1575" y="1378" width="715" height="92" rx="11" fill="#d8ebe5" stroke="#273e4e" stroke-width="1.5"/><text x="1932" y="1418" text-anchor="middle" font-size="19" font-weight="730">output staging + barriers</text><text x="1932" y="1447" text-anchor="middle" font-size="16" fill="#526a79">correction / epilogue handoff</text>
+  <text x="90" y="1553" font-size="20" font-weight="760">TMEM</text>
+  <rect x="235" y="1518" width="650" height="92" rx="11" fill="#cfe9df" stroke="#273e4e" stroke-width="1.5"/><text x="560" y="1558" text-anchor="middle" font-size="19" font-weight="730">score tile S</text><text x="560" y="1587" text-anchor="middle" font-size="16" fill="#526a79">partitioned by Q stage / softmax WG</text>
+  <rect x="905" y="1518" width="650" height="92" rx="11" fill="#cfe9df" stroke="#273e4e" stroke-width="1.5"/><text x="1230" y="1558" text-anchor="middle" font-size="19" font-weight="730">PV / O accumulators</text><text x="1230" y="1587" text-anchor="middle" font-size="16" fill="#526a79">MMA-owned output columns</text>
+  <rect x="1575" y="1518" width="715" height="92" rx="11" fill="#cfe9df" stroke="#273e4e" stroke-width="1.5"/><text x="1932" y="1558" text-anchor="middle" font-size="19" font-weight="730">correction-visible slices</text><text x="1932" y="1587" text-anchor="middle" font-size="16" fill="#526a79">released after rescale / consumption</text>
 </svg>

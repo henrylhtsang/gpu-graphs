@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1000" viewBox="0 0 1800 1000" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1750" viewBox="0 0 2400 1750" role="img" aria-labelledby="title desc">
   <title id="title">FA3-CuTe FlashAttention-4 SM90 forward overlap for head dimension 128</title>
   <desc id="desc">A timeline of the CuTeDSL Hopper forward kernel. A TMA producer fills a two-stage K and V pipeline. Two consumer warpgroups alternate a named-barrier issue token. Within each consumer warpgroup, a new QK WGMMA overlaps an older PV WGMMA; wait-group one exposes the completed scores while PV remains in flight, then wait-group zero gates probability conversion and output rescaling.</desc>
   <defs>
@@ -28,6 +28,9 @@
     <marker id="arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="#526d7c"/></marker>
     <marker id="arrow-token" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="#b97808"/></marker>
   </defs>
+
+  <rect width="2400" height="1750" fill="#f8fafb"/>
+  <g transform="translate(48 20) scale(1.28)">
 
   <rect width="1800" height="1000" fill="#f8fafb"/>
   <text class="title" x="60" y="58">FA3-CuTe (FlashAttention-4 SM90) forward · D = 128</text>
@@ -164,4 +167,15 @@
   <text class="box-text" x="1287" y="854">K/V stage 0 ⇄ K/V stage 1</text>
   <text class="small" x="1287" y="878" text-anchor="middle">independent circular shared-memory pipeline managed by producer/consumer states</text>
   <text class="small code" x="1730" y="915" text-anchor="end">flash_attn/cute/flash_fwd_sm90.py</text>
+  </g>
+
+  <text x="70" y="1332" font-size="20" font-weight="780" fill="#526a79" letter-spacing="1.2">ON-CHIP MEMORY PARTITION</text>
+  <rect x="60" y="1355" width="2280" height="315" rx="12" fill="#fff" stroke="#d4e0e7" stroke-width="1.5"/>
+  <text x="90" y="1412" font-size="20" font-weight="760">SMEM</text>
+  <rect x="235" y="1378" width="475" height="92" rx="11" fill="#d8ebe5" stroke="#273e4e" stroke-width="1.5"/><text x="472" y="1418" text-anchor="middle" font-size="19" font-weight="730">Q tile</text><text x="472" y="1447" text-anchor="middle" font-size="16" fill="#526a79">resident operand</text>
+  <rect x="730" y="1378" width="475" height="92" rx="11" fill="#d8ebe5" stroke="#273e4e" stroke-width="1.5"/><text x="967" y="1418" text-anchor="middle" font-size="19" font-weight="730">K stage 0 ⇄ 1</text><text x="967" y="1447" text-anchor="middle" font-size="16" fill="#526a79">independent circular pipeline</text>
+  <rect x="1225" y="1378" width="475" height="92" rx="11" fill="#d8ebe5" stroke="#273e4e" stroke-width="1.5"/><text x="1462" y="1418" text-anchor="middle" font-size="19" font-weight="730">V stage 0 ⇄ 1</text><text x="1462" y="1447" text-anchor="middle" font-size="16" fill="#526a79">released after WGMMA issue</text>
+  <rect x="1720" y="1378" width="570" height="92" rx="11" fill="#d8ebe5" stroke="#273e4e" stroke-width="1.5"/><text x="2005" y="1418" text-anchor="middle" font-size="19" font-weight="730">pipeline barriers</text><text x="2005" y="1447" text-anchor="middle" font-size="16" fill="#526a79">producer / consumer stage ownership</text>
+  <text x="90" y="1553" font-size="20" font-weight="760">TMEM</text>
+  <rect x="235" y="1518" width="2055" height="92" rx="11" fill="#e8eef2" stroke="#273e4e" stroke-width="1.5"/><text x="1262" y="1558" text-anchor="middle" font-size="19" font-weight="730">not available on SM90</text><text x="1262" y="1587" text-anchor="middle" font-size="16" fill="#526a79">QK scores, P fragments, and O accumulators live in registers; K/V operands use SMEM</text>
 </svg>

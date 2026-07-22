@@ -218,54 +218,95 @@ def box_text(lines, x, y):
 
 
 def render(g):
-    lane_y = [205, 365, 525, 685]
-    box_x = [355, 675, 995, 1315]
+    lane_y = [245, 425, 605, 785]
+    box_x = [465, 900, 1335, 1770]
     colors = ["#d7e8f2", "#cfe9df", "#8bcdb8", "#f2d394"]
     rows = []
     for idx, (name, note, boxes) in enumerate(g["lanes"]):
         y = lane_y[idx]
-        rows.append(f'<text class="lane" x="72" y="{y + 31}">{escape(name)}</text>')
-        rows.append(f'<text class="lane-note" x="72" y="{y + 57}">{escape(note)}</text>')
+        rows.append(f'<text class="lane" x="92" y="{y + 35}">{escape(name)}</text>')
+        rows.append(f'<text class="lane-note" x="92" y="{y + 63}">{escape(note)}</text>')
         for j, label in enumerate(boxes):
             x = box_x[j]
-            rows.append(f'<rect class="node" x="{x}" y="{y}" width="245" height="70" rx="10" fill="{colors[idx]}"/>')
-            rows.append(box_text(label, x + 122.5, y + 36))
+            rows.append(f'<rect class="node" x="{x}" y="{y}" width="330" height="82" rx="12" fill="{colors[idx]}"/>')
+            rows.append(box_text(label, x + 165, y + 42))
             if j:
-                rows.append(f'<path class="arrow" d="M{box_x[j-1] + 245} {y + 35} H{x - 2}"/>')
+                rows.append(f'<path class="arrow" d="M{box_x[j-1] + 330} {y + 41} H{x - 3}"/>')
     for j in range(3):
-        x = box_x[j] + 122.5
-        rows.append(f'<path class="dep" d="M{x} {lane_y[j] + 70} V{lane_y[j+1] - 2}"/>')
+        x = box_x[j] + 165
+        rows.append(f'<path class="dep" d="M{x} {lane_y[j] + 82} V{lane_y[j+1] - 3}"/>')
+
+    if g["file"] == "gemm-sm100-pipeline":
+        role_summary = "warp roles: scheduler / TMA producer · UMMA issuer · epilogue consumers"
+        smem = [("A/B stages", "TMA → UMMA"), ("C / aux", "epilogue input"), ("D stages", "TMA store")]
+        tmem = [("acc stage 0", "MMA output"), ("acc stage 1", "overlap"), ("SFA / SFB", "if blockscaled")]
+    elif g["file"] == "gemm-sm90-pipeline":
+        role_summary = "warp-group roles: TMA producer · WGMMA consumer WG0 / WG1 · epilogue"
+        smem = [("A stages", "multicast TMA"), ("B stages", "multicast TMA"), ("D stages", "TMA store")]
+        tmem = [("not present", "SM90 accumulators live in registers")]
+    elif g["file"] == "gemm-sm120-pipeline":
+        role_summary = "warp roles: scheduler / TMA load · warp-MMA consumers · epilogue"
+        smem = [("A/B stages", "TMA → ldmatrix"), ("D stages", "TMA store"), ("barriers", "stage ownership")]
+        tmem = [("not used", "warp-MMA accumulators live in registers")]
+    else:
+        role_summary = "cooperative CTA: participating warps follow the same phase sequence; no dedicated producer / consumer warp roles"
+        smem = [("input tile(s)", "coalesced staging"), ("exchange / reduce", "barriers + partials"), ("output tile", "when required")]
+        tmem = [("not applicable", "this kernel does not use TMEM")]
+
+    def memory_boxes(items, x, y, width, fill):
+        gap = 16
+        cell_w = (width - gap * (len(items) - 1)) / len(items)
+        out = []
+        for i, (name, note) in enumerate(items):
+            cell_x = x + i * (cell_w + gap)
+            out.append(f'<rect class="mem-node" x="{cell_x}" y="{y}" width="{cell_w}" height="92" rx="11" fill="{fill}"/>')
+            out.append(f'<text class="mem-name" x="{cell_x + cell_w/2}" y="{y + 37}">{escape(name)}</text>')
+            out.append(f'<text class="mem-note" x="{cell_x + cell_w/2}" y="{y + 66}">{escape(note)}</text>')
+        return "".join(out)
+
     desc = f'{g["title"]}. {g["subtitle"]} {g["note"]}'
-    return f'''<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1000" viewBox="0 0 1800 1000" role="img" aria-labelledby="title desc">
+    return f'''<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1500" viewBox="0 0 2400 1500" role="img" aria-labelledby="title desc">
   <title id="title">{escape(g["title"])}</title>
   <desc id="desc">{escape(desc)}</desc>
   <defs>
     <style>
       text {{ font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #172734; }}
-      .title {{ font-size: 34px; font-weight: 760; }} .subtitle {{ font-size: 17px; fill: #425869; }}
-      .lane {{ font-size: 17px; font-weight: 730; }} .lane-note {{ font-size: 13px; fill: #526a79; }}
-      .phase {{ font-size: 13px; font-weight: 700; fill: #607887; text-anchor: middle; letter-spacing: .6px; }}
-      .box {{ font-size: 15px; font-weight: 700; text-anchor: middle; dominant-baseline: middle; }}
-      .mini {{ font-size: 12px; font-weight: 650; fill: #425869; text-anchor: middle; dominant-baseline: middle; }}
+      .title {{ font-size: 42px; font-weight: 760; }} .subtitle {{ font-size: 21px; fill: #425869; }}
+      .panel-title {{ font-size: 18px; font-weight: 780; fill: #526a79; letter-spacing: 1.2px; }}
+      .lane {{ font-size: 20px; font-weight: 730; }} .lane-note {{ font-size: 16px; fill: #526a79; }}
+      .phase {{ font-size: 15px; font-weight: 700; fill: #607887; text-anchor: middle; letter-spacing: .7px; }}
+      .box {{ font-size: 18px; font-weight: 700; text-anchor: middle; dominant-baseline: middle; }}
+      .mini {{ font-size: 15px; font-weight: 650; fill: #425869; text-anchor: middle; dominant-baseline: middle; }}
       .node {{ stroke: #294251; stroke-width: 1.6; }} .grid {{ stroke: #dce6ec; stroke-width: 1.2; }}
       .arrow {{ fill: none; stroke: #526d7c; stroke-width: 2.2; marker-end: url(#arrow); }}
       .dep {{ fill: none; stroke: #b87912; stroke-width: 2; stroke-dasharray: 6 5; marker-end: url(#gold); }}
-      .note {{ font-size: 15px; font-weight: 650; fill: #704b09; }} .source {{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; fill: #526a79; }}
+      .note {{ font-size: 18px; font-weight: 650; fill: #704b09; }} .source {{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 17px; fill: #526a79; }}
+      .role-summary {{ font-size: 18px; font-weight: 680; fill: #1e5d50; }}
+      .memory-label {{ font-size: 19px; font-weight: 760; }} .mem-node {{ stroke: #294251; stroke-width: 1.5; }}
+      .mem-name {{ font-size: 18px; font-weight: 740; text-anchor: middle; }} .mem-note {{ font-size: 15px; fill: #526a79; text-anchor: middle; }}
     </style>
     <marker id="arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#526d7c"/></marker>
     <marker id="gold" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#b87912"/></marker>
   </defs>
-  <rect width="1800" height="1000" fill="#f8fafb"/>
-  <text class="title" x="60" y="58">{escape(g["title"])}</text>
-  <text class="subtitle" x="60" y="94">{escape(g["subtitle"])}</text>
-  <text class="subtitle" x="60" y="122">CuTe DSL entry point: <tspan class="source">{escape(g["source"])}</tspan></text>
-  <rect x="50" y="160" width="1700" height="700" rx="9" fill="#fff" stroke="#d4e0e7" stroke-width="1.4"/>
-  <line class="grid" x1="320" y1="160" x2="320" y2="860"/>
-  <line class="grid" x1="50" y1="340" x2="1750" y2="340"/><line class="grid" x1="50" y1="500" x2="1750" y2="500"/><line class="grid" x1="50" y1="660" x2="1750" y2="660"/>
-  <text class="phase" x="477" y="185">SET UP / LOAD</text><text class="phase" x="797" y="185">TRANSFORM</text><text class="phase" x="1117" y="185">SYNCHRONIZE / REDUCE</text><text class="phase" x="1437" y="185">PUBLISH / ADVANCE</text>
+  <rect width="2400" height="1500" fill="#f8fafb"/>
+  <text class="title" x="70" y="66">{escape(g["title"])}</text>
+  <text class="subtitle" x="70" y="108">{escape(g["subtitle"])}</text>
+  <text class="subtitle" x="70" y="145">CuTe DSL entry point: <tspan class="source">{escape(g["source"])}</tspan></text>
+  <text class="panel-title" x="70" y="195">WARP / WARP-GROUP ROLE TIMELINE</text>
+  <text class="role-summary" x="455" y="195">{escape(role_summary)}</text>
+  <rect x="60" y="215" width="2280" height="730" rx="12" fill="#fff" stroke="#d4e0e7" stroke-width="1.5"/>
+  <line class="grid" x1="425" y1="215" x2="425" y2="945"/>
+  <line class="grid" x1="60" y1="395" x2="2340" y2="395"/><line class="grid" x1="60" y1="575" x2="2340" y2="575"/><line class="grid" x1="60" y1="755" x2="2340" y2="755"/>
+  <text class="phase" x="630" y="237">SET UP / LOAD</text><text class="phase" x="1065" y="237">TRANSFORM</text><text class="phase" x="1500" y="237">SYNCHRONIZE / REDUCE</text><text class="phase" x="1935" y="237">PUBLISH / ADVANCE</text>
   {''.join(rows)}
-  <rect x="60" y="892" width="1680" height="62" rx="10" fill="#fff7df" stroke="#b87912" stroke-width="1.5"/>
-  <text class="note" x="85" y="929">{escape(g["note"])}</text>
+  <rect x="70" y="975" width="2260" height="70" rx="11" fill="#fff7df" stroke="#b87912" stroke-width="1.5"/>
+  <text class="note" x="100" y="1018">{escape(g["note"])}</text>
+  <text class="panel-title" x="70" y="1095">ON-CHIP MEMORY PARTITION</text>
+  <rect x="60" y="1120" width="2280" height="310" rx="12" fill="#fff" stroke="#d4e0e7" stroke-width="1.5"/>
+  <text class="memory-label" x="90" y="1172">SMEM</text>
+  {memory_boxes(smem, 235, 1140, 2055, "#d7e8f2")}
+  <text class="memory-label" x="90" y="1310">TMEM</text>
+  {memory_boxes(tmem, 235, 1278, 2055, "#cfe9df")}
 </svg>
 '''
 
@@ -273,7 +314,10 @@ def render(g):
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     for graph in GRAPHS:
-        (OUT / f'{graph["file"]}.svg').write_text(render(graph), encoding="utf-8")
+        path = OUT / f'{graph["file"]}.svg'
+        content = render(graph)
+        if not path.exists() or path.read_text(encoding="utf-8") != content:
+            path.write_text(content, encoding="utf-8")
 
 
 if __name__ == "__main__":
