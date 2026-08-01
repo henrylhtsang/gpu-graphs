@@ -426,7 +426,8 @@ def readme() -> str:
     entries = []
     for source in CPP_EXAMPLES + PY_EXAMPLES:
         kind = "tutorial" if "/tutorial/" in source else ("C++ example" if source in CPP_EXAMPLES else "Python example")
-        entries.append(f"| `{source}` | [{slug(source)}.svg]({slug(source)}.svg) | {kind} |")
+        name = slug(source)
+        entries.append(f"| `{source}` | [{name}.svg]({name}/{name}.svg) | {kind} |")
     return f'''# CUTLASS warp-specialized examples and tutorials
 
 Large role-timeline diagrams for every runnable example or tutorial detected as
@@ -456,6 +457,7 @@ examples/tutorials ({len(CPP_EXAMPLES) + len(PY_EXAMPLES)} diagrams).**
 
 
 def write_if_changed(path: Path, content: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
     if not path.exists() or path.read_text(encoding="utf-8") != content:
         path.write_text(content, encoding="utf-8")
 
@@ -469,7 +471,8 @@ def main() -> None:
         return
     OUT.mkdir(parents=True, exist_ok=True)
     for source in CPP_EXAMPLES + PY_EXAMPLES:
-        write_if_changed(OUT / f"{slug(source)}.svg", render(source))
+        name = slug(source)
+        write_if_changed(OUT / name / f"{name}.svg", render(source))
     write_if_changed(OUT / "README.md", readme())
 
 

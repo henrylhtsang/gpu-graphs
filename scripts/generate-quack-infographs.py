@@ -314,7 +314,8 @@ def render(g):
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     for graph in GRAPHS:
-        path = OUT / f'{graph["file"]}.svg'
+        path = OUT / graph["file"] / f'{graph["file"]}.svg'
+        path.parent.mkdir(parents=True, exist_ok=True)
         content = render(graph)
         if not path.exists() or path.read_text(encoding="utf-8") != content:
             path.write_text(content, encoding="utf-8")

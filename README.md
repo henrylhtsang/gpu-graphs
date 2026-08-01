@@ -14,9 +14,10 @@ All topics live under `graphs/` so the repository root stays small:
 ```text
 graphs/
   <topic>/
-    README.md          # optional context, sources, and terminology
-    <graph-name>.svg   # editable source of truth
-    <graph-name>.png   # generated from the SVG
+    README.md                    # optional collection context
+    <content-name>/
+      <graph-name>.svg           # editable source of truth
+      <graph-name>.png           # generated from the SVG
 scripts/
   render-svg.sh
 ```
@@ -28,7 +29,8 @@ reasonable system fallbacks.
 
 ## Add or update a graph
 
-1. Create or choose a topic directory under `graphs/`.
+1. Create or choose a topic directory under `graphs/`, then give each content
+   unit its own mini-directory when a topic contains multiple diagrams.
 2. Add the SVG and, when useful, a short topic `README.md` explaining what it
    shows and linking to relevant sources.
 3. Run `make png` to generate the PNG companion.

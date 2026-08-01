@@ -16,6 +16,8 @@
   timeline figures.
 - Put graph topics under `graphs/<topic>/`; do not add topic directories at the
   repository root.
+- When a topic contains multiple diagrams, put each SVG/PNG pair in its own
+  `graphs/<topic>/<content-name>/` mini-directory.
 - Use lowercase kebab-case for directory and file names.
 - Treat SVG files as the editable source of truth. Do not edit generated PNGs
   independently.
