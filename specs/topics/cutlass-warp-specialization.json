@@ -28,8 +28,10 @@
     "required_content": [
       "name the inspected source path and pinned commit",
       "show role ownership and major waits or handoffs",
+      "show exactly three top-level phases: prologue, mainloop, and epilogue",
       "show the applicable SMEM partition",
       "show TMEM usage or explicitly state that TMEM is unavailable or unused",
+      "align resource lifetimes and stage reuse to the same three-phase axis",
       "separate code-observed facts from configuration-dependent interpretation"
     ],
     "excluded_content": [
@@ -42,10 +44,13 @@
     "profile": "direct-role-memory",
     "min_width": 2400,
     "required_classes": [
-      { "class": "phase", "minimum": 4 },
+      { "class": "phase", "minimum": 3 },
+      { "class": "phase-band", "minimum": 3 },
       { "class": "role", "minimum": 4 },
       { "class": "node", "minimum": 16 },
-      { "class": "mem", "minimum": 1 }
+      { "class": "mem", "minimum": 1 },
+      { "class": "resource-lifetime", "minimum": 2 },
+      { "class": "life-box", "minimum": 2 }
     ],
     "source_text_classes": ["source"]
   }

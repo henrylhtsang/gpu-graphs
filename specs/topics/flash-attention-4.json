@@ -17,13 +17,17 @@
     "goal": "Explain both the compact dependency story and the complete three-phase SM100 forward reconstruction.",
     "audience": "GPU kernel engineers familiar with Blackwell TMA, tcgen05, SMEM, and TMEM.",
     "reading_order": ["warp roles", "prologue/mainloop/epilogue operation order", "ready and release handoffs", "SMEM/TMEM lifetimes and reuse"],
-    "required_content": ["two Q stages", "separate QK and PV issues", "split softmax publication", "correction role", "SMEM/TMEM reuse"],
+    "required_content": ["exactly three top-level phases: prologue, mainloop, and epilogue", "two Q stages", "separate QK and PV issues", "split softmax publication", "correction role", "SMEM/TMEM lifetimes and reuse on the same event axis"],
     "excluded_content": ["cycle-accurate timing", "host launch plumbing"]
   },
   "qa": {
     "profile": "direct-role-memory",
     "min_width": 2400,
-    "required_classes": [],
+    "required_classes": [
+      { "class": "phase-band", "minimum": 3 },
+      { "class": "resource-lifetime", "minimum": 2 },
+      { "class": "life-box", "minimum": 2 }
+    ],
     "source_text_classes": []
   }
 }

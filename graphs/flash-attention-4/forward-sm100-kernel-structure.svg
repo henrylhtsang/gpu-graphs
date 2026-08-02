@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg data-authoring="llm-direct" data-authoring-profile="direct-role-memory" data-topic-id="flash-attention-4" data-graph-id="forward-sm100-kernel-structure" data-source-id="flash-attention" xmlns="http://www.w3.org/2000/svg" width="4200" height="2596" viewBox="0 0 4200 2596" role="img" aria-labelledby="title desc" data-kernel-id="forward-sm100-kernel-structure" data-view-id="timeline" data-qa-profile="reconstruction-timeline">
+<svg data-authoring="llm-direct" data-authoring-profile="direct-role-memory" data-structure-version="three-phase-role-memory-v1" data-topic-id="flash-attention-4" data-graph-id="forward-sm100-kernel-structure" data-source-id="flash-attention" xmlns="http://www.w3.org/2000/svg" width="4200" height="2596" viewBox="0 0 4200 2596" role="img" aria-labelledby="title desc" data-kernel-id="forward-sm100-kernel-structure" data-view-id="timeline" data-qa-profile="reconstruction-timeline">
   <title id="title">FlashAttention-4 forward · SM100 kernel structure</title>
   <desc id="desc">Who does the work, which events connect the roles, and when SMEM/TMEM storage can be reused. Warp-role operations, cross-role synchronization, and aligned SMEM/TMEM lifetimes.</desc>
   <defs>
@@ -39,6 +39,9 @@
   <text class="section" x="68" y="214">WARP-ROLE EXECUTION · REPRESENTATIVE STEADY STATE</text>
   <text class="axis" x="2312.5" y="214">semantic event order · widths are not cycle-accurate</text>
   <rect x="50" y="230" width="4100" height="1242" rx="12" fill="#fff" stroke="#d4e0e7" stroke-width="1.5"/>
+  <rect class="phase-band" data-phase-id="prologue" x="478" y="231" width="724" height="30" fill="#eef6fa"/>
+  <rect class="phase-band" data-phase-id="mainloop" x="1312.3" y="231" width="2048.2" height="30" fill="#fbfcfd"/>
+  <rect class="phase-band" data-phase-id="epilogue" x="3510.5" y="231" width="611.5" height="30" fill="#fff8e7"/>
   <line class="grid" x1="478" y1="230" x2="478" y2="1472"/>
   <rect x="1202.3" y="230" width="110.0" height="1242" fill="#f3f6f8"/>
   <line class="grid" x1="1312.3" y1="230" x2="1312.3" y2="1472"/>

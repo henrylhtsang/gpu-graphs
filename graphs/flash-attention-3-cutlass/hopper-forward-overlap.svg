@@ -1,4 +1,4 @@
-<svg data-authoring="llm-direct" data-authoring-profile="direct-role-memory" data-topic-id="flash-attention-3-cutlass" data-graph-id="hopper-forward-overlap" data-source-id="flash-attention" xmlns="http://www.w3.org/2000/svg" width="2400" height="1750" viewBox="0 0 2400 1750" role="img" aria-labelledby="title desc">
+<svg data-authoring="llm-direct" data-authoring-profile="direct-role-memory" data-structure-version="three-phase-role-memory-v1" data-topic-id="flash-attention-3-cutlass" data-graph-id="hopper-forward-overlap" data-source-id="flash-attention" xmlns="http://www.w3.org/2000/svg" width="2400" height="1980" viewBox="0 0 2400 1980" role="img" aria-labelledby="title desc">
   <title id="title">FlashAttention-3 forward: Hopper scheduler ping-pong and intra-warpgroup overlap</title>
   <desc id="desc">A head-dimension-128 swimlane graph showing one producer warp, two consumer warpgroups, named-barrier scheduler-token alternation, and QK/PV overlap within each consumer warpgroup.</desc>
 
@@ -45,6 +45,8 @@
   <text class="title" x="60" y="62">FlashAttention-3 forward · Hopper scheduler ping-pong and intra-WG overlap</text>
   <text class="subtitle" x="60" y="101">Head dim 128: kBlockM=128, two consumer WGs, RS-PV, and a separate 2-stage circular K/V buffer.</text>
   <text class="subtitle" x="60" y="132">“Ping-pong” means the named-barrier scheduler token alternates WG0 ↔ WG1; it does not mean the K/V buffer stages.</text>
+  <rect class="phase-band" data-phase-id="prologue" x="330" y="138" width="330" height="22" fill="#e7f1f6"/><rect class="phase-band" data-phase-id="mainloop" x="660" y="138" width="790" height="22" fill="#f6f9fa"/><rect class="phase-band" data-phase-id="epilogue" x="1450" y="138" width="300" height="22" fill="#fff3d8"/>
+  <text class="tiny phase" data-phase-id="prologue" x="495" y="154" text-anchor="middle">PROLOGUE · Q + K₀/V₀</text><text class="tiny phase" data-phase-id="mainloop" x="1055" y="154" text-anchor="middle">MAINLOOP · Kj/Vj + next stage</text><text class="tiny phase" data-phase-id="epilogue" x="1600" y="154" text-anchor="middle">EPILOGUE · O</text>
 
   <!-- Main swimlane frame -->
   <rect x="40" y="168" width="1720" height="730" fill="none" class="grid"/>
@@ -86,9 +88,9 @@
     <rect class="load-box" x="1240" y="197" width="230" height="58" rx="10"/>
   </g>
   <text class="box-text" x="452" y="226">Load Qᵢ</text>
-  <text class="box-text" x="720" y="226">Load Kⱼ₊₁, Vⱼ₊₁</text>
+  <text class="box-text" x="720" y="226">Load K₀, V₀</text>
   <text class="box-text" x="1025" y="226">Load Kⱼ, Vⱼ</text>
-  <text class="box-text" x="1355" y="226">Load Kⱼ₋₁, Vⱼ₋₁</text>
+  <text class="box-text" x="1355" y="226">Load Kⱼ₊₁, Vⱼ₊₁</text>
 
   <!-- Informal ping-pong is scheduler-token ownership, not the K/V pipeline stages. -->
   <path d="M733 459 V464 H570 V498 H581" fill="none" stroke="#496273" stroke-width="1.8" stroke-dasharray="6 5" marker-end="url(#arrow)"/>
@@ -194,7 +196,7 @@
   <text x="60" y="943" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif" font-size="13" fill="#607685">ping-pong = consumer-WG scheduler-token handoff; K/V stage 0/1 is a different double buffer</text>
   <text x="1740" y="943" text-anchor="end" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif" font-size="13" fill="#607685">FA3 Hopper forward · D=128 simplified steady state</text>
   </g>
-  <text x="70" y="1332" font-size="20" font-weight="780" fill="#526a79" letter-spacing="1.2">ON-CHIP MEMORY PARTITION</text>
+  <text x="70" y="1332" font-size="20" font-weight="780" fill="#526a79" letter-spacing="1.2">ON-CHIP MEMORY ALLOCATIONS</text>
   <rect x="60" y="1355" width="2280" height="315" rx="12" fill="#fff" stroke="#d4e0e7" stroke-width="1.5"/>
   <text x="90" y="1412" font-size="20" font-weight="760">SMEM</text>
   <rect x="235" y="1378" width="630" height="92" rx="11" fill="#d8ebe5" stroke="#273e4e" stroke-width="1.5"/><text x="550" y="1418" text-anchor="middle" font-size="19" font-weight="730">Q + K stage ring</text><text x="550" y="1447" text-anchor="middle" font-size="16" fill="#526a79">TMA producer → QK WGMMA</text>
@@ -202,4 +204,5 @@
   <rect x="1535" y="1378" width="755" height="92" rx="11" fill="#d8ebe5" stroke="#273e4e" stroke-width="1.5"/><text x="1912" y="1418" text-anchor="middle" font-size="19" font-weight="730">barriers + optional output staging</text><text x="1912" y="1447" text-anchor="middle" font-size="16" fill="#526a79">scheduler token is separate from the K/V ring</text>
   <text x="90" y="1553" font-size="20" font-weight="760">TMEM</text>
   <rect x="235" y="1518" width="2055" height="92" rx="11" fill="#e8eef2" stroke="#273e4e" stroke-width="1.5"/><text x="1262" y="1558" text-anchor="middle" font-size="19" font-weight="730">not available on SM90</text><text x="1262" y="1587" text-anchor="middle" font-size="16" fill="#526a79">S, packed P, and persistent O are register-resident live ranges</text>
+  <text x="70" y="1720" font-size="20" font-weight="780" fill="#526a79" letter-spacing="1.2">MEMORY LIFETIMES · SAME THREE-PHASE AXIS</text><rect x="60" y="1740" width="2280" height="170" rx="12" fill="#fff" stroke="#d4e0e7"/><text x="90" y="1810" font-size="19" font-weight="760">SMEM</text><g class="resource-lifetime" data-resource-id="kv-ring"><rect class="life-box" x="420" y="1775" width="1280" height="58" rx="10" fill="#d8ebe5" stroke="#273e4e"/><text x="1060" y="1810" text-anchor="middle" font-size="17" font-weight="700">Q + K/V ring · stage j releases after issue; the same slot becomes stage j+1</text></g><text x="90" y="1880" font-size="19" font-weight="760">REG</text><g class="resource-lifetime" data-resource-id="attention-regs"><rect class="life-box" x="760" y="1845" width="1480" height="58" rx="10" fill="#cfe9df" stroke="#273e4e"/><text x="1500" y="1880" text-anchor="middle" font-size="17" font-weight="700">old P remains live until PV completes; O persists to epilogue · TMEM unavailable</text></g>
 </svg>

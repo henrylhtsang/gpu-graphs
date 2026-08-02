@@ -77,6 +77,30 @@ class DirectSvgQaTests(unittest.TestCase):
         )
         self.assertTrue(any("svg.semantic-class" in issue for issue in issues))
 
+    def test_direct_svg_requires_exactly_three_phase_bands(self) -> None:
+        root = self._root()
+        for element in root.iter():
+            if element.get("class") == "phase-band" and element.get("data-phase-id") == "epilogue":
+                element.set("data-phase-id", "mainloop")
+        issues = inspect_direct_svg(
+            self.spec,
+            self.relative_path,
+            ElementTree.tostring(root, encoding="unicode"),
+        )
+        self.assertTrue(any("svg.three-phase" in issue for issue in issues))
+
+    def test_direct_svg_requires_memory_lifetime_bars(self) -> None:
+        root = self._root()
+        for element in root.iter():
+            if element.get("class") == "life-box":
+                element.set("class", "removed-life-box")
+        issues = inspect_direct_svg(
+            self.spec,
+            self.relative_path,
+            ElementTree.tostring(root, encoding="unicode"),
+        )
+        self.assertTrue(any("svg.memory-lifetimes" in issue for issue in issues))
+
 
 if __name__ == "__main__":
     unittest.main()

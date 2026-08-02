@@ -28,9 +28,11 @@
     "required_content": [
       "name the inspected kernel entry point",
       "state whether execution is cooperative or warp-specialized",
+      "show exactly three top-level phases: prologue, mainloop, and epilogue",
       "show major data movement and compute operations",
       "show synchronization or reduction boundaries",
-      "show SMEM and TMEM usage, including explicit non-use"
+      "show SMEM and TMEM usage, including explicit non-use",
+      "show resource lifetimes, release points, and stage aliasing on the same phase axis"
     ],
     "excluded_content": [
       "host wrappers and framework bindings",
@@ -42,10 +44,14 @@
     "profile": "direct-role-memory",
     "min_width": 2400,
     "required_classes": [
-      { "class": "phase", "minimum": 4 },
+      { "class": "phase", "minimum": 3 },
+      { "class": "phase-band", "minimum": 3 },
       { "class": "lane", "minimum": 4 },
-      { "class": "node", "minimum": 16 },
-      { "class": "mem-node", "minimum": 4 }
+      { "class": "operation", "minimum": 7 },
+      { "class": "sync", "minimum": 1 },
+      { "class": "mem-node", "minimum": 4 },
+      { "class": "resource-lifetime", "minimum": 2 },
+      { "class": "life-box", "minimum": 2 }
     ],
     "source_text_classes": ["source"]
   }

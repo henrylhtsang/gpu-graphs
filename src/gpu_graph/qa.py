@@ -436,6 +436,32 @@ def inspect_direct_svg(
             issues.append(
                 f"svg.source-trace: class {class_name!r} must expose inspected code"
             )
+
+    phase_bands = elements_by_class.get("phase-band", [])
+    phase_ids = [element.get("data-phase-id", "") for element in phase_bands]
+    expected_phases = {"prologue", "mainloop", "epilogue"}
+    if set(phase_ids) != expected_phases or len(phase_ids) != 3:
+        issues.append(
+            "svg.three-phase: expected exactly one visible phase-band for "
+            f"prologue, mainloop, and epilogue; found {phase_ids or 'none'}"
+        )
+
+    lifetime_groups = elements_by_class.get("resource-lifetime", [])
+    lifetime_bars = elements_by_class.get("life-box", [])
+    if not lifetime_groups or not lifetime_bars:
+        issues.append(
+            "svg.memory-lifetimes: require resource-lifetime groups with life-box bars"
+        )
+
+    visible_text = " ".join(
+        " ".join(element.itertext())
+        for element in root.iter()
+        if element.tag == f"{SVG_NAMESPACE}text"
+    ).upper()
+    if "SMEM" not in visible_text:
+        issues.append("svg.memory-lifetimes: graph must identify SMEM usage or non-use")
+    if "TMEM" not in visible_text:
+        issues.append("svg.memory-lifetimes: graph must identify TMEM usage or non-use")
     return issues
 
 

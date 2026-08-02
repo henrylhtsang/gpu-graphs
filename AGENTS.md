@@ -3,12 +3,17 @@
 ## Purpose and organization
 
 - This repository explains GPU concepts through diagrams.
-- Treat the warp / warp-group role timeline as a primary design artifact. It is
+- Treat the warp / warp-group role timeline as a primary design artifact. Every
+  primary graph uses exactly three top-level phases: prologue, mainloop, and
+  epilogue. Put loop bootstrap in prologue, representative repeated work and
+  any loop-tail event inside mainloop, and final publication/drain in epilogue.
+  It is
   critical for understanding how a kernel assigns work and overlaps producer,
   MMA, epilogue, and auxiliary roles; show role ownership and synchronization
   over time whenever the kernel uses warp specialization.
 - When the kernel uses shared memory (SMEM) or tensor memory (TMEM), include a
-  clearly labeled sub-figure showing the applicable memory partition: operands,
+  clearly labeled sub-figure showing physical allocations and resource
+  lifetimes on the same prologue/mainloop/epilogue event axis: operands,
   pipeline stages, accumulators, scale factors, epilogue buffers, and any
   intentional aliasing or reuse. State explicitly when TMEM is not available.
 - Make diagrams large enough for role and memory labels to remain legible when

@@ -1,4 +1,4 @@
-<svg data-authoring="llm-direct" data-authoring-profile="direct-role-memory" data-topic-id="fa3-cute" data-graph-id="sm90-forward-overlap" data-source-id="flash-attention" xmlns="http://www.w3.org/2000/svg" width="2400" height="1750" viewBox="0 0 2400 1750" role="img" aria-labelledby="title desc">
+<svg data-authoring="llm-direct" data-authoring-profile="direct-role-memory" data-structure-version="three-phase-role-memory-v1" data-topic-id="fa3-cute" data-graph-id="sm90-forward-overlap" data-source-id="flash-attention" xmlns="http://www.w3.org/2000/svg" width="2400" height="1980" viewBox="0 0 2400 1980" role="img" aria-labelledby="title desc">
   <title id="title">FA3-CuTe FlashAttention-4 SM90 forward overlap for head dimension 128</title>
   <desc id="desc">A timeline of the CuTeDSL Hopper forward kernel. A TMA producer fills a two-stage K and V pipeline. Two consumer warpgroups alternate a named-barrier issue token. Within each consumer warpgroup, a new QK WGMMA overlaps an older PV WGMMA; wait-group one exposes the completed scores while PV remains in flight, then wait-group zero gates probability conversion and output rescaling.</desc>
   <defs>
@@ -36,6 +36,8 @@
   <text class="title" x="60" y="58">FA3-CuTe (FlashAttention-4 SM90) forward · D = 128</text>
   <text class="subtitle" x="60" y="94">Dense TMA path · blockM = 128 · two consumer warpgroups · register-sourced PV · two-stage circular K/V</text>
   <text class="subtitle" x="60" y="122">CuTeDSL function shown: <tspan class="code">mma_one_n_block_intrawg_overlap()</tspan></text>
+  <rect class="phase-band" data-phase-id="prologue" x="330" y="132" width="330" height="23" fill="#e7f1f6"/><rect class="phase-band" data-phase-id="mainloop" x="660" y="132" width="790" height="23" fill="#f6f9fa"/><rect class="phase-band" data-phase-id="epilogue" x="1450" y="132" width="300" height="23" fill="#fff3d8"/>
+  <text class="small phase" data-phase-id="prologue" x="495" y="149" text-anchor="middle">PROLOGUE · Q + K₀/V₀</text><text class="small phase" data-phase-id="mainloop" x="1055" y="149" text-anchor="middle">MAINLOOP · Kj/Vj + next stage</text><text class="small phase" data-phase-id="epilogue" x="1600" y="149" text-anchor="middle">EPILOGUE · O</text>
 
   <rect x="50" y="155" width="1700" height="770" rx="8" fill="#ffffff" stroke="#d4e0e7" stroke-width="1.4"/>
   <line class="grid" x1="330" y1="155" x2="330" y2="925"/>
@@ -169,7 +171,7 @@
   <text class="small code" x="1730" y="915" text-anchor="end">flash_attn/cute/flash_fwd_sm90.py</text>
   </g>
 
-  <text x="70" y="1332" font-size="20" font-weight="780" fill="#526a79" letter-spacing="1.2">ON-CHIP MEMORY PARTITION</text>
+  <text x="70" y="1332" font-size="20" font-weight="780" fill="#526a79" letter-spacing="1.2">ON-CHIP MEMORY ALLOCATIONS</text>
   <rect x="60" y="1355" width="2280" height="315" rx="12" fill="#fff" stroke="#d4e0e7" stroke-width="1.5"/>
   <text x="90" y="1412" font-size="20" font-weight="760">SMEM</text>
   <rect x="235" y="1378" width="475" height="92" rx="11" fill="#d8ebe5" stroke="#273e4e" stroke-width="1.5"/><text x="472" y="1418" text-anchor="middle" font-size="19" font-weight="730">Q tile</text><text x="472" y="1447" text-anchor="middle" font-size="16" fill="#526a79">resident operand</text>
@@ -178,4 +180,5 @@
   <rect x="1720" y="1378" width="570" height="92" rx="11" fill="#d8ebe5" stroke="#273e4e" stroke-width="1.5"/><text x="2005" y="1418" text-anchor="middle" font-size="19" font-weight="730">pipeline barriers</text><text x="2005" y="1447" text-anchor="middle" font-size="16" fill="#526a79">producer / consumer stage ownership</text>
   <text x="90" y="1553" font-size="20" font-weight="760">TMEM</text>
   <rect x="235" y="1518" width="2055" height="92" rx="11" fill="#e8eef2" stroke="#273e4e" stroke-width="1.5"/><text x="1262" y="1558" text-anchor="middle" font-size="19" font-weight="730">not available on SM90</text><text x="1262" y="1587" text-anchor="middle" font-size="16" fill="#526a79">QK scores, P fragments, and O accumulators live in registers; K/V operands use SMEM</text>
+  <text x="70" y="1720" font-size="20" font-weight="780" fill="#526a79" letter-spacing="1.2">MEMORY LIFETIMES · SAME THREE-PHASE AXIS</text><rect x="60" y="1740" width="2280" height="170" rx="12" fill="#fff" stroke="#d4e0e7"/><text x="90" y="1810" font-size="19" font-weight="760">SMEM</text><g class="resource-lifetime" data-resource-id="kv-ring"><rect class="life-box" x="420" y="1775" width="1280" height="58" rx="10" fill="#d8ebe5" stroke="#273e4e"/><text x="1060" y="1810" text-anchor="middle" font-size="17" font-weight="700">Q persists; K/V stage j releases after WGMMA issue, then the slot becomes j+1</text></g><text x="90" y="1880" font-size="19" font-weight="760">REG</text><g class="resource-lifetime" data-resource-id="attention-regs"><rect class="life-box" x="760" y="1845" width="1480" height="58" rx="10" fill="#cfe9df" stroke="#273e4e"/><text x="1500" y="1880" text-anchor="middle" font-size="17" font-weight="700">S + packed P + persistent O · mainloop to epilogue · TMEM unavailable on SM90</text></g>
 </svg>

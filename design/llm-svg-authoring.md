@@ -67,6 +67,8 @@ Decorative elements need no semantic identity.
    - Follow the authoring brief's reading order and composition hint.
    - Treat width and shape as free variables; enlarge the canvas before reducing
      essential information or legibility.
+   - Use exactly three top-level timeline phases: prologue, mainloop, and
+     epilogue. Keep loop-tail/exit work inside the mainloop phase.
 3. Establish large regions first.
    - Title/context, primary execution structure, synchronization, memory, and
      notes should have an explicit reading order.
@@ -87,6 +89,7 @@ The graph is complete only when:
 - labels remain legible without overlap or clipping;
 - synchronization paths can be followed from producer to consumer;
 - SMEM/TMEM lifetime and reuse claims match the spec;
+- resource lifetimes are aligned to the same three-phase axis as role work;
 - `make qa` passes; and
 - manual inspection finds no density or reading-order failure.
 

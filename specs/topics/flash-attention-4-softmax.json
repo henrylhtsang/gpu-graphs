@@ -17,7 +17,7 @@
     "goal": "Reconstruct what one SM100 softmax warpgroup does and why correction and PV can overlap it.",
     "audience": "GPU kernel engineers familiar with online softmax and TMEM.",
     "reading_order": ["two Q-stage groups", "score-to-P operation order", "early correction handoff", "split P readiness", "SMEM/TMEM ownership"],
-    "required_content": ["warps 0-3 and 4-7", "TMEM score load", "mask and online max/sum", "96+32 or equivalent split P publication", "separate correction and MMA consumers"],
+    "required_content": ["prologue, mainloop, and epilogue phases", "warps 0-3 and 4-7", "TMEM score load", "mask and online max/sum", "96+32 or equivalent split P publication", "separate correction and MMA consumers", "aligned TMEM score, P, and O lifetimes"],
     "excluded_content": ["unrelated load-warp details", "cycle timing"]
   },
   "qa": {
@@ -26,7 +26,10 @@
     "required_classes": [
       { "class": "lane-title", "minimum": 5 },
       { "class": "outline", "minimum": 20 },
-      { "class": "early", "minimum": 5 }
+      { "class": "early", "minimum": 5 },
+      { "class": "phase-band", "minimum": 3 },
+      { "class": "resource-lifetime", "minimum": 2 },
+      { "class": "life-box", "minimum": 2 }
     ],
     "source_text_classes": ["code"]
   }

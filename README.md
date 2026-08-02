@@ -68,6 +68,8 @@ commit, defines the authoring brief, owns every SVG in the topic, and declares
 the minimum semantic structure QA expects. A reconstruction graph is covered by
 both layers: its topic spec enforces repository-wide direct authorship, while
 its kernel spec enforces exact operation, synchronization, and lifetime facts.
+Every graph uses exactly three top-level phases—prologue, mainloop, and
+epilogue—and aligns SMEM/TMEM lifetime and reuse bars to that same event axis.
 
 Before committing a specification-backed graph, run `make qa`. It executes the
 ordered spec → LLM-authored SVG → automated layout QA → PNG parity loop. The QA

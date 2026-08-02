@@ -17,7 +17,7 @@
     "goal": "Reconstruct the Hopper forward role overlap and distinguish scheduler-token ping-pong from the K/V stage ring.",
     "audience": "GPU kernel engineers familiar with CUTLASS Hopper attention.",
     "reading_order": ["producer pipeline", "consumer warpgroup roles", "QK/PV issue and wait order", "register and SMEM residency"],
-    "required_content": ["two consumer warpgroups", "RS-PV", "named-barrier token", "two-stage K/V pipeline", "SM90 has no TMEM"],
+    "required_content": ["prologue, mainloop, and epilogue phases", "two consumer warpgroups", "RS-PV", "named-barrier token", "two-stage K/V pipeline with j to j+1 reuse", "aligned SMEM/register lifetimes", "SM90 has no TMEM"],
     "excluded_content": ["cycle-accurate widths", "non-D=128 variants"]
   },
   "qa": {
@@ -26,7 +26,10 @@
     "required_classes": [
       { "class": "lane-title", "minimum": 5 },
       { "class": "box-text", "minimum": 30 },
-      { "class": "grid", "minimum": 10 }
+      { "class": "grid", "minimum": 10 },
+      { "class": "phase-band", "minimum": 3 },
+      { "class": "resource-lifetime", "minimum": 2 },
+      { "class": "life-box", "minimum": 2 }
     ],
     "source_text_classes": []
   }

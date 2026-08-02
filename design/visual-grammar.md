@@ -21,8 +21,10 @@ timeline merely to reuse a template.
 1. Kernel identity and the concrete configuration being illustrated.
 2. One horizontal lane per active warp or warp-group role.
 3. Cross-role readiness and release handoffs.
-4. Explicit prologue, repeated-mainloop, loop-tail, and epilogue regions when applicable.
-5. SMEM and TMEM physical-allocation lifetimes on the same event axis.
+4. Exactly three top-level timeline regions: prologue, repeated mainloop, and
+   epilogue. A loop-tail or exit event belongs inside the mainloop region.
+5. SMEM and TMEM physical-allocation lifetimes on the same three-phase event
+   axis, with sequential alias/reuse shown as non-overlapping bars.
 6. A small reconstruction note area for essential formulas or variant decisions.
 
 When a view uses a horizontal axis, it represents semantic event order unless
