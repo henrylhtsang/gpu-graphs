@@ -20,6 +20,7 @@ graphs/
       <graph-name>.png           # generated from the SVG
 scripts/
   generate-kernel-graphs.py
+  qa-kernel-graphs.py
   render-svg.sh
 schema/
   kernel.schema.json
@@ -28,10 +29,13 @@ specs/
 src/gpu_graph/
   model.py              # loading and lifecycle resolution
   validation.py         # causal, loop-residency, and storage checks
+  renderers.py          # renderer registry shared by generation and QA
   render_svg.py         # dense reconstruction-timeline projection
   render_overview_svg.py # cyclic attention overview projection
+  qa.py                 # generic and renderer-specific artifact QA
 design/
   authoring-workflow.md # scalable spec construction and enforced invariants
+  qa-workflow.md        # spec -> SVG -> QA -> PNG feedback loop
 ```
 
 Use lowercase kebab-case for topic directories and graph filenames. A topic can
@@ -56,6 +60,22 @@ renders every declared view; no per-kernel output registration is required.
 Each spec may select multiple renderers and output paths while sharing one
 validated semantic model. See
 [`design/authoring-workflow.md`](design/authoring-workflow.md) before adding one.
+
+Before committing a specification-backed graph, run `make qa`. It executes the
+ordered spec → generated SVG → automated layout QA → PNG parity loop. The QA
+contract and visual-review checklist are in
+[`design/qa-workflow.md`](design/qa-workflow.md).
+
+```text
+specification
+    → semantic validation
+    → deterministic SVG generation
+    → generic + renderer-specific SVG QA
+    → PNG rendering
+    → SVG/PNG artifact parity
+    → visual review
+    ↺ fix the spec or renderer and repeat
+```
 
 The PNG must be regenerated after **every** SVG change. `make png` only rebuilds
 PNG files whose SVG sources are newer; use `make png-force` to regenerate all of

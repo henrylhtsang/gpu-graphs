@@ -56,6 +56,7 @@ boundary.
 | Logical resource lifetime | Colored bar derived from lifecycle references |
 | Alias/reuse | Adjacent logical bars in the same physical-allocation row |
 | Next-iteration carry | Bar ending at the loop boundary and labeled as carried |
+| Split publication | Separate partial-ready and final-ready handoffs to one consumer operation |
 | Explicit separation | Different allocation rows plus a validated storage relation |
 
 Color identifies broad data or operation classes. It never carries the only

@@ -3,13 +3,15 @@ PNG_FILES := $(SVG_FILES:.svg=.png)
 
 CUTLASS_ROOT ?= $(HOME)/cutlass
 
-.PHONY: help generate check check-cutlass-inventory png png-force
+.PHONY: help generate check svg-qa artifact-qa qa check-cutlass-inventory png png-force
 
 help:
 	@echo "make png        Render missing or outdated PNG companions"
 	@echo "make png-force  Regenerate every PNG companion"
 	@echo "make generate   Regenerate diagrams backed by repository generators"
 	@echo "make check      Validate schema-backed kernel graph specifications"
+	@echo "make svg-qa     Check generated SVG freshness, coverage, bounds, and collisions"
+	@echo "make qa         Run the complete spec -> SVG -> QA -> PNG artifact loop"
 	@echo "make check-cutlass-inventory  Audit warp-specialized CUTLASS coverage"
 
 generate:
@@ -22,6 +24,19 @@ check:
 		PYTHONPATH=src python3 -m gpu_graph.cli "$$spec" /tmp/gpu-graph-check.svg --check; \
 	done
 	@python3 -m unittest discover -s tests
+
+svg-qa:
+	@python3 scripts/qa-kernel-graphs.py --stage svg
+
+artifact-qa:
+	@python3 scripts/qa-kernel-graphs.py --stage artifacts
+
+qa:
+	@$(MAKE) --no-print-directory check
+	@$(MAKE) --no-print-directory generate
+	@$(MAKE) --no-print-directory svg-qa
+	@$(MAKE) --no-print-directory png
+	@$(MAKE) --no-print-directory artifact-qa
 
 check-cutlass-inventory:
 	@python3 scripts/generate-cutlass-warp-specialization.py --check "$(CUTLASS_ROOT)"

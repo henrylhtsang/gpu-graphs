@@ -151,6 +151,9 @@ def validate_spec(spec: dict[str, Any]) -> None:
             raise SpecError(f'{view["id"]}: view output must stay inside graphs/{spec["topic"]}/')
         if output in view_outputs:
             raise SpecError(f'{view["id"]}: duplicate view output {output}')
+        width = view.get("width")
+        if width is not None and (not isinstance(width, int) or width < 2400):
+            raise SpecError(f'{view["id"]}: view width must be an integer of at least 2400')
         view_outputs.add(output)
 
     previous_end = start
@@ -249,6 +252,7 @@ def validate_spec(spec: dict[str, Any]) -> None:
                         f'{operation["id"]}: label/detail must contain {expected} '
                         f'for {position} iteration'
                     )
+        _validate_evidence(operation["id"], operation.get("evidence", []), sources)
         for access in ("reads", "writes"):
             for resource_id in operation.get(access, []):
                 if resource_id not in resources:

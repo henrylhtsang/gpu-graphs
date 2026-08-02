@@ -33,8 +33,9 @@ phase relationship.
 
 Add one lane per active role. Keep only operations that change a logical
 resource, create a cross-role dependency, release storage, or are necessary to
-reconstruct the datapath. Mark repeated operations with their loop scope and
-frequency.
+reconstruct the datapath. Preserve multiple readiness points when a consumer can
+start on a partial operand and later waits on a final fragment. Mark repeated
+operations with their loop scope and frequency.
 
 ## 5. Define logical resources
 
@@ -71,13 +72,16 @@ Secondary views may expose denser reconstruction detail without forcing it into
 the primary infographic. View declarations select renderers and output paths;
 they do not duplicate operations, resources, lifetimes, or storage decisions.
 
-Run:
+Run the complete production loop:
 
 ```sh
-make check
-make generate
-make png
+make qa
 ```
+
+This validates the spec, regenerates deterministic SVG views, applies generic
+and renderer-specific layout QA, renders PNG companions, and verifies SVG/PNG
+dimension parity. See [`qa-workflow.md`](qa-workflow.md) for the gate contracts,
+failure routing, and manual visual-review checklist.
 
 The validator enforces these invariants:
 
@@ -93,5 +97,7 @@ The validator enforces these invariants:
 | Evidence references registered primary sources | Untraceable reconstruction assumptions |
 | Seed/current/adjacent operations stay in their declared phases | `K0`/`V0` leaking into a symbolic mainloop |
 
-Visual inspection remains necessary for label collisions and information
-density, but kernel causality and storage consistency should not depend on it.
+Automated SVG QA catches supported collision, coverage, containment, and canvas
+failures. Visual inspection remains necessary for information density and the
+overall reconstruction story, but repeatable layout failures should become QA
+regressions rather than recurring manual fixes.

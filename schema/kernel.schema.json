@@ -101,7 +101,8 @@
             "type": "string",
             "pattern": "^graphs/[a-z0-9][a-z0-9/-]*/[a-z0-9][a-z0-9-]*\\.svg$"
           },
-          "primary": { "type": "boolean" }
+          "primary": { "type": "boolean" },
+          "width": { "type": "integer", "minimum": 2400 }
         },
         "additionalProperties": false
       }
@@ -255,7 +256,11 @@
           "scope": { "$ref": "#/$defs/id" },
           "frequency": { "enum": ["once", "each-iteration", "loop-tail"] },
           "reads": { "type": "array", "items": { "$ref": "#/$defs/id" } },
-          "writes": { "type": "array", "items": { "$ref": "#/$defs/id" } }
+          "writes": { "type": "array", "items": { "$ref": "#/$defs/id" } },
+          "evidence": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/evidence" }
+          }
         },
         "additionalProperties": false
       }

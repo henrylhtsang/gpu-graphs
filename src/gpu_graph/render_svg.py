@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from html import escape
+from textwrap import wrap
 from typing import Any
 
 from .model import resolve_point, resources_by_allocation
@@ -27,14 +28,135 @@ OBJECT_COLORS = {
 }
 
 
+def _wrap_operation_text(value: str, width: float, font_size: float) -> list[str]:
+    """Wrap an operation label to the usable width of its timeline box."""
+    usable_width = max(36.0, width - 14.0)
+    max_chars = max(6, int(usable_width / (font_size * 0.56)))
+    return wrap(
+        value,
+        width=max_chars,
+        break_long_words=False,
+        break_on_hyphens=False,
+    ) or [value]
+
+
 def render_svg(spec: dict[str, Any]) -> str:
-    width = 3000
+    view = next(
+        (
+            item
+            for item in spec.get("views", [])
+            if item.get("renderer") == "reconstruction-timeline" and item.get("primary")
+        ),
+        {},
+    )
+    width = int(view.get("width", 3000))
     plot_x = 500
     plot_right = width - 75
     plot_width = plot_right - plot_x
-    row_h = 116
+
+    t0 = spec["timeline"]["start"]
+    t1 = spec["timeline"]["end"]
+    sections = spec["timeline"].get("sections", [])
+    gaps = [
+        (section["start"], section.get("gap_before", 0))
+        for section in sections
+        if section.get("gap_before", 0) > 0
+    ]
+    linear_plot_width = plot_width - sum(gap for _, gap in gaps)
+
+    def tx(value: float, boundary_side: str = "after") -> float:
+        extra = sum(
+            gap
+            for boundary, gap in gaps
+            if boundary < value or (boundary == value and boundary_side == "after")
+        )
+        return plot_x + (value - t0) / (t1 - t0) * linear_plot_width + extra
+
+    roles = {role["id"]: role for role in spec["roles"]}
+    operations = {operation["id"]: operation for operation in spec["operations"]}
+
+    # Assign overlapping operations to vertical sublanes. Most roles need one;
+    # roles that interleave stages get another instead of drawing boxes on top
+    # of each other.
+    operation_sublane: dict[str, int] = {}
+    sublane_count: dict[str, int] = {}
+    for role_id in roles:
+        lane_ends: list[float] = []
+        role_operations = sorted(
+            (operation for operation in spec["operations"] if operation["role"] == role_id),
+            key=lambda operation: (operation["start"], operation["end"]),
+        )
+        for operation in role_operations:
+            lane = next(
+                (
+                    index
+                    for index, lane_end in enumerate(lane_ends)
+                    if operation["start"] >= lane_end
+                ),
+                len(lane_ends),
+            )
+            if lane == len(lane_ends):
+                lane_ends.append(operation["end"])
+            else:
+                lane_ends[lane] = operation["end"]
+            operation_sublane[operation["id"]] = lane
+        sublane_count[role_id] = max(1, len(lane_ends))
+
+    # Assign synchronization annotations to as many horizontal tiers as each
+    # role needs. Intervals use conservative text-width estimates and padding.
+    handoff_label_layout: dict[str, tuple[float, int]] = {}
+    label_tiers: dict[str, list[list[tuple[float, float]]]] = {
+        role_id: [] for role_id in roles
+    }
+    for handoff in spec["handoffs"]:
+        source_role = operations[handoff["from"]]["role"]
+        event_x = tx(handoff["at"])
+        label_width = max(
+            len(handoff["label"]) * 7.5,
+            len(handoff["mechanism"]) * 6.2,
+        )
+        label_x = min(event_x + 7, plot_right - label_width - 6)
+        interval = (label_x - 6, label_x + label_width + 6)
+        tiers = label_tiers[source_role]
+        tier = next(
+            (
+                index
+                for index, occupied in enumerate(tiers)
+                if all(interval[1] + 12 < left or interval[0] - 12 > right for left, right in occupied)
+            ),
+            len(tiers),
+        )
+        if tier == len(tiers):
+            tiers.append([])
+        tiers[tier].append(interval)
+        handoff_label_layout[handoff["id"]] = (label_x, tier)
+
+    op_box_height = 92
+    op_sublane_gap = 10
+    role_top_padding = 18
+    annotation_gap = 18
+    annotation_tier_height = 31
+    role_bottom_padding = 12
     role_top = 292
-    role_bottom = role_top + len(spec["roles"]) * row_h
+    role_y: dict[str, int] = {}
+    next_role_y = role_top
+    for role_id in roles:
+        operation_height = (
+            sublane_count[role_id] * op_box_height
+            + (sublane_count[role_id] - 1) * op_sublane_gap
+        )
+        annotation_height = len(label_tiers[role_id]) * annotation_tier_height
+        height_for_role = (
+            role_top_padding
+            + operation_height
+            + (annotation_gap if annotation_height else 0)
+            + annotation_height
+            + role_bottom_padding
+        )
+        role_y[role_id] = next_role_y
+        next_role_y += height_for_role
+    role_bottom = next_role_y
+
     memory_title_y = role_bottom + 72
     memory_top = memory_title_y + 30
     memory_row_h = 66
@@ -58,28 +180,6 @@ def render_svg(spec: dict[str, Any]) -> str:
     footer_top = memory_bottom + 34
     footer_height = max(110, 64 + len(notes) * 23)
     height = footer_top + footer_height + 35
-
-    t0 = spec["timeline"]["start"]
-    t1 = spec["timeline"]["end"]
-    sections = spec["timeline"].get("sections", [])
-    gaps = [
-        (section["start"], section.get("gap_before", 0))
-        for section in sections
-        if section.get("gap_before", 0) > 0
-    ]
-    linear_plot_width = plot_width - sum(gap for _, gap in gaps)
-
-    def tx(value: float, boundary_side: str = "after") -> float:
-        extra = sum(
-            gap
-            for boundary, gap in gaps
-            if boundary < value or (boundary == value and boundary_side == "after")
-        )
-        return plot_x + (value - t0) / (t1 - t0) * linear_plot_width + extra
-
-    roles = {role["id"]: role for role in spec["roles"]}
-    role_index = {role["id"]: index for index, role in enumerate(spec["roles"])}
-    operations = {operation["id"]: operation for operation in spec["operations"]}
 
     def display_value(value: Any) -> str:
         if isinstance(value, bool):
@@ -108,7 +208,7 @@ def render_svg(spec: dict[str, Any]) -> str:
       .phase {{ font-size: 13px; font-weight: 760; fill: #334b59; text-anchor: middle; letter-spacing: .8px; }}
       .axis {{ font-size: 14px; font-weight: 680; fill: #607887; text-anchor: middle; }}
       .role {{ font-size: 19px; font-weight: 740; }} .role-note {{ font-size: 15px; fill: #526a79; }}
-      .op {{ font-size: 16px; font-weight: 720; text-anchor: middle; }} .op-detail {{ font-size: 13px; fill: #425869; text-anchor: middle; }}
+      .op {{ font-size: 15px; font-weight: 720; text-anchor: middle; }} .op-detail {{ font-size: 12px; fill: #425869; text-anchor: middle; }}
       .handoff {{ font-size: 12px; font-weight: 700; fill: #80570c; paint-order: stroke; stroke: #f8fafb; stroke-width: 5px; stroke-linejoin: round; }}
       .handoff-mech {{ font-size: 10px; font-weight: 650; fill: #8c6a2c; paint-order: stroke; stroke: #f8fafb; stroke-width: 4px; stroke-linejoin: round; }}
       .memory {{ font-size: 16px; font-weight: 730; }} .extent {{ font-size: 13px; fill: #607887; }}
@@ -151,45 +251,99 @@ def render_svg(spec: dict[str, Any]) -> str:
         parts.append(f'<text class="axis" x="{x:.1f}" y="270">{escape(tick["label"])}</text>')
 
     for index, role in enumerate(spec["roles"]):
-        y = role_top + index * row_h
+        y = role_y[role["id"]]
         if index:
             parts.append(f'<line class="lane" x1="50" y1="{y}" x2="{width - 50}" y2="{y}"/>')
         parts.append(f'<text class="role" x="76" y="{y + 39}">{escape(role["label"])} · {escape(role["warps"])}</text>')
         parts.append(f'<text class="role-note" x="76" y="{y + 65}">{escape(role["responsibility"])}</text>')
 
-    op_geometry: dict[str, tuple[float, float, float]] = {}
+    operation_parts: list[str] = []
+    op_geometry: dict[str, tuple[float, float, float, float]] = {}
     for operation in spec["operations"]:
-        index = role_index[operation["role"]]
-        y = role_top + index * row_h + 25
+        y = (
+            role_y[operation["role"]]
+            + role_top_padding
+            + operation_sublane[operation["id"]] * (op_box_height + op_sublane_gap)
+        )
         x = tx(operation["start"], "after") + 5
         x2 = tx(operation["end"], "before") - 5
-        box_width = max(72, x2 - x)
+        box_width = max(44, x2 - x)
         center = x + box_width / 2
         fill = OP_COLORS[operation["kind"]]
         if operation["kind"] == "wait":
             fill = "url(#wait-pattern)"
-        parts.append(f'<rect class="op-box" x="{x:.1f}" y="{y}" width="{box_width:.1f}" height="66" rx="10" fill="{fill}"/>')
+        operation_parts.append(
+            f'<g class="operation" data-operation-id="{escape(operation["id"])}">'
+        )
+        operation_parts.append(f'<rect class="op-box" x="{x:.1f}" y="{y}" width="{box_width:.1f}" height="{op_box_height}" rx="10" fill="{fill}"/>')
         detail = operation.get("detail")
-        label_y = y + (29 if detail else 39)
-        parts.append(f'<text class="op" x="{center:.1f}" y="{label_y}">{escape(operation["label"])}</text>')
-        if detail:
-            parts.append(f'<text class="op-detail" x="{center:.1f}" y="{y + 50}">{escape(detail)}</text>')
-        op_geometry[operation["id"]] = (x, x + box_width, y + 33)
+        label_lines = _wrap_operation_text(operation["label"], box_width, 15)
+        detail_lines = _wrap_operation_text(detail, box_width, 12) if detail else []
+        text_lines = [("op", line) for line in label_lines] + [
+            ("op-detail", line) for line in detail_lines
+        ]
+        line_height = 15
+        first_line_y = y + op_box_height / 2 - (len(text_lines) - 1) * line_height / 2 + 5
+        for line_index, (text_class, line) in enumerate(text_lines):
+            operation_parts.append(
+                f'<text class="{text_class}" x="{center:.1f}" '
+                f'y="{first_line_y + line_index * line_height:.1f}">{escape(line)}</text>'
+            )
+        operation_parts.append('</g>')
+        op_geometry[operation["id"]] = (x, x + box_width, y, y + op_box_height)
 
+    handoff_paths: list[str] = []
+    handoff_labels: list[str] = []
     for handoff in spec["handoffs"]:
         event_x = tx(handoff["at"])
-        source_x1, source_x2, source_y = op_geometry[handoff["from"]]
-        target_x1, target_x2, target_y = op_geometry[handoff["to"]]
+        source_x1, source_x2, source_top, source_bottom = op_geometry[handoff["from"]]
+        target_x1, target_x2, target_top, target_bottom = op_geometry[handoff["to"]]
         source_anchor = min(max(event_x, source_x1), source_x2)
         target_anchor = min(max(event_x, target_x1), target_x2)
+        if (target_top + target_bottom) / 2 > (source_top + source_bottom) / 2:
+            source_y = source_bottom
+            target_y = target_top
+        else:
+            source_y = source_top
+            target_y = target_bottom
         path_class = handoff["kind"]
-        parts.append(
+        handoff_paths.append(
             f'<path class="{path_class}" d="M{source_anchor:.1f} {source_y:.1f} '
             f'H{event_x:.1f} V{target_y:.1f} H{target_anchor:.1f}"/>'
         )
-        label_y = (source_y + target_y) / 2 - 5
-        parts.append(f'<text class="handoff" x="{event_x + 7:.1f}" y="{label_y:.1f}">{escape(handoff["label"])}</text>')
-        parts.append(f'<text class="handoff-mech" x="{event_x + 7:.1f}" y="{label_y + 15:.1f}">{escape(handoff["mechanism"])}</text>')
+
+        source_role = operations[handoff["from"]]["role"]
+        label_x, tier = handoff_label_layout[handoff["id"]]
+        operation_height = (
+            sublane_count[source_role] * op_box_height
+            + (sublane_count[source_role] - 1) * op_sublane_gap
+        )
+        label_y = (
+            role_y[source_role]
+            + role_top_padding
+            + operation_height
+            + annotation_gap
+            + 12
+            + tier * annotation_tier_height
+        )
+        handoff_labels.append(
+            f'<g class="handoff-annotation" data-handoff-id="{escape(handoff["id"])}">'
+        )
+        handoff_labels.append(
+            f'<text class="handoff" x="{label_x:.1f}" y="{label_y:.1f}">'
+            f'{escape(handoff["label"])}</text>'
+        )
+        handoff_labels.append(
+            f'<text class="handoff-mech" x="{label_x:.1f}" y="{label_y + 15:.1f}">'
+            f'{escape(handoff["mechanism"])}</text>'
+        )
+        handoff_labels.append('</g>')
+
+    # Put connectors behind operation boxes and all labels. A long cross-role
+    # path can pass through a busy lane without obscuring any operation text.
+    parts.extend(handoff_paths)
+    parts.extend(operation_parts)
+    parts.extend(handoff_labels)
 
     parts += [f'''
   <text class="section" x="68" y="{memory_title_y}">ON-CHIP MEMORY LIFETIMES · SAME EVENT AXIS</text>

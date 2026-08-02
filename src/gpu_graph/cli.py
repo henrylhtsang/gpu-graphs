@@ -6,15 +6,8 @@ import argparse
 from pathlib import Path
 
 from .model import load_spec
-from .render_overview_svg import render_attention_cycle_overview
-from .render_svg import render_svg
+from .renderers import RENDERERS
 from .validation import validate_spec
-
-
-RENDERERS = {
-    "attention-cycle-overview": render_attention_cycle_overview,
-    "reconstruction-timeline": render_svg,
-}
 
 
 def main() -> None:

@@ -40,6 +40,12 @@ class ValidationTests(unittest.TestCase):
         with self.assertRaisesRegex(SpecError, "must stay inside"):
             validate_spec(broken)
 
+    def test_view_width_has_a_legibility_floor(self) -> None:
+        broken = copy.deepcopy(self.spec)
+        broken["views"][0]["width"] = 1800
+        with self.assertRaisesRegex(SpecError, "width must be"):
+            validate_spec(broken)
+
     def test_overlapping_alias_lifetimes_are_rejected(self) -> None:
         broken = copy.deepcopy(self.spec)
         resource = next(item for item in broken["resources"] if item["id"] == "svj1")
@@ -92,6 +98,13 @@ class ValidationTests(unittest.TestCase):
     def test_storage_claims_require_registered_evidence(self) -> None:
         broken = copy.deepcopy(self.spec)
         broken["storage_relations"][0]["evidence"][0]["source"] = "missing-source"
+        with self.assertRaisesRegex(SpecError, "unknown evidence source"):
+            validate_spec(broken)
+
+    def test_operation_evidence_requires_registered_source(self) -> None:
+        broken = copy.deepcopy(self.spec)
+        operation = next(item for item in broken["operations"] if item["id"] == "soft0-load-s")
+        operation["evidence"][0]["source"] = "missing-source"
         with self.assertRaisesRegex(SpecError, "unknown evidence source"):
             validate_spec(broken)
 

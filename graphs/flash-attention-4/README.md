@@ -13,6 +13,9 @@ Blackwell GPUs.
   [`specs/kernels/flash-attention-4/forward-sm100.json`](../../specs/kernels/flash-attention-4/forward-sm100.json).
   The prologue uses concrete `K0`/`V0` seed names; the representative mainloop
   consumes symbolic `Kj`/`Vj` while the TMA producer prefetches `Kj+1`/`Vj+1`.
+  Each softmax lane exposes its TMEM-to-register load, mask and online row-max,
+  correction-scale handoff, exp2 conversion, 96+32-column `P` publication, row
+  sum update, and final-statistics handoff.
   Its loop-resident Q resources, next-iteration K/V carries, physical reuse, and
   configuration-specific Q/O separation are validated rather than encoded as
   independent drawing coordinates.

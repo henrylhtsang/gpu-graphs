@@ -10,13 +10,15 @@
       "id": "timeline",
       "renderer": "reconstruction-timeline",
       "output": "graphs/flash-attention-4/forward-sm100-kernel-structure.svg",
-      "primary": true
+      "primary": true,
+      "width": 4200
     }
   ],
   "configuration": [
     { "id": "path", "label": "path", "value": "dense TMA" },
     { "id": "q-stages", "label": "Q stages", "value": 2 },
     { "id": "kv-stages", "label": "KV stages", "value": 3 },
+    { "id": "p-publish", "label": "P publish", "value": "96 + 32 cols" },
     { "id": "split-kv", "label": "split-KV", "value": false },
     { "id": "tile", "label": "tile", "value": "N=128, D=Dv=128" },
     { "id": "head-dim", "label": "D", "value": 128, "display": false },
@@ -33,12 +35,12 @@
   ],
   "timeline": {
     "start": 0,
-    "end": 9,
+    "end": 11.5,
     "label": "semantic event order · widths are not cycle-accurate",
     "sections": [
       { "id": "prologue", "label": "PROLOGUE", "start": 0, "end": 2.4 },
-      { "id": "mainloop", "label": "MAINLOOP · REPEAT OVER j (ONE ITERATION SHOWN)", "start": 2.4, "end": 7.3, "gap_before": 90 },
-      { "id": "epilogue", "label": "EPILOGUE", "start": 7.3, "end": 9, "gap_before": 120 }
+      { "id": "mainloop", "label": "MAINLOOP · REPEAT OVER j (ONE ITERATION + LOOP EXIT SHOWN)", "start": 2.4, "end": 9.4, "gap_before": 110 },
+      { "id": "epilogue", "label": "EPILOGUE", "start": 9.4, "end": 11.5, "gap_before": 150 }
     ],
     "ticks": [
       { "at": 0, "label": "K₀ LOAD" },
@@ -46,11 +48,13 @@
       { "at": 2, "label": "V₀ READY" },
       { "at": 3, "label": "QK₀ · Kⱼ" },
       { "at": 4, "label": "QK₁ / PREFETCH j+1" },
-      { "at": 5, "label": "P₀ READY" },
-      { "at": 6, "label": "PV₀ · Vⱼ / P₁" },
-      { "at": 7, "label": "PV₁ · Vⱼ" },
-      { "at": 8, "label": "O FINAL" },
-      { "at": 9, "label": "STORE" }
+      { "at": 5, "label": "α₀ READY" },
+      { "at": 6, "label": "EXP / α₁ READY" },
+      { "at": 7, "label": "¾ P₀ → PV₀" },
+      { "at": 8, "label": "¾ P₁ → PV₁" },
+      { "at": 9, "label": "FINAL STATS" },
+      { "at": 10, "label": "O FINAL" },
+      { "at": 11.5, "label": "STORE" }
     ]
   },
   "loops": [
@@ -78,7 +82,7 @@
     {
       "id": "q-loop-release",
       "kind": "release",
-      "at": 7.3,
+      "at": 9.4,
       "label": "Q₀/Q₁ reusable after K/V loop",
       "mechanism": "pipeline_q.consumer_release_w_index(stage)",
       "scope": "kv-loop",
@@ -108,13 +112,13 @@
       "id": "softmax0",
       "label": "Softmax · Q stage 0",
       "warps": "warps 0–3",
-      "responsibility": "TMEM scores → registers → TMEM probabilities"
+      "responsibility": "Load S; mask + online max/sum; publish α and split P"
     },
     {
       "id": "softmax1",
       "label": "Softmax · Q stage 1",
       "warps": "warps 4–7",
-      "responsibility": "Same program, staggered behind Q stage 0"
+      "responsibility": "Same softmax program, staggered behind Q stage 0"
     },
     {
       "id": "correction",
@@ -246,9 +250,9 @@
       "kind": "wait",
       "scope": "kv-loop",
       "frequency": "each-iteration",
-      "start": 4.7,
-      "end": 5.3,
-      "label": "wait P₀/O₀"
+      "start": 6.15,
+      "end": 6.45,
+      "label": "acquire ¾ P₀ + O₀"
     },
     {
       "id": "mma-pv0",
@@ -257,23 +261,13 @@
       "stage": 0,
       "scope": "kv-loop",
       "frequency": "each-iteration",
-      "start": 5.3,
-      "end": 6.05,
+      "start": 6.45,
+      "end": 7.45,
       "label": "tcgen05 PV₀",
-      "detail": "TMEM P₀ × sVⱼ → TMEM O₀",
+      "detail": "P₀ × Vⱼ; issue after ¾ P; final ¼ mbar",
       "iteration": { "loop": "kv-loop", "position": "current", "objects": ["V"] },
       "reads": ["tp0", "svj", "to0"],
       "writes": ["to0"]
-    },
-    {
-      "id": "mma-wait-p1",
-      "role": "mma",
-      "kind": "wait",
-      "scope": "kv-loop",
-      "frequency": "each-iteration",
-      "start": 6.05,
-      "end": 6.55,
-      "label": "wait P₁/O₁"
     },
     {
       "id": "mma-pv1",
@@ -282,10 +276,10 @@
       "stage": 1,
       "scope": "kv-loop",
       "frequency": "each-iteration",
-      "start": 6.55,
-      "end": 7.3,
+      "start": 7.45,
+      "end": 8.55,
       "label": "tcgen05 PV₁",
-      "detail": "TMEM P₁ × sVⱼ → TMEM O₁",
+      "detail": "P₁ × Vⱼ; issue after ¾ P; final ¼ mbar",
       "iteration": { "loop": "kv-loop", "position": "current", "objects": ["V"] },
       "reads": ["tp1", "svj", "to1"],
       "writes": ["to1"]
@@ -297,50 +291,171 @@
       "scope": "kv-loop",
       "frequency": "each-iteration",
       "start": 2.85,
-      "end": 3.25,
+      "end": 3.2,
       "label": "wait S₀"
     },
     {
-      "id": "soft0-score",
+      "id": "soft0-load-s",
       "role": "softmax0",
       "kind": "transfer",
       "stage": 0,
       "scope": "kv-loop",
       "frequency": "each-iteration",
-      "start": 3.25,
-      "end": 4.05,
-      "label": "S₀ → regs",
-      "detail": "mask + row max + exp",
+      "start": 3.2,
+      "end": 3.8,
+      "label": "TMEM S₀ → regs",
+      "detail": "tcgen05.ld 32×32b",
       "reads": ["ts0"],
-      "writes": ["sstats"]
+      "evidence": [
+        {
+          "source": "fa4-forward-sm100",
+          "locator": "lines 2202–2214",
+          "note": "Softmax waits for S and copies its TMEM score tile into registers."
+        }
+      ]
     },
     {
-      "id": "soft0-p",
+      "id": "soft0-rowmax",
       "role": "softmax0",
       "kind": "compute",
       "stage": 0,
       "scope": "kv-loop",
       "frequency": "each-iteration",
-      "start": 4.05,
-      "end": 5.05,
-      "label": "publish α₀ + first ¾ P₀",
-      "detail": "registers → reused TMEM",
-      "reads": ["sstats"],
-      "writes": ["sstats", "tp0"]
+      "start": 3.8,
+      "end": 4.55,
+      "label": "mask + row max",
+      "detail": "update m₀; compute α₀",
+      "writes": ["sstats"],
+      "evidence": [
+        {
+          "source": "fa4-forward-sm100",
+          "locator": "lines 2215–2244",
+          "note": "The score modifier and mask precede the online row-max update and accumulator scale."
+        }
+      ]
     },
     {
-      "id": "soft0-final",
+      "id": "soft0-publish-scale",
+      "role": "softmax0",
+      "kind": "transfer",
+      "stage": 0,
+      "scope": "kv-loop",
+      "frequency": "each-iteration",
+      "start": 4.55,
+      "end": 4.9,
+      "label": "publish α₀",
+      "detail": "sScale + named barrier",
+      "reads": ["sstats"],
+      "writes": ["sstats"],
+      "evidence": [
+        {
+          "source": "fa4-forward-sm100",
+          "locator": "lines 2237–2247",
+          "note": "The accumulator scale is written to SMEM and the correction warp-group is notified before exp2."
+        }
+      ]
+    },
+    {
+      "id": "soft0-exp",
       "role": "softmax0",
       "kind": "compute",
       "stage": 0,
       "scope": "kv-loop",
       "frequency": "each-iteration",
-      "start": 5.05,
-      "end": 5.6,
-      "label": "final ¼ P₀",
-      "detail": "publish row sum",
+      "start": 4.9,
+      "end": 5.75,
+      "label": "subtract m₀ + exp2",
+      "detail": "scores → probability regs",
       "reads": ["sstats"],
-      "writes": ["sstats", "tp0"]
+      "evidence": [
+        {
+          "source": "fa4-forward-sm100",
+          "locator": "lines 2249–2265",
+          "note": "Scores are shifted by row max, exponentiated, and converted to the P operand type."
+        }
+      ]
+    },
+    {
+      "id": "soft0-p-first",
+      "role": "softmax0",
+      "kind": "transfer",
+      "stage": 0,
+      "scope": "kv-loop",
+      "frequency": "each-iteration",
+      "start": 5.75,
+      "end": 6.45,
+      "label": "store first ¾ P₀",
+      "detail": "regs → aliased TMEM; release",
+      "writes": ["tp0"],
+      "evidence": [
+        {
+          "source": "fa4-forward-sm100",
+          "locator": "lines 166–172 and 2271–2278",
+          "note": "For N=128, 96 columns of P are stored before releasing the MMA producer stage."
+        }
+      ]
+    },
+    {
+      "id": "soft0-p-last",
+      "role": "softmax0",
+      "kind": "transfer",
+      "stage": 0,
+      "scope": "kv-loop",
+      "frequency": "each-iteration",
+      "start": 6.45,
+      "end": 6.8,
+      "label": "store final ¼ P₀",
+      "detail": "commit last-split mbar",
+      "writes": ["tp0"],
+      "evidence": [
+        {
+          "source": "fa4-forward-sm100",
+          "locator": "lines 2279–2286",
+          "note": "The remaining P columns are fenced before the last-split barrier is committed."
+        }
+      ]
+    },
+    {
+      "id": "soft0-sum",
+      "role": "softmax0",
+      "kind": "compute",
+      "stage": 0,
+      "scope": "kv-loop",
+      "frequency": "each-iteration",
+      "start": 6.8,
+      "end": 7.25,
+      "label": "update running ℓ₀",
+      "detail": "after correction consumes α₀",
+      "reads": ["sstats"],
+      "writes": ["sstats"],
+      "evidence": [
+        {
+          "source": "fa4-forward-sm100",
+          "locator": "lines 2287–2289",
+          "note": "After the correction stage releases the stats slot, softmax updates the online row sum."
+        }
+      ]
+    },
+    {
+      "id": "soft0-final-stats",
+      "role": "softmax0",
+      "kind": "transfer",
+      "stage": 0,
+      "scope": "kv-loop",
+      "frequency": "loop-tail",
+      "start": 8.75,
+      "end": 9.15,
+      "label": "publish final ℓ₀ / m₀",
+      "detail": "sScale → correction barrier",
+      "reads": ["sstats"],
+      "writes": ["sstats"],
+      "evidence": [
+        {
+          "source": "fa4-forward-sm100",
+          "locator": "lines 2113–2120",
+          "note": "At loop exit, dense softmax stores final row sum and optional row max, then signals correction."
+        }
+      ]
     },
     {
       "id": "soft1-wait",
@@ -349,50 +464,115 @@
       "scope": "kv-loop",
       "frequency": "each-iteration",
       "start": 3.6,
-      "end": 4.0,
+      "end": 3.95,
       "label": "wait S₁"
     },
     {
-      "id": "soft1-score",
+      "id": "soft1-load-s",
       "role": "softmax1",
       "kind": "transfer",
       "stage": 1,
       "scope": "kv-loop",
       "frequency": "each-iteration",
-      "start": 4.0,
-      "end": 4.8,
-      "label": "S₁ → regs",
-      "detail": "mask + row max + exp",
-      "reads": ["ts1"],
+      "start": 3.95,
+      "end": 4.55,
+      "label": "TMEM S₁ → regs",
+      "detail": "tcgen05.ld 32×32b",
+      "reads": ["ts1"]
+    },
+    {
+      "id": "soft1-rowmax",
+      "role": "softmax1",
+      "kind": "compute",
+      "stage": 1,
+      "scope": "kv-loop",
+      "frequency": "each-iteration",
+      "start": 4.55,
+      "end": 5.3,
+      "label": "mask + row max",
+      "detail": "update m₁; compute α₁",
       "writes": ["sstats"]
     },
     {
-      "id": "soft1-p",
+      "id": "soft1-publish-scale",
       "role": "softmax1",
-      "kind": "compute",
+      "kind": "transfer",
       "stage": 1,
       "scope": "kv-loop",
       "frequency": "each-iteration",
-      "start": 4.8,
-      "end": 5.8,
-      "label": "publish α₁ + first ¾ P₁",
-      "detail": "registers → reused TMEM",
+      "start": 5.3,
+      "end": 5.65,
+      "label": "publish α₁",
+      "detail": "sScale + named barrier",
       "reads": ["sstats"],
-      "writes": ["sstats", "tp1"]
+      "writes": ["sstats"]
     },
     {
-      "id": "soft1-final",
+      "id": "soft1-exp",
       "role": "softmax1",
       "kind": "compute",
       "stage": 1,
       "scope": "kv-loop",
       "frequency": "each-iteration",
-      "start": 5.8,
-      "end": 6.35,
-      "label": "final ¼ P₁",
-      "detail": "publish row sum",
+      "start": 5.65,
+      "end": 6.5,
+      "label": "subtract m₁ + exp2",
+      "detail": "scores → probability regs",
+      "reads": ["sstats"]
+    },
+    {
+      "id": "soft1-p-first",
+      "role": "softmax1",
+      "kind": "transfer",
+      "stage": 1,
+      "scope": "kv-loop",
+      "frequency": "each-iteration",
+      "start": 6.5,
+      "end": 7.2,
+      "label": "store first ¾ P₁",
+      "detail": "regs → aliased TMEM; release",
+      "writes": ["tp1"]
+    },
+    {
+      "id": "soft1-p-last",
+      "role": "softmax1",
+      "kind": "transfer",
+      "stage": 1,
+      "scope": "kv-loop",
+      "frequency": "each-iteration",
+      "start": 7.2,
+      "end": 7.55,
+      "label": "store final ¼ P₁",
+      "detail": "commit last-split mbar",
+      "writes": ["tp1"]
+    },
+    {
+      "id": "soft1-sum",
+      "role": "softmax1",
+      "kind": "compute",
+      "stage": 1,
+      "scope": "kv-loop",
+      "frequency": "each-iteration",
+      "start": 7.55,
+      "end": 8.0,
+      "label": "update running ℓ₁",
+      "detail": "after correction consumes α₁",
       "reads": ["sstats"],
-      "writes": ["sstats", "tp1"]
+      "writes": ["sstats"]
+    },
+    {
+      "id": "soft1-final-stats",
+      "role": "softmax1",
+      "kind": "transfer",
+      "stage": 1,
+      "scope": "kv-loop",
+      "frequency": "loop-tail",
+      "start": 8.95,
+      "end": 9.35,
+      "label": "publish final ℓ₁ / m₁",
+      "detail": "sScale → correction barrier",
+      "reads": ["sstats"],
+      "writes": ["sstats"]
     },
     {
       "id": "corr-wait0",
@@ -400,7 +580,7 @@
       "kind": "wait",
       "scope": "kv-loop",
       "frequency": "each-iteration",
-      "start": 4.5,
+      "start": 4.55,
       "end": 4.9,
       "label": "wait α₀"
     },
@@ -412,7 +592,7 @@
       "scope": "kv-loop",
       "frequency": "each-iteration",
       "start": 4.9,
-      "end": 5.5,
+      "end": 5.55,
       "label": "rescale O₀",
       "detail": "TMEM → regs; release to PV₀",
       "reads": ["to0", "sstats"],
@@ -424,8 +604,8 @@
       "kind": "wait",
       "scope": "kv-loop",
       "frequency": "each-iteration",
-      "start": 5.5,
-      "end": 5.9,
+      "start": 5.3,
+      "end": 5.65,
       "label": "wait α₁"
     },
     {
@@ -435,8 +615,8 @@
       "stage": 1,
       "scope": "kv-loop",
       "frequency": "each-iteration",
-      "start": 5.9,
-      "end": 6.5,
+      "start": 5.65,
+      "end": 6.3,
       "label": "rescale O₁",
       "detail": "TMEM → regs; release to PV₁",
       "reads": ["to1", "sstats"],
@@ -447,8 +627,8 @@
       "role": "correction",
       "kind": "transfer",
       "stage": 0,
-      "start": 7.3,
-      "end": 7.8,
+      "start": 9.4,
+      "end": 10.0,
       "label": "final O₀",
       "detail": "TMEM → regs → sO[0]",
       "reads": ["to0", "sstats"],
@@ -459,8 +639,8 @@
       "role": "correction",
       "kind": "transfer",
       "stage": 1,
-      "start": 7.8,
-      "end": 8.3,
+      "start": 10.0,
+      "end": 10.6,
       "label": "final O₁",
       "detail": "TMEM → regs → sO[1]",
       "reads": ["to1", "sstats"],
@@ -470,16 +650,16 @@
       "id": "epi-wait",
       "role": "epilogue",
       "kind": "wait",
-      "start": 7.8,
-      "end": 8.3,
+      "start": 10.0,
+      "end": 10.6,
       "label": "wait sO[0:1]"
     },
     {
       "id": "epi-store",
       "role": "epilogue",
       "kind": "store",
-      "start": 8.3,
-      "end": 9,
+      "start": 10.6,
+      "end": 11.5,
       "label": "TMA store O₀/O₁",
       "detail": "SMEM → GMEM",
       "reads": ["so"]
@@ -534,63 +714,117 @@
     {
       "id": "stats0-ready",
       "kind": "ready",
-      "from": "soft0-p",
+      "from": "soft0-publish-scale",
       "to": "corr-wait0",
-      "at": 4.75,
+      "at": 4.88,
       "label": "α₀ ready",
-      "mechanism": "softmax stats barrier[0]"
+      "mechanism": "sm_stats barrier[0]"
     },
     {
       "id": "stats1-ready",
       "kind": "ready",
-      "from": "soft1-p",
+      "from": "soft1-publish-scale",
       "to": "corr-wait1",
-      "at": 5.55,
+      "at": 5.63,
       "label": "α₁ ready",
-      "mechanism": "softmax stats barrier[1]"
+      "mechanism": "sm_stats barrier[1]"
     },
     {
-      "id": "p0-ready",
+      "id": "p0-first-ready",
       "kind": "ready",
-      "from": "soft0-final",
+      "from": "soft0-p-first",
       "to": "mma-wait-p0",
-      "at": 5.5,
-      "label": "P₀ ready",
-      "mechanism": "mbar P lastsplit[0]"
+      "at": 6.43,
+      "label": "¾ P₀ ready",
+      "mechanism": "S/P/O release[0]"
     },
     {
-      "id": "p1-ready",
+      "id": "p0-last-ready",
       "kind": "ready",
-      "from": "soft1-final",
-      "to": "mma-wait-p1",
-      "at": 6.3,
-      "label": "P₁ ready",
-      "mechanism": "mbar P lastsplit[1]"
+      "from": "soft0-p-last",
+      "to": "mma-pv0",
+      "at": 6.78,
+      "label": "¼ P₀ ready",
+      "mechanism": "P lastsplit[0]"
+    },
+    {
+      "id": "p1-first-ready",
+      "kind": "ready",
+      "from": "soft1-p-first",
+      "to": "mma-pv1",
+      "at": 7.18,
+      "label": "¾ P₁ ready",
+      "mechanism": "S/P/O release[1]"
+    },
+    {
+      "id": "p1-last-ready",
+      "kind": "ready",
+      "from": "soft1-p-last",
+      "to": "mma-pv1",
+      "at": 7.53,
+      "label": "¼ P₁ ready",
+      "mechanism": "P lastsplit[1]"
     },
     {
       "id": "o0-rescaled",
       "kind": "release",
       "from": "corr-rescale0",
       "to": "mma-wait-p0",
-      "at": 5.25,
-      "label": "O₀ rescaled / free",
+      "at": 5.53,
+      "label": "O₀ rescaled",
       "mechanism": "mbar S/P/O release[0]"
     },
     {
       "id": "o1-rescaled",
       "kind": "release",
       "from": "corr-rescale1",
-      "to": "mma-wait-p1",
-      "at": 6.25,
-      "label": "O₁ rescaled / free",
+      "to": "mma-pv1",
+      "at": 6.28,
+      "label": "O₁ rescaled",
       "mechanism": "mbar S/P/O release[1]"
+    },
+    {
+      "id": "stats0-consumed",
+      "kind": "release",
+      "from": "corr-rescale0",
+      "to": "soft0-sum",
+      "at": 6.78,
+      "label": "α₀ consumed; slot free",
+      "mechanism": "sm_stats consumer_release"
+    },
+    {
+      "id": "stats1-consumed",
+      "kind": "release",
+      "from": "corr-rescale1",
+      "to": "soft1-sum",
+      "at": 7.53,
+      "label": "α₁ consumed; slot free",
+      "mechanism": "sm_stats consumer_release"
+    },
+    {
+      "id": "final-stats0-ready",
+      "kind": "ready",
+      "from": "soft0-final-stats",
+      "to": "corr-final0",
+      "at": 9.14,
+      "label": "final ℓ₀ / m₀",
+      "mechanism": "sm_stats barrier[0]"
+    },
+    {
+      "id": "final-stats1-ready",
+      "kind": "ready",
+      "from": "soft1-final-stats",
+      "to": "corr-final1",
+      "at": 9.34,
+      "label": "final ℓ₁ / m₁",
+      "mechanism": "sm_stats barrier[1]"
     },
     {
       "id": "so0-ready",
       "kind": "ready",
       "from": "corr-final0",
       "to": "epi-wait",
-      "at": 7.75,
+      "at": 9.95,
       "label": "sO₀ ready",
       "mechanism": "pipeline_o_epi[0]"
     },
@@ -599,7 +833,7 @@
       "kind": "ready",
       "from": "corr-final1",
       "to": "epi-wait",
-      "at": 8.25,
+      "at": 10.55,
       "label": "sO₁ ready",
       "mechanism": "pipeline_o_epi[1]"
     }
@@ -649,8 +883,8 @@
     {
       "id": "smem-stats",
       "memory": "smem",
-      "label": "Softmax statistics",
-      "extent": "row max + row sum for two Q stages"
+      "label": "Correction / final statistics",
+      "extent": "per-iteration α; final row sum ℓ and optional row max m"
     },
     {
       "id": "smem-output",
@@ -787,10 +1021,10 @@
     {
       "id": "sstats",
       "allocation": "smem-stats",
-      "label": "α₀/α₁, max, sum · softmax → correction",
+      "label": "α₀/α₁ during loop; final ℓ₀/ℓ₁ (+ m when needed)",
       "category": "stats",
       "lifetime": {
-        "from": { "operation": "soft0-score", "edge": "start" },
+        "from": { "operation": "soft0-rowmax", "edge": "start" },
         "until": { "operation": "corr-final1", "edge": "end" }
       }
     },
@@ -811,7 +1045,7 @@
       "category": "score",
       "lifetime": {
         "from": { "operation": "mma-qk0", "edge": "start" },
-        "until": { "operation": "soft0-score", "edge": "end" }
+        "until": { "operation": "soft0-load-s", "edge": "end" }
       }
     },
     {
@@ -820,7 +1054,7 @@
       "label": "P₀ · same region → PV₀",
       "category": "probability",
       "lifetime": {
-        "from": { "operation": "soft0-p", "edge": "start" },
+        "from": { "operation": "soft0-p-first", "edge": "start" },
         "until": { "operation": "mma-pv0", "edge": "end" }
       }
     },
@@ -831,7 +1065,7 @@
       "category": "score",
       "lifetime": {
         "from": { "operation": "mma-qk1", "edge": "start" },
-        "until": { "operation": "soft1-score", "edge": "end" }
+        "until": { "operation": "soft1-load-s", "edge": "end" }
       }
     },
     {
@@ -840,7 +1074,7 @@
       "label": "P₁ · same region → PV₁",
       "category": "probability",
       "lifetime": {
-        "from": { "operation": "soft1-p", "edge": "start" },
+        "from": { "operation": "soft1-p-first", "edge": "start" },
         "until": { "operation": "mma-pv1", "edge": "end" }
       }
     },
@@ -888,6 +1122,7 @@
   ],
   "reconstruction_notes": [
     "Index contract: prologue primes K₀/V₀; at mainloop entry they are the j=0 instance of symbolic Kⱼ/Vⱼ; steady state prefetches Kⱼ₊₁/Vⱼ₊₁.",
+    "Steady-state softmax is shown: each stage publishes α before exp2, writes P as 96 + 32 columns, and updates the running row sum after correction consumes α; the first K/V iteration skips O rescale.",
     "TMEM offsets: S=[0,N], P=S+N/2 (packed view), O=2N+stage×Dv; N=Dv=128 in this view.",
     "The 3-stage K/V ring overlaps current Vⱼ consumption with Kⱼ₊₁/Vⱼ₊₁ prefetch; slot 0 is shown reusing Kⱼ storage for Vⱼ₊₁."
   ]

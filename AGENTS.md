@@ -38,6 +38,33 @@
 - Keep SVG text as text when practical, embed required styles, include a
   meaningful `<title>` and `<desc>`, and use a `viewBox` so the graph scales.
 
+## Specification-backed graph QA
+
+Use this production flow for every generated kernel graph:
+
+```text
+specification
+    → semantic validation
+    → deterministic SVG generation
+    → generic + renderer-specific SVG QA
+    → PNG rendering
+    → SVG/PNG artifact parity
+    → visual review
+    ↺ fix the spec or renderer and repeat
+```
+
+- Treat `specs/kernels/**/*.json` as the semantic source of truth for generated
+  kernel graphs. Change the spec or renderer; do not patch generated SVG markup.
+- Run `make qa` before finishing a specification-backed graph change. It must
+  pass spec validation, deterministic SVG generation, renderer-specific layout
+  QA, PNG rendering, and SVG/PNG dimension parity.
+- When visual review finds a repeatable collision, clipping, or coverage bug,
+  add it to the renderer QA contract and regression tests instead of fixing only
+  the current graph.
+- Keep kernel facts in specifications and reusable presentation policy in
+  renderers. Shorten a spec label only when doing so preserves the reconstruction
+  information.
+
 ## Topic documentation
 
 - Add `graphs/<topic>/README.md` when a graph needs background, terminology,

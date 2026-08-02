@@ -56,6 +56,12 @@ have distinct consumers. If `Q0K -> S0` wakes softmax stage 0 and `Q1K -> S1`
 wakes softmax stage 1, both MMA issues and both handoffs belong in the primary
 timeline.
 
+Do not collapse a split publication when an early fragment changes the consumer
+schedule. Show the partial-ready operation and handoff that allows the consumer
+to start, then the final-ready handoff that gates completion. For example, when
+softmax releases the first 96 columns of `P` before committing the remaining 32,
+both readiness events belong on the timeline.
+
 ## What stays out
 
 Do not put host launch plumbing, pointer arithmetic, every arithmetic
