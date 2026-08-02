@@ -1,0 +1,391 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gpu-graphs.local/schema/kernel-0.2.json",
+  "title": "GPU kernel graph specification",
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
+    },
+    "evidence": {
+      "type": "object",
+      "required": ["source", "locator", "note"],
+      "properties": {
+        "source": { "$ref": "#/$defs/id" },
+        "locator": { "type": "string", "minLength": 1 },
+        "note": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "iteration-ref": {
+      "type": "object",
+      "required": ["loop", "position", "objects"],
+      "properties": {
+        "loop": { "$ref": "#/$defs/id" },
+        "position": { "enum": ["seed", "previous", "current", "next"] },
+        "objects": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      },
+      "additionalProperties": false
+    },
+    "point-ref": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["timeline"],
+          "properties": { "timeline": { "enum": ["start", "end"] } },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["operation", "edge"],
+          "properties": {
+            "operation": { "$ref": "#/$defs/id" },
+            "edge": { "enum": ["start", "end"] }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["loop", "edge"],
+          "properties": {
+            "loop": { "$ref": "#/$defs/id" },
+            "edge": { "enum": ["start", "end"] }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["event"],
+          "properties": { "event": { "$ref": "#/$defs/id" } },
+          "additionalProperties": false
+        }
+      ]
+    }
+  },
+  "type": "object",
+  "required": [
+    "schema_version",
+    "id",
+    "title",
+    "architecture",
+    "views",
+    "timeline",
+    "roles",
+    "operations",
+    "handoffs",
+    "allocations",
+    "resources"
+  ],
+  "properties": {
+    "schema_version": { "const": "0.2" },
+    "id": { "$ref": "#/$defs/id" },
+    "topic": { "$ref": "#/$defs/id" },
+    "title": { "type": "string", "minLength": 1 },
+    "subtitle": { "type": "string" },
+    "architecture": { "type": "string", "minLength": 1 },
+    "views": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "renderer", "output", "primary"],
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "renderer": { "$ref": "#/$defs/id" },
+          "output": {
+            "type": "string",
+            "pattern": "^graphs/[a-z0-9][a-z0-9/-]*/[a-z0-9][a-z0-9-]*\\.svg$"
+          },
+          "primary": { "type": "boolean" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "configuration": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "label", "value"],
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "label": { "type": "string", "minLength": 1 },
+          "value": { "type": ["string", "number", "boolean"] },
+          "display": { "type": "boolean" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "label", "url"],
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "label": { "type": "string", "minLength": 1 },
+          "url": { "type": "string", "minLength": 1 },
+          "observed": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "timeline": {
+      "type": "object",
+      "required": ["start", "end", "ticks"],
+      "properties": {
+        "start": { "type": "number" },
+        "end": { "type": "number" },
+        "label": { "type": "string" },
+        "ticks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["at", "label"],
+            "properties": {
+              "at": { "type": "number" },
+              "label": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        },
+        "sections": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "label", "start", "end"],
+            "properties": {
+              "id": { "$ref": "#/$defs/id" },
+              "label": { "type": "string" },
+              "start": { "type": "number" },
+              "end": { "type": "number" },
+              "gap_before": { "type": "number", "minimum": 0 }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "loops": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "label", "section", "iterator", "display", "evidence"],
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "label": { "type": "string", "minLength": 1 },
+          "section": { "$ref": "#/$defs/id" },
+          "iterator": { "type": "string", "minLength": 1 },
+          "display": { "enum": ["all-iterations", "representative-iteration", "collapsed"] },
+          "indexing": {
+            "type": "object",
+            "required": ["mode", "seed", "adjacent"],
+            "properties": {
+              "mode": { "const": "concrete-prologue-symbolic-mainloop" },
+              "seed": { "type": "integer", "minimum": 0 },
+              "adjacent": { "enum": ["previous", "next"] }
+            },
+            "additionalProperties": false
+          },
+          "evidence": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "$ref": "#/$defs/evidence" }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "kind", "at", "label", "mechanism"],
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "kind": { "enum": ["ready", "release", "boundary"] },
+          "at": { "type": "number" },
+          "label": { "type": "string", "minLength": 1 },
+          "mechanism": { "type": "string", "minLength": 1 },
+          "scope": { "$ref": "#/$defs/id" },
+          "evidence": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/evidence" }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "roles": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "label", "warps", "responsibility"],
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "label": { "type": "string" },
+          "warps": { "type": "string" },
+          "responsibility": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "operations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "role", "kind", "start", "end", "label"],
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "role": { "$ref": "#/$defs/id" },
+          "kind": { "enum": ["load", "wait", "mma", "compute", "transfer", "store"] },
+          "start": { "type": "number" },
+          "end": { "type": "number" },
+          "label": { "type": "string" },
+          "detail": { "type": "string" },
+          "stage": { "type": ["integer", "string"] },
+          "iteration": { "$ref": "#/$defs/iteration-ref" },
+          "scope": { "$ref": "#/$defs/id" },
+          "frequency": { "enum": ["once", "each-iteration", "loop-tail"] },
+          "reads": { "type": "array", "items": { "$ref": "#/$defs/id" } },
+          "writes": { "type": "array", "items": { "$ref": "#/$defs/id" } }
+        },
+        "additionalProperties": false
+      }
+    },
+    "handoffs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "kind", "from", "to", "at", "label", "mechanism"],
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "kind": { "enum": ["ready", "release"] },
+          "from": { "$ref": "#/$defs/id" },
+          "to": { "$ref": "#/$defs/id" },
+          "at": { "type": "number" },
+          "label": { "type": "string" },
+          "mechanism": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "allocations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "memory", "label", "extent"],
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "memory": { "enum": ["smem", "tmem"] },
+          "label": { "type": "string" },
+          "extent": { "type": "string" },
+          "reuse": {
+            "type": "object",
+            "required": ["mode", "label", "evidence"],
+            "properties": {
+              "mode": { "const": "sequential-alias" },
+              "label": { "type": "string", "minLength": 1 },
+              "evidence": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "$ref": "#/$defs/evidence" }
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "resources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "allocation", "label", "category", "lifetime"],
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "allocation": { "$ref": "#/$defs/id" },
+          "label": { "type": "string", "minLength": 1 },
+          "category": { "enum": ["input", "score", "probability", "stats", "output", "scratch"] },
+          "lifetime": {
+            "type": "object",
+            "required": ["from", "until"],
+            "properties": {
+              "from": { "$ref": "#/$defs/point-ref" },
+              "until": { "$ref": "#/$defs/point-ref" }
+            },
+            "additionalProperties": false
+          },
+          "residency": {
+            "type": "object",
+            "required": ["kind", "scope"],
+            "properties": {
+              "kind": { "const": "loop" },
+              "scope": { "$ref": "#/$defs/id" }
+            },
+            "additionalProperties": false
+          },
+          "carry": { "enum": ["next-iteration"] },
+          "evidence": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/evidence" }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "storage_relations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "kind", "objects", "label", "when", "evidence"],
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "kind": { "enum": ["alias", "distinct"] },
+          "objects": {
+            "type": "array",
+            "minItems": 2,
+            "items": { "$ref": "#/$defs/id" },
+            "uniqueItems": true
+          },
+          "label": { "type": "string", "minLength": 1 },
+          "when": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["configuration", "equals"],
+              "properties": {
+                "configuration": { "$ref": "#/$defs/id" },
+                "equals": { "type": ["string", "number", "boolean"] }
+              },
+              "additionalProperties": false
+            }
+          },
+          "alternate": { "type": "string" },
+          "evidence": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "$ref": "#/$defs/evidence" }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "reconstruction_notes": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "additionalProperties": false
+}

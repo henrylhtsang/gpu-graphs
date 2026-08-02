@@ -1,0 +1,894 @@
+{
+  "schema_version": "0.2",
+  "id": "forward-sm100-kernel-structure",
+  "topic": "flash-attention-4",
+  "title": "FlashAttention-4 forward · SM100 kernel structure",
+  "subtitle": "Who does the work, which events connect the roles, and when SMEM/TMEM storage can be reused.",
+  "architecture": "NVIDIA Blackwell SM100",
+  "views": [
+    {
+      "id": "timeline",
+      "renderer": "reconstruction-timeline",
+      "output": "graphs/flash-attention-4/forward-sm100-kernel-structure.svg",
+      "primary": true
+    }
+  ],
+  "configuration": [
+    { "id": "path", "label": "path", "value": "dense TMA" },
+    { "id": "q-stages", "label": "Q stages", "value": 2 },
+    { "id": "kv-stages", "label": "KV stages", "value": 3 },
+    { "id": "split-kv", "label": "split-KV", "value": false },
+    { "id": "tile", "label": "tile", "value": "N=128, D=Dv=128" },
+    { "id": "head-dim", "label": "D", "value": 128, "display": false },
+    { "id": "head-dim-v", "label": "Dv", "value": 128, "display": false },
+    { "id": "scope", "label": "scope", "value": "representative 1-CTA steady state" }
+  ],
+  "sources": [
+    {
+      "id": "fa4-forward-sm100",
+      "label": "flash_attn/cute/flash_fwd_sm100.py",
+      "url": "https://github.com/Dao-AILab/flash-attention/blob/main/flash_attn/cute/flash_fwd_sm100.py",
+      "observed": "2026-08-01"
+    }
+  ],
+  "timeline": {
+    "start": 0,
+    "end": 9,
+    "label": "semantic event order · widths are not cycle-accurate",
+    "sections": [
+      { "id": "prologue", "label": "PROLOGUE", "start": 0, "end": 2.4 },
+      { "id": "mainloop", "label": "MAINLOOP · REPEAT OVER j (ONE ITERATION SHOWN)", "start": 2.4, "end": 7.3, "gap_before": 90 },
+      { "id": "epilogue", "label": "EPILOGUE", "start": 7.3, "end": 9, "gap_before": 120 }
+    ],
+    "ticks": [
+      { "at": 0, "label": "K₀ LOAD" },
+      { "at": 1, "label": "Q₀ / Q₁" },
+      { "at": 2, "label": "V₀ READY" },
+      { "at": 3, "label": "QK₀ · Kⱼ" },
+      { "at": 4, "label": "QK₁ / PREFETCH j+1" },
+      { "at": 5, "label": "P₀ READY" },
+      { "at": 6, "label": "PV₀ · Vⱼ / P₁" },
+      { "at": 7, "label": "PV₁ · Vⱼ" },
+      { "at": 8, "label": "O FINAL" },
+      { "at": 9, "label": "STORE" }
+    ]
+  },
+  "loops": [
+    {
+      "id": "kv-loop",
+      "label": "sequence-length K/V sweep",
+      "section": "mainloop",
+      "iterator": "j",
+      "display": "representative-iteration",
+      "indexing": {
+        "mode": "concrete-prologue-symbolic-mainloop",
+        "seed": 0,
+        "adjacent": "next"
+      },
+      "evidence": [
+        {
+          "source": "fa4-forward-sm100",
+          "locator": "lines 1661–1733",
+          "note": "Q remains resident while the MMA loop advances through K/V blocks."
+        }
+      ]
+    }
+  ],
+  "events": [
+    {
+      "id": "q-loop-release",
+      "kind": "release",
+      "at": 7.3,
+      "label": "Q₀/Q₁ reusable after K/V loop",
+      "mechanism": "pipeline_q.consumer_release_w_index(stage)",
+      "scope": "kv-loop",
+      "evidence": [
+        {
+          "source": "fa4-forward-sm100",
+          "locator": "lines 1731–1733",
+          "note": "Both Q stages are released only after the sequence-length loop exits."
+        }
+      ]
+    }
+  ],
+  "roles": [
+    {
+      "id": "load",
+      "label": "Load producer",
+      "warps": "warp 14",
+      "responsibility": "Issue TMA Q/K/V loads into staged SMEM"
+    },
+    {
+      "id": "mma",
+      "label": "MMA issuer",
+      "warps": "warp 12",
+      "responsibility": "Issue tcgen05 QK and PV; own TMEM allocation"
+    },
+    {
+      "id": "softmax0",
+      "label": "Softmax · Q stage 0",
+      "warps": "warps 0–3",
+      "responsibility": "TMEM scores → registers → TMEM probabilities"
+    },
+    {
+      "id": "softmax1",
+      "label": "Softmax · Q stage 1",
+      "warps": "warps 4–7",
+      "responsibility": "Same program, staggered behind Q stage 0"
+    },
+    {
+      "id": "correction",
+      "label": "Output correction",
+      "warps": "warps 8–11",
+      "responsibility": "Rescale prior O and finalize TMEM O into SMEM"
+    },
+    {
+      "id": "epilogue",
+      "label": "Output store",
+      "warps": "warp 13",
+      "responsibility": "Consume staged SMEM O and publish GMEM output"
+    }
+  ],
+  "operations": [
+    {
+      "id": "load-q0",
+      "role": "load",
+      "kind": "load",
+      "stage": 0,
+      "start": 0.6,
+      "end": 1.2,
+      "label": "TMA Q₀",
+      "detail": "GMEM → sQ[0]",
+      "writes": ["sq0"]
+    },
+    {
+      "id": "load-q1",
+      "role": "load",
+      "kind": "load",
+      "stage": 1,
+      "start": 1.2,
+      "end": 1.8,
+      "label": "TMA Q₁",
+      "detail": "GMEM → sQ[1]",
+      "writes": ["sq1"]
+    },
+    {
+      "id": "load-k",
+      "role": "load",
+      "kind": "load",
+      "start": 0,
+      "end": 0.6,
+      "label": "TMA K₀",
+      "detail": "GMEM → current K slot",
+      "iteration": { "loop": "kv-loop", "position": "seed", "objects": ["K"] },
+      "writes": ["skj"]
+    },
+    {
+      "id": "load-v",
+      "role": "load",
+      "kind": "load",
+      "start": 1.8,
+      "end": 2.4,
+      "label": "TMA V₀",
+      "detail": "GMEM → current V slot",
+      "iteration": { "loop": "kv-loop", "position": "seed", "objects": ["V"] },
+      "writes": ["svj"]
+    },
+    {
+      "id": "load-k-next",
+      "role": "load",
+      "kind": "load",
+      "stage": "next-kv",
+      "scope": "kv-loop",
+      "frequency": "each-iteration",
+      "start": 3.6,
+      "end": 4.2,
+      "label": "TMA Kⱼ₊₁",
+      "detail": "prefetch → KV ring slot 2",
+      "iteration": { "loop": "kv-loop", "position": "next", "objects": ["K"] },
+      "writes": ["skj1"]
+    },
+    {
+      "id": "load-v-next",
+      "role": "load",
+      "kind": "load",
+      "stage": "next-kv",
+      "scope": "kv-loop",
+      "frequency": "each-iteration",
+      "start": 4.2,
+      "end": 4.8,
+      "label": "TMA Vⱼ₊₁",
+      "detail": "prefetch → released slot 0",
+      "iteration": { "loop": "kv-loop", "position": "next", "objects": ["V"] },
+      "writes": ["svj1"]
+    },
+    {
+      "id": "mma-wait-q0",
+      "role": "mma",
+      "kind": "wait",
+      "start": 1.65,
+      "end": 2.4,
+      "label": "wait Q₀/K"
+    },
+    {
+      "id": "mma-qk0",
+      "role": "mma",
+      "kind": "mma",
+      "stage": 0,
+      "scope": "kv-loop",
+      "frequency": "each-iteration",
+      "start": 2.4,
+      "end": 3.15,
+      "label": "tcgen05 QK₀",
+      "detail": "sQ[0] × sKⱼ → TMEM S₀",
+      "iteration": { "loop": "kv-loop", "position": "current", "objects": ["K"] },
+      "reads": ["sq0", "skj"],
+      "writes": ["ts0"]
+    },
+    {
+      "id": "mma-qk1",
+      "role": "mma",
+      "kind": "mma",
+      "stage": 1,
+      "scope": "kv-loop",
+      "frequency": "each-iteration",
+      "start": 3.15,
+      "end": 3.9,
+      "label": "tcgen05 QK₁",
+      "detail": "sQ[1] × sKⱼ → TMEM S₁",
+      "iteration": { "loop": "kv-loop", "position": "current", "objects": ["K"] },
+      "reads": ["sq1", "skj"],
+      "writes": ["ts1"]
+    },
+    {
+      "id": "mma-wait-p0",
+      "role": "mma",
+      "kind": "wait",
+      "scope": "kv-loop",
+      "frequency": "each-iteration",
+      "start": 4.7,
+      "end": 5.3,
+      "label": "wait P₀/O₀"
+    },
+    {
+      "id": "mma-pv0",
+      "role": "mma",
+      "kind": "mma",
+      "stage": 0,
+      "scope": "kv-loop",
+      "frequency": "each-iteration",
+      "start": 5.3,
+      "end": 6.05,
+      "label": "tcgen05 PV₀",
+      "detail": "TMEM P₀ × sVⱼ → TMEM O₀",
+      "iteration": { "loop": "kv-loop", "position": "current", "objects": ["V"] },
+      "reads": ["tp0", "svj", "to0"],
+      "writes": ["to0"]
+    },
+    {
+      "id": "mma-wait-p1",
+      "role": "mma",
+      "kind": "wait",
+      "scope": "kv-loop",
+      "frequency": "each-iteration",
+      "start": 6.05,
+      "end": 6.55,
+      "label": "wait P₁/O₁"
+    },
+    {
+      "id": "mma-pv1",
+      "role": "mma",
+      "kind": "mma",
+      "stage": 1,
+      "scope": "kv-loop",
+      "frequency": "each-iteration",
+      "start": 6.55,
+      "end": 7.3,
+      "label": "tcgen05 PV₁",
+      "detail": "TMEM P₁ × sVⱼ → TMEM O₁",
+      "iteration": { "loop": "kv-loop", "position": "current", "objects": ["V"] },
+      "reads": ["tp1", "svj", "to1"],
+      "writes": ["to1"]
+    },
+    {
+      "id": "soft0-wait",
+      "role": "softmax0",
+      "kind": "wait",
+      "scope": "kv-loop",
+      "frequency": "each-iteration",
+      "start": 2.85,
+      "end": 3.25,
+      "label": "wait S₀"
+    },
+    {
+      "id": "soft0-score",
+      "role": "softmax0",
+      "kind": "transfer",
+      "stage": 0,
+      "scope": "kv-loop",
+      "frequency": "each-iteration",
+      "start": 3.25,
+      "end": 4.05,
+      "label": "S₀ → regs",
+      "detail": "mask + row max + exp",
+      "reads": ["ts0"],
+      "writes": ["sstats"]
+    },
+    {
+      "id": "soft0-p",
+      "role": "softmax0",
+      "kind": "compute",
+      "stage": 0,
+      "scope": "kv-loop",
+      "frequency": "each-iteration",
+      "start": 4.05,
+      "end": 5.05,
+      "label": "publish α₀ + first ¾ P₀",
+      "detail": "registers → reused TMEM",
+      "reads": ["sstats"],
+      "writes": ["sstats", "tp0"]
+    },
+    {
+      "id": "soft0-final",
+      "role": "softmax0",
+      "kind": "compute",
+      "stage": 0,
+      "scope": "kv-loop",
+      "frequency": "each-iteration",
+      "start": 5.05,
+      "end": 5.6,
+      "label": "final ¼ P₀",
+      "detail": "publish row sum",
+      "reads": ["sstats"],
+      "writes": ["sstats", "tp0"]
+    },
+    {
+      "id": "soft1-wait",
+      "role": "softmax1",
+      "kind": "wait",
+      "scope": "kv-loop",
+      "frequency": "each-iteration",
+      "start": 3.6,
+      "end": 4.0,
+      "label": "wait S₁"
+    },
+    {
+      "id": "soft1-score",
+      "role": "softmax1",
+      "kind": "transfer",
+      "stage": 1,
+      "scope": "kv-loop",
+      "frequency": "each-iteration",
+      "start": 4.0,
+      "end": 4.8,
+      "label": "S₁ → regs",
+      "detail": "mask + row max + exp",
+      "reads": ["ts1"],
+      "writes": ["sstats"]
+    },
+    {
+      "id": "soft1-p",
+      "role": "softmax1",
+      "kind": "compute",
+      "stage": 1,
+      "scope": "kv-loop",
+      "frequency": "each-iteration",
+      "start": 4.8,
+      "end": 5.8,
+      "label": "publish α₁ + first ¾ P₁",
+      "detail": "registers → reused TMEM",
+      "reads": ["sstats"],
+      "writes": ["sstats", "tp1"]
+    },
+    {
+      "id": "soft1-final",
+      "role": "softmax1",
+      "kind": "compute",
+      "stage": 1,
+      "scope": "kv-loop",
+      "frequency": "each-iteration",
+      "start": 5.8,
+      "end": 6.35,
+      "label": "final ¼ P₁",
+      "detail": "publish row sum",
+      "reads": ["sstats"],
+      "writes": ["sstats", "tp1"]
+    },
+    {
+      "id": "corr-wait0",
+      "role": "correction",
+      "kind": "wait",
+      "scope": "kv-loop",
+      "frequency": "each-iteration",
+      "start": 4.5,
+      "end": 4.9,
+      "label": "wait α₀"
+    },
+    {
+      "id": "corr-rescale0",
+      "role": "correction",
+      "kind": "compute",
+      "stage": 0,
+      "scope": "kv-loop",
+      "frequency": "each-iteration",
+      "start": 4.9,
+      "end": 5.5,
+      "label": "rescale O₀",
+      "detail": "TMEM → regs; release to PV₀",
+      "reads": ["to0", "sstats"],
+      "writes": ["to0"]
+    },
+    {
+      "id": "corr-wait1",
+      "role": "correction",
+      "kind": "wait",
+      "scope": "kv-loop",
+      "frequency": "each-iteration",
+      "start": 5.5,
+      "end": 5.9,
+      "label": "wait α₁"
+    },
+    {
+      "id": "corr-rescale1",
+      "role": "correction",
+      "kind": "compute",
+      "stage": 1,
+      "scope": "kv-loop",
+      "frequency": "each-iteration",
+      "start": 5.9,
+      "end": 6.5,
+      "label": "rescale O₁",
+      "detail": "TMEM → regs; release to PV₁",
+      "reads": ["to1", "sstats"],
+      "writes": ["to1"]
+    },
+    {
+      "id": "corr-final0",
+      "role": "correction",
+      "kind": "transfer",
+      "stage": 0,
+      "start": 7.3,
+      "end": 7.8,
+      "label": "final O₀",
+      "detail": "TMEM → regs → sO[0]",
+      "reads": ["to0", "sstats"],
+      "writes": ["so"]
+    },
+    {
+      "id": "corr-final1",
+      "role": "correction",
+      "kind": "transfer",
+      "stage": 1,
+      "start": 7.8,
+      "end": 8.3,
+      "label": "final O₁",
+      "detail": "TMEM → regs → sO[1]",
+      "reads": ["to1", "sstats"],
+      "writes": ["so"]
+    },
+    {
+      "id": "epi-wait",
+      "role": "epilogue",
+      "kind": "wait",
+      "start": 7.8,
+      "end": 8.3,
+      "label": "wait sO[0:1]"
+    },
+    {
+      "id": "epi-store",
+      "role": "epilogue",
+      "kind": "store",
+      "start": 8.3,
+      "end": 9,
+      "label": "TMA store O₀/O₁",
+      "detail": "SMEM → GMEM",
+      "reads": ["so"]
+    }
+  ],
+  "handoffs": [
+    {
+      "id": "q0-ready",
+      "kind": "ready",
+      "from": "load-q0",
+      "to": "mma-wait-q0",
+      "at": 1.18,
+      "label": "Q₀ ready",
+      "mechanism": "pipeline_q[0]"
+    },
+    {
+      "id": "q1-ready",
+      "kind": "ready",
+      "from": "load-q1",
+      "to": "mma-qk1",
+      "at": 1.78,
+      "label": "Q₁ ready",
+      "mechanism": "pipeline_q[1]"
+    },
+    {
+      "id": "k-ready",
+      "kind": "ready",
+      "from": "load-k",
+      "to": "mma-wait-q0",
+      "at": 0.58,
+      "label": "K₀ seeds Kⱼ",
+      "mechanism": "pipeline_kv"
+    },
+    {
+      "id": "s0-ready",
+      "kind": "ready",
+      "from": "mma-qk0",
+      "to": "soft0-wait",
+      "at": 3.12,
+      "label": "S₀ ready",
+      "mechanism": "mbar S/P/O[0]"
+    },
+    {
+      "id": "s1-ready",
+      "kind": "ready",
+      "from": "mma-qk1",
+      "to": "soft1-wait",
+      "at": 3.88,
+      "label": "S₁ ready",
+      "mechanism": "mbar S/P/O[1]"
+    },
+    {
+      "id": "stats0-ready",
+      "kind": "ready",
+      "from": "soft0-p",
+      "to": "corr-wait0",
+      "at": 4.75,
+      "label": "α₀ ready",
+      "mechanism": "softmax stats barrier[0]"
+    },
+    {
+      "id": "stats1-ready",
+      "kind": "ready",
+      "from": "soft1-p",
+      "to": "corr-wait1",
+      "at": 5.55,
+      "label": "α₁ ready",
+      "mechanism": "softmax stats barrier[1]"
+    },
+    {
+      "id": "p0-ready",
+      "kind": "ready",
+      "from": "soft0-final",
+      "to": "mma-wait-p0",
+      "at": 5.5,
+      "label": "P₀ ready",
+      "mechanism": "mbar P lastsplit[0]"
+    },
+    {
+      "id": "p1-ready",
+      "kind": "ready",
+      "from": "soft1-final",
+      "to": "mma-wait-p1",
+      "at": 6.3,
+      "label": "P₁ ready",
+      "mechanism": "mbar P lastsplit[1]"
+    },
+    {
+      "id": "o0-rescaled",
+      "kind": "release",
+      "from": "corr-rescale0",
+      "to": "mma-wait-p0",
+      "at": 5.25,
+      "label": "O₀ rescaled / free",
+      "mechanism": "mbar S/P/O release[0]"
+    },
+    {
+      "id": "o1-rescaled",
+      "kind": "release",
+      "from": "corr-rescale1",
+      "to": "mma-wait-p1",
+      "at": 6.25,
+      "label": "O₁ rescaled / free",
+      "mechanism": "mbar S/P/O release[1]"
+    },
+    {
+      "id": "so0-ready",
+      "kind": "ready",
+      "from": "corr-final0",
+      "to": "epi-wait",
+      "at": 7.75,
+      "label": "sO₀ ready",
+      "mechanism": "pipeline_o_epi[0]"
+    },
+    {
+      "id": "so1-ready",
+      "kind": "ready",
+      "from": "corr-final1",
+      "to": "epi-wait",
+      "at": 8.25,
+      "label": "sO₁ ready",
+      "mechanism": "pipeline_o_epi[1]"
+    }
+  ],
+  "allocations": [
+    {
+      "id": "smem-q0",
+      "memory": "smem",
+      "label": "Q tile · stage 0",
+      "extent": "sQ[0] · held until the K/V loop exits"
+    },
+    {
+      "id": "smem-q1",
+      "memory": "smem",
+      "label": "Q tile · stage 1",
+      "extent": "sQ[1] · held until the K/V loop exits"
+    },
+    {
+      "id": "smem-kv-slot0",
+      "memory": "smem",
+      "label": "K/V ring · slot 0",
+      "extent": "logical K/V views share this physical stage",
+      "reuse": {
+        "mode": "sequential-alias",
+        "label": "K and V are typed views of the same physical stage",
+        "evidence": [
+          {
+            "source": "fa4-forward-sm100",
+            "locator": "lines 992–1003 and 1657–1701",
+            "note": "sV is a recast view of the staged sK allocation and stages are released between uses."
+          }
+        ]
+      }
+    },
+    {
+      "id": "smem-kv-slot1",
+      "memory": "smem",
+      "label": "K/V ring · slot 1",
+      "extent": "current V stage"
+    },
+    {
+      "id": "smem-kv-slot2",
+      "memory": "smem",
+      "label": "K/V ring · slot 2",
+      "extent": "next K stage prefetched during current compute"
+    },
+    {
+      "id": "smem-stats",
+      "memory": "smem",
+      "label": "Softmax statistics",
+      "extent": "row max + row sum for two Q stages"
+    },
+    {
+      "id": "smem-output",
+      "memory": "smem",
+      "label": "Output stage ring",
+      "extent": "sO[0], sO[1]"
+    },
+    {
+      "id": "tmem-sp0",
+      "memory": "tmem",
+      "label": "Score / P region · stage 0",
+      "extent": "S offset 0; P view begins at S + N/2",
+      "reuse": {
+        "mode": "sequential-alias",
+        "label": "P reuses the score region after the TMEM-to-register read",
+        "evidence": [
+          {
+            "source": "fa4-forward-sm100",
+            "locator": "lines 299–309 and 1710–1723",
+            "note": "P uses an offset view of the score allocation after softmax has consumed S."
+          }
+        ]
+      }
+    },
+    {
+      "id": "tmem-sp1",
+      "memory": "tmem",
+      "label": "Score / P region · stage 1",
+      "extent": "S offset N; P view begins at S + N/2",
+      "reuse": {
+        "mode": "sequential-alias",
+        "label": "P reuses the score region after the TMEM-to-register read",
+        "evidence": [
+          {
+            "source": "fa4-forward-sm100",
+            "locator": "lines 299–309 and 1710–1723",
+            "note": "P uses an offset view of the score allocation after softmax has consumed S."
+          }
+        ]
+      }
+    },
+    {
+      "id": "tmem-o0",
+      "memory": "tmem",
+      "label": "Output accumulator · stage 0",
+      "extent": "O offset 2N"
+    },
+    {
+      "id": "tmem-o1",
+      "memory": "tmem",
+      "label": "Output accumulator · stage 1",
+      "extent": "O offset 2N + Dv"
+    }
+  ],
+  "resources": [
+    {
+      "id": "sq0",
+      "allocation": "smem-q0",
+      "label": "Q₀ · loaded once; reused by every Q₀Kᵢ",
+      "category": "input",
+      "lifetime": {
+        "from": { "operation": "load-q0", "edge": "start" },
+        "until": { "event": "q-loop-release" }
+      },
+      "residency": { "kind": "loop", "scope": "kv-loop" },
+      "evidence": [
+        {
+          "source": "fa4-forward-sm100",
+          "locator": "lines 1661–1662 and 1731–1733",
+          "note": "Q₀ remains an MMA operand through the K/V sweep and is released afterward."
+        }
+      ]
+    },
+    {
+      "id": "sq1",
+      "allocation": "smem-q1",
+      "label": "Q₁ · loaded once; reused by every Q₁Kᵢ",
+      "category": "input",
+      "lifetime": {
+        "from": { "operation": "load-q1", "edge": "start" },
+        "until": { "event": "q-loop-release" }
+      },
+      "residency": { "kind": "loop", "scope": "kv-loop" },
+      "evidence": [
+        {
+          "source": "fa4-forward-sm100",
+          "locator": "lines 1661–1662 and 1731–1733",
+          "note": "Q₁ remains an MMA operand through the K/V sweep and is released afterward."
+        }
+      ]
+    },
+    {
+      "id": "skj",
+      "allocation": "smem-kv-slot0",
+      "label": "Kⱼ · current tile → QK₀ + QK₁",
+      "category": "input",
+      "lifetime": {
+        "from": { "operation": "load-k", "edge": "start" },
+        "until": { "operation": "mma-qk1", "edge": "end" }
+      }
+    },
+    {
+      "id": "svj1",
+      "allocation": "smem-kv-slot0",
+      "label": "Vⱼ₊₁ · carried into the next iteration",
+      "category": "input",
+      "lifetime": {
+        "from": { "operation": "load-v-next", "edge": "start" },
+        "until": { "loop": "kv-loop", "edge": "end" }
+      },
+      "carry": "next-iteration"
+    },
+    {
+      "id": "svj",
+      "allocation": "smem-kv-slot1",
+      "label": "Vⱼ · current tile → PV₀ + PV₁",
+      "category": "input",
+      "lifetime": {
+        "from": { "operation": "load-v", "edge": "start" },
+        "until": { "operation": "mma-pv1", "edge": "end" }
+      }
+    },
+    {
+      "id": "skj1",
+      "allocation": "smem-kv-slot2",
+      "label": "Kⱼ₊₁ · carried into the next iteration",
+      "category": "input",
+      "lifetime": {
+        "from": { "operation": "load-k-next", "edge": "start" },
+        "until": { "loop": "kv-loop", "edge": "end" }
+      },
+      "carry": "next-iteration"
+    },
+    {
+      "id": "sstats",
+      "allocation": "smem-stats",
+      "label": "α₀/α₁, max, sum · softmax → correction",
+      "category": "stats",
+      "lifetime": {
+        "from": { "operation": "soft0-score", "edge": "start" },
+        "until": { "operation": "corr-final1", "edge": "end" }
+      }
+    },
+    {
+      "id": "so",
+      "allocation": "smem-output",
+      "label": "O₀/O₁ · correction → TMA store",
+      "category": "output",
+      "lifetime": {
+        "from": { "operation": "corr-final0", "edge": "start" },
+        "until": { "operation": "epi-store", "edge": "end" }
+      }
+    },
+    {
+      "id": "ts0",
+      "allocation": "tmem-sp0",
+      "label": "S₀ · QK₀ → softmax 0",
+      "category": "score",
+      "lifetime": {
+        "from": { "operation": "mma-qk0", "edge": "start" },
+        "until": { "operation": "soft0-score", "edge": "end" }
+      }
+    },
+    {
+      "id": "tp0",
+      "allocation": "tmem-sp0",
+      "label": "P₀ · same region → PV₀",
+      "category": "probability",
+      "lifetime": {
+        "from": { "operation": "soft0-p", "edge": "start" },
+        "until": { "operation": "mma-pv0", "edge": "end" }
+      }
+    },
+    {
+      "id": "ts1",
+      "allocation": "tmem-sp1",
+      "label": "S₁ · QK₁ → softmax 1",
+      "category": "score",
+      "lifetime": {
+        "from": { "operation": "mma-qk1", "edge": "start" },
+        "until": { "operation": "soft1-score", "edge": "end" }
+      }
+    },
+    {
+      "id": "tp1",
+      "allocation": "tmem-sp1",
+      "label": "P₁ · same region → PV₁",
+      "category": "probability",
+      "lifetime": {
+        "from": { "operation": "soft1-p", "edge": "start" },
+        "until": { "operation": "mma-pv1", "edge": "end" }
+      }
+    },
+    {
+      "id": "to0",
+      "allocation": "tmem-o0",
+      "label": "O₀ · rescale → PV₀ accumulate → final",
+      "category": "output",
+      "lifetime": {
+        "from": { "timeline": "start" },
+        "until": { "operation": "corr-final0", "edge": "end" }
+      }
+    },
+    {
+      "id": "to1",
+      "allocation": "tmem-o1",
+      "label": "O₁ · rescale → PV₁ accumulate → final",
+      "category": "output",
+      "lifetime": {
+        "from": { "timeline": "start" },
+        "until": { "operation": "corr-final1", "edge": "end" }
+      }
+    }
+  ],
+  "storage_relations": [
+    {
+      "id": "sq-so-layout",
+      "kind": "distinct",
+      "objects": ["sq0", "sq1", "so"],
+      "label": "sQ and sO use separate physical allocations in this configuration",
+      "when": [
+        { "configuration": "head-dim", "equals": 128 },
+        { "configuration": "head-dim-v", "equals": 128 },
+        { "configuration": "split-kv", "equals": false }
+      ],
+      "alternate": "sQ and sO alias for D=192 with Dv≥64, or split-KV with Dv≥128",
+      "evidence": [
+        {
+          "source": "fa4-forward-sm100",
+          "locator": "lines 229–234 and 1000–1003",
+          "note": "overlap_sO_sQ selects either a separate sO tensor or a recast view of sQ."
+        }
+      ]
+    }
+  ],
+  "reconstruction_notes": [
+    "Index contract: prologue primes K₀/V₀; at mainloop entry they are the j=0 instance of symbolic Kⱼ/Vⱼ; steady state prefetches Kⱼ₊₁/Vⱼ₊₁.",
+    "TMEM offsets: S=[0,N], P=S+N/2 (packed view), O=2N+stage×Dv; N=Dv=128 in this view.",
+    "The 3-stage K/V ring overlaps current Vⱼ consumption with Kⱼ₊₁/Vⱼ₊₁ prefetch; slot 0 is shown reusing Kⱼ storage for Vⱼ₊₁."
+  ]
+}
