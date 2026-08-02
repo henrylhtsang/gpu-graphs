@@ -1,0 +1,167 @@
+{
+  "schema_version": "collection-0.1",
+  "id": "quack-kernels",
+  "topic": "quack-kernels",
+  "title": "QuACK code-derived kernel reconstruction catalog",
+  "source": {
+    "repository": "https://github.com/Dao-AILab/quack",
+    "commit": "b66e4ec",
+    "observed": "2026-08-01"
+  },
+  "authoring": {
+    "goal": "Join every QuACK SVG to the inspected CuTe DSL kernel path, its synchronization contract, and its on-chip memory lifetime.",
+    "note": "The catalog is an evidence ledger for direct LLM-authored SVGs; it is not a renderer."
+  },
+  "kernels": [
+    {
+      "id": "cross-entropy-backward-fused",
+      "output": "graphs/quack-kernels/cross-entropy-backward-fused/cross-entropy-backward-fused.svg",
+      "architecture": "CUDA cooperative CTA reduction",
+      "source_locator": "quack/cross_entropy.py · CrossEntropyBackward.kernel()",
+      "code_locator": "quack/cross_entropy.py:393,464 · CrossEntropyBackward.kernel",
+      "role_path": "CTA warps load logits and saved LSE → reconstruct probabilities and target correction → scale and store dX",
+      "synchronization_and_memory": "Saved LSE removes the forward cross-CTA reduction; a logit SMEM tile is released after reconstruction while probability and broadcast state remain in registers; TMEM is unused.",
+      "visible_tokens": ["MAINLOOP · reconstruct probability", "logit tile sX"]
+    },
+    {
+      "id": "cross-entropy-forward-fused",
+      "output": "graphs/quack-kernels/cross-entropy-forward-fused/cross-entropy-forward-fused.svg",
+      "architecture": "CUDA cooperative CTA or CTA-cluster reduction",
+      "source_locator": "quack/cross_entropy.py · CrossEntropy.kernel()",
+      "code_locator": "quack/cross_entropy.py:28,114 · CrossEntropy.kernel",
+      "role_path": "CTA warps load logits and metadata → compute stable row max/sum and target term → publish loss, LSE, and optional dX",
+      "synchronization_and_memory": "Reduction barriers publish row or cluster partials before epilogue reads; logit and exchange SMEM live through the stable reduction and FP32 row state remains in registers; TMEM is unused.",
+      "visible_tokens": ["MAINLOOP · stable row reduction", "loss / LSE / optional dX"]
+    },
+    {
+      "id": "gemm-sm100-pipeline",
+      "output": "graphs/quack-kernels/gemm-sm100-pipeline/gemm-sm100-pipeline.svg",
+      "architecture": "Blackwell / SM100",
+      "source_locator": "quack/gemm_sm100.py · GemmSm100.kernel()",
+      "code_locator": "quack/gemm_sm100.py:116,1029 · GemmSm100.kernel",
+      "role_path": "Scheduler assigns work → TMA warp fills A/B stages → UMMA warp issues tcgen05 MMA into TMEM → epilogue warps stage and TMA-store D",
+      "synchronization_and_memory": "Producer/consumer mbarriers protect A/B ring reuse from j to j+1; two TMEM accumulator stages alternate and remain distinct from C/aux SMEM and D output stages.",
+      "visible_tokens": ["MAINLOOP · Aj/Bj + prefetch j+1", "acc stage 1"]
+    },
+    {
+      "id": "gemm-sm120-pipeline",
+      "output": "graphs/quack-kernels/gemm-sm120-pipeline/gemm-sm120-pipeline.svg",
+      "architecture": "Blackwell GeForce / SM120",
+      "source_locator": "quack/gemm_sm120.py · GemmSm120.kernel()",
+      "code_locator": "quack/gemm_sm120.py:30,164 · GemmSm120.kernel",
+      "role_path": "CTA warps acquire a tile → TMA-load A/B → ldmatrix and warp MMA accumulate in registers → TMA-store D",
+      "synchronization_and_memory": "Stage ownership barriers release A/B stage j before the same SMEM slot becomes j+1; accumulators are register-resident and TMEM is not used on SM120.",
+      "visible_tokens": ["MAINLOOP · warp MMA j / prefetch j+1", "warp-MMA accumulators live in registers"]
+    },
+    {
+      "id": "gemm-sm90-pipeline",
+      "output": "graphs/quack-kernels/gemm-sm90-pipeline/gemm-sm90-pipeline.svg",
+      "architecture": "Hopper / SM90",
+      "source_locator": "quack/gemm_sm90.py · GemmSm90.kernel()",
+      "code_locator": "quack/gemm_sm90.py:72,537 · GemmSm90.kernel",
+      "role_path": "TMA producer warps multicast A/B → WGMMA consumers issue the K loop → epilogue stages and TMA-stores D",
+      "synchronization_and_memory": "Pipeline barriers gate A/B stage issue and release before j+1 reuse; WGMMA accumulators live in registers because SM90 has no TMEM.",
+      "visible_tokens": ["MAINLOOP · WGMMA j / prefetch j+1", "SM90 accumulators live in registers"]
+    },
+    {
+      "id": "hadamard-forward-backward",
+      "output": "graphs/quack-kernels/hadamard-forward-backward/hadamard-forward-backward.svg",
+      "architecture": "CUDA cooperative CTA transform",
+      "source_locator": "quack/transform/hadamard.py · HadamardTransform.kernel()",
+      "code_locator": "quack/transform/hadamard.py:611,677 · HadamardTransform.kernel",
+      "role_path": "CTA warps seed a row → perform local butterflies and optional shared exchange → scale and store the transformed row",
+      "synchronization_and_memory": "sync_threads separates shared butterfly exchanges; the row-j SMEM buffer is released after the exchange and reused for j+1 while register butterflies remain live; TMEM is unused.",
+      "visible_tokens": ["MAINLOOP · row j / prefetch j+1", "same row buffer reused for j+1"]
+    },
+    {
+      "id": "rms-final-reduce",
+      "output": "graphs/quack-kernels/rms-final-reduce/rms-final-reduce.svg",
+      "architecture": "CUDA cooperative CTA reduction",
+      "source_locator": "quack/rms_final_reduce.py · RmsFinalReduce.kernel()",
+      "code_locator": "quack/rms_final_reduce.py:27,67 · RmsFinalReduce.kernel",
+      "role_path": "CTA warps load partial RMS values → reduce warp and row partials → compute rsqrt and store final rstd",
+      "synchronization_and_memory": "A reduction barrier makes the row total visible before broadcast; SMEM partials end after broadcast and the final scalar is register-resident; TMEM is unused.",
+      "visible_tokens": ["MAINLOOP · local / row reduce", "warp partials + reduction barrier"]
+    },
+    {
+      "id": "rmsnorm-layernorm-backward",
+      "output": "graphs/quack-kernels/rmsnorm-layernorm-backward/rmsnorm-layernorm-backward.svg",
+      "architecture": "CUDA cooperative CTA reduction",
+      "source_locator": "quack/rmsnorm.py · RMSNormBackward.kernel()",
+      "code_locator": "quack/rmsnorm.py:597,724 · RMSNormBackward.kernel",
+      "role_path": "CTA warps load Xj and dOj → reduce correction terms and form dX → emit dX plus partial dW/dB",
+      "synchronization_and_memory": "Consumer waits and reduction barriers keep Xj/dOj and reduction slots live through correction; the shared stage releases before the same physical slot becomes j+1; TMEM is unused.",
+      "visible_tokens": ["MAINLOOP · row j + prefetch j+1", "same ring slot reused for j+1"]
+    },
+    {
+      "id": "rmsnorm-layernorm-forward",
+      "output": "graphs/quack-kernels/rmsnorm-layernorm-forward/rmsnorm-layernorm-forward.svg",
+      "architecture": "CUDA cooperative CTA reduction",
+      "source_locator": "quack/rmsnorm.py · RMSNorm.kernel()",
+      "code_locator": "quack/rmsnorm.py:66,151 · RMSNorm.kernel",
+      "role_path": "CTA warps load X and optional residual → reduce row statistics and apply affine transform → publish stats and Y",
+      "synchronization_and_memory": "Reduction exchange completes before affine consumers read statistics; X/residual SMEM persists until its final affine read while mean/rstd and fragments stay in registers; TMEM is unused.",
+      "visible_tokens": ["MAINLOOP · statistics + affine", "X / residual + reduction exchange"]
+    },
+    {
+      "id": "rotary-forward-backward",
+      "output": "graphs/quack-kernels/rotary-forward-backward/rotary-forward-backward.svg",
+      "architecture": "CUDA cooperative CTA transform",
+      "source_locator": "quack/rotary.py · RotaryKernel.kernel()",
+      "code_locator": "quack/rotary.py:30,132 · RotaryKernel.kernel",
+      "role_path": "CTA warps load indices, cos/sin, and paired X values → rotate each pair → handle the tail and store",
+      "synchronization_and_memory": "The non-interleaved cp.async path uses sync_threads before paired reads; its X split tile releases after the pair read while cos/sin and rotated pairs stay in registers; TMEM is unused.",
+      "visible_tokens": ["MAINLOOP · pair rotation", "load → sync_threads → pair read → release"]
+    },
+    {
+      "id": "softmax-backward-jacobian",
+      "output": "graphs/quack-kernels/softmax-backward-jacobian/softmax-backward-jacobian.svg",
+      "architecture": "CUDA cooperative CTA reduction",
+      "source_locator": "quack/softmax.py · SoftmaxBackward.kernel()",
+      "code_locator": "quack/softmax.py:216,276 · SoftmaxBackward.kernel",
+      "role_path": "CTA warps load dY and saved Y → reduce dot(dY,Y) → apply the Jacobian and store dX",
+      "synchronization_and_memory": "Exchange and a dot-ready barrier publish the scalar before dX formation; paired dY/Y SMEM remains live to that boundary while products and dot stay in registers; TMEM is unused.",
+      "visible_tokens": ["MAINLOOP · dot reduction", "load → dot-ready barrier → release"]
+    },
+    {
+      "id": "softmax-forward-reduction",
+      "output": "graphs/quack-kernels/softmax-forward-reduction/softmax-forward-reduction.svg",
+      "architecture": "CUDA cooperative CTA or CTA-cluster reduction",
+      "source_locator": "quack/softmax.py · Softmax.kernel()",
+      "code_locator": "quack/softmax.py:26,88 · Softmax.kernel",
+      "role_path": "CTA warps load X → reduce stable row max and denominator, optionally across a cluster → normalize and store Y",
+      "synchronization_and_memory": "Cluster partials pass through mbarriers before denominator use; sX and exchange SMEM live through the final reduction read while FP32 max/exp/sum remain in registers; TMEM is unused.",
+      "visible_tokens": ["MAINLOOP · max / sum reduction", "sX + cluster reduction exchange"]
+    },
+    {
+      "id": "split-k-reduce",
+      "output": "graphs/quack-kernels/split-k-reduce/split-k-reduce.svg",
+      "architecture": "CUDA cooperative CTA reduction",
+      "source_locator": "quack/split_k_reduce.py · SplitKReduce.kernel()",
+      "code_locator": "quack/split_k_reduce.py:35,133 · SplitKReduce.kernel",
+      "role_path": "CTA warps seed from workspace W0 → accumulate W1…Ws-1 in deterministic order → apply the linear epilogue once and store D",
+      "synchronization_and_memory": "Split ordering is the semantic dependency; one FP32 register accumulator persists across the loop, optional SMEM only stages inputs, and TMEM is unused.",
+      "visible_tokens": ["MAINLOOP · W₁…Wₛ₋₁ in order", "FP32 accumulator + C/vector fragments"]
+    },
+    {
+      "id": "top-k-backward-scatter",
+      "output": "graphs/quack-kernels/top-k-backward-scatter/top-k-backward-scatter.svg",
+      "architecture": "CUDA cooperative CTA scatter",
+      "source_locator": "quack/topk.py · TopKBackward.kernel()",
+      "code_locator": "quack/topk.py:275,339 · TopKBackward.kernel",
+      "role_path": "CTA warps load selected gradients and indices → transform and scatter into a zero shared tile → coalesced dense-store warps publish dX",
+      "synchronization_and_memory": "A cooperative barrier separates irregular scatter from dense reads; input/exchange SMEM releases at its last consumer and epilogue-owned output staging publishes dX; TMEM is unused.",
+      "visible_tokens": ["MAINLOOP · selected-space math + scatter", "output staging"]
+    },
+    {
+      "id": "top-k-forward-bitonic",
+      "output": "graphs/quack-kernels/top-k-forward-bitonic/top-k-forward-bitonic.svg",
+      "architecture": "CUDA cooperative CTA selection",
+      "source_locator": "quack/topk.py · TopK.kernel()",
+      "code_locator": "quack/topk.py:26,78 · TopK.kernel",
+      "role_path": "CTA warps acquire values and indices → run register bitonic selection with deterministic ties → redistribute selected lanes, optionally softmax, and store",
+      "synchronization_and_memory": "Warp shuffles and cooperative barriers order selection and redistribution; selected values/indices remain in registers, with only optional SMEM exchange/output staging; TMEM is unused.",
+      "visible_tokens": ["MAINLOOP · cooperative selection", "register compute state; TMEM only on the SM100 GEMM path"]
+    }
+  ]
+}

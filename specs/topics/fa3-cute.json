@@ -28,6 +28,7 @@
       { "class": "outline", "minimum": 19 },
       { "class": "token-arrow", "minimum": 6 },
       { "class": "phase-band", "minimum": 3 },
+      { "class": "source-specific", "minimum": 1 },
       { "class": "resource-lifetime", "minimum": 2 },
       { "class": "life-box", "minimum": 2 }
     ],

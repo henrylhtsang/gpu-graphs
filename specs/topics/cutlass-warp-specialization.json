@@ -32,6 +32,7 @@
       "show the applicable SMEM partition",
       "show TMEM usage or explicitly state that TMEM is unavailable or unused",
       "align resource lifetimes and stage reuse to the same three-phase axis",
+      "show a source-derived variant path plus its synchronization and memory consequence",
       "separate code-observed facts from configuration-dependent interpretation"
     ],
     "excluded_content": [
@@ -50,7 +51,8 @@
       { "class": "node", "minimum": 16 },
       { "class": "mem", "minimum": 1 },
       { "class": "resource-lifetime", "minimum": 2 },
-      { "class": "life-box", "minimum": 2 }
+      { "class": "life-box", "minimum": 2 },
+      { "class": "source-specific", "minimum": 1 }
     ],
     "source_text_classes": ["source"]
   }

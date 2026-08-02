@@ -1,0 +1,917 @@
+{
+  "schema_version": "collection-0.1",
+  "id": "cutlass-warp-specialization",
+  "topic": "cutlass-warp-specialization",
+  "title": "CUTLASS code-derived kernel reconstruction catalog",
+  "source": {
+    "repository": "https://github.com/NVIDIA/cutlass",
+    "commit": "2802e228",
+    "observed": "2026-08-01"
+  },
+  "authoring": {
+    "goal": "Keep every CUTLASS graph joined to a source-derived role path, synchronization contract, and memory consequence.",
+    "note": "The SVG remains directly LLM-authored. This catalog records semantic evidence and never generates geometry or markup."
+  },
+  "kernels": [
+    {
+      "id": "cpp-111-hopper-ssd",
+      "output": "graphs/cutlass-warp-specialization/cpp-111-hopper-ssd/cpp-111-hopper-ssd.svg",
+      "architecture": "Hopper attention / sequence kernel",
+      "source_locator": "examples/111_hopper_ssd",
+      "code_locator": "examples/111_hopper_ssd/111_hopper_ssd.cu · schedule/collective declarations and referenced helper kernels",
+      "role_path": "Load WG → intra-state WGMMA → inter-state WGMMA → recurrence output",
+      "synchronization_and_memory": "Pipeline barriers protect Q/state and K/V stages; SM90 keeps recurrence state in registers/SMEM, not TMEM."
+    },
+    {
+      "id": "cpp-112-blackwell-ssd",
+      "output": "graphs/cutlass-warp-specialization/cpp-112-blackwell-ssd/cpp-112-blackwell-ssd.svg",
+      "architecture": "Blackwell attention / sequence kernel",
+      "source_locator": "examples/112_blackwell_ssd",
+      "code_locator": "examples/112_blackwell_ssd/112_blackwell_ssd.cu · schedule/collective declarations and referenced helper kernels",
+      "role_path": "TMA load warp → intra/inter tcgen05 MMA warps → preprocess and recurrence output",
+      "synchronization_and_memory": "Named pipelines hand off staged state; score/state and output accumulators occupy distinct TMEM regions."
+    },
+    {
+      "id": "cpp-113-hopper-gemm-activation-fusion",
+      "output": "graphs/cutlass-warp-specialization/cpp-113-hopper-gemm-activation-fusion/cpp-113-hopper-gemm-activation-fusion.svg",
+      "architecture": "Hopper / SM90",
+      "source_locator": "examples/113_hopper_gemm_activation_fusion",
+      "code_locator": "examples/113_hopper_gemm_activation_fusion/113_hopper_gemm_fused_act.cu, examples/113_hopper_gemm_activation_fusion/113_hopper_gemm_fused_gated_act.cu, examples/113_hopper_gemm_activation_fusion/113_hopper_grouped_gemm_fused_act.cu, examples/113_hopper_gemm_activation_fusion/113_hopper_grouped_gemm_fused_gated_act.cu · schedule/collective declarations and referenced helper kernels",
+      "role_path": "TMA A/B producer → WGMMA consumers → fused activation or gated-activation epilogue",
+      "synchronization_and_memory": "Mainloop and epilogue barriers separate operand stages from activation scratch; SM90 has no TMEM."
+    },
+    {
+      "id": "cpp-48-hopper-warp-specialized-gemm",
+      "output": "graphs/cutlass-warp-specialization/cpp-48-hopper-warp-specialized-gemm/cpp-48-hopper-warp-specialized-gemm.svg",
+      "architecture": "Hopper / SM90",
+      "source_locator": "examples/48_hopper_warp_specialized_gemm",
+      "code_locator": "examples/48_hopper_warp_specialized_gemm/48_hopper_warp_specialized_gemm.cu · schedule/collective declarations and referenced helper kernels",
+      "role_path": "Persistent scheduler → elected TMA producer → WGMMA consumer WG → TMA epilogue",
+      "synchronization_and_memory": "Producer/consumer pipelines recycle A/B stages only after WGMMA release; accumulators remain register-resident on SM90."
+    },
+    {
+      "id": "cpp-49-hopper-gemm-with-collective-builder",
+      "output": "graphs/cutlass-warp-specialization/cpp-49-hopper-gemm-with-collective-builder/cpp-49-hopper-gemm-with-collective-builder.svg",
+      "architecture": "Hopper / SM90",
+      "source_locator": "examples/49_hopper_gemm_with_collective_builder",
+      "code_locator": "examples/49_hopper_gemm_with_collective_builder/49_collective_builder.cu · schedule/collective declarations and referenced helper kernels",
+      "role_path": "CollectiveBuilder selects the TMA mainloop, WGMMA consumer schedule, and epilogue",
+      "synchronization_and_memory": "Builder-selected stage count carves SMEM around epilogue storage; producer/consumer barriers guard reuse."
+    },
+    {
+      "id": "cpp-50-hopper-gemm-with-epilogue-swizzle",
+      "output": "graphs/cutlass-warp-specialization/cpp-50-hopper-gemm-with-epilogue-swizzle/cpp-50-hopper-gemm-with-epilogue-swizzle.svg",
+      "architecture": "Hopper / SM90",
+      "source_locator": "examples/50_hopper_gemm_with_epilogue_swizzle",
+      "code_locator": "examples/50_hopper_gemm_with_epilogue_swizzle/50_hopper_gemm_with_epilogue_swizzle.cu · schedule/collective declarations and referenced helper kernels",
+      "role_path": "TMA/WGMMA mainloop → swizzled epilogue ownership → reordered D store",
+      "synchronization_and_memory": "Epilogue adapter waits on accumulators, uses its own SMEM staging, then releases storage after the swizzled store."
+    },
+    {
+      "id": "cpp-51-hopper-gett",
+      "output": "graphs/cutlass-warp-specialization/cpp-51-hopper-gett/cpp-51-hopper-gett.svg",
+      "architecture": "Hopper / SM90",
+      "source_locator": "examples/51_hopper_gett",
+      "code_locator": "examples/51_hopper_gett/51_hopper_gett.cu, examples/51_hopper_gett/gett_kernel.cuh · schedule/collective declarations and referenced helper kernels",
+      "role_path": "GETT mode/stride mapping → TMA tensor tiles → WGMMA contraction → tensor-shaped epilogue",
+      "synchronization_and_memory": "Static-1 stride modes determine major orientation; staged operands and epilogue storage remain distinct."
+    },
+    {
+      "id": "cpp-52-hopper-gather-scatter-fusion",
+      "output": "graphs/cutlass-warp-specialization/cpp-52-hopper-gather-scatter-fusion/cpp-52-hopper-gather-scatter-fusion.svg",
+      "architecture": "Hopper / SM90",
+      "source_locator": "examples/52_hopper_gather_scatter_fusion",
+      "code_locator": "examples/52_hopper_gather_scatter_fusion/52_hopper_gather_scatter_fusion.cu, examples/52_hopper_gather_scatter_fusion/gather_gemm.hpp, examples/52_hopper_gather_scatter_fusion/gather_kernel.cuh, examples/52_hopper_gather_scatter_fusion/scatter_epilogue.hpp · schedule/collective declarations and referenced helper kernels",
+      "role_path": "Gather-addressed A/C loads → WGMMA GEMM → scatter-addressed D publication",
+      "synchronization_and_memory": "Gather/scatter tensors alter GMEM addressing, not the SMEM stage lifecycle; epilogue release follows scattered stores."
+    },
+    {
+      "id": "cpp-54-hopper-fp8-warp-specialized-gemm",
+      "output": "graphs/cutlass-warp-specialization/cpp-54-hopper-fp8-warp-specialized-gemm/cpp-54-hopper-fp8-warp-specialized-gemm.svg",
+      "architecture": "Hopper / SM90",
+      "source_locator": "examples/54_hopper_fp8_warp_specialized_gemm",
+      "code_locator": "examples/54_hopper_fp8_warp_specialized_gemm/54_hopper_fp8_warp_specialized_gemm.cu, examples/54_hopper_fp8_warp_specialized_gemm/hopper_fp8_commandline.hpp · schedule/collective declarations and referenced helper kernels",
+      "role_path": "FP8 TMA producer → WGMMA accumulation → scale-aware epilogue conversion",
+      "synchronization_and_memory": "A/B stage barriers cover narrow operands; scale metadata and register accumulators remain live until epilogue conversion."
+    },
+    {
+      "id": "cpp-55-hopper-mixed-dtype-gemm",
+      "output": "graphs/cutlass-warp-specialization/cpp-55-hopper-mixed-dtype-gemm/cpp-55-hopper-mixed-dtype-gemm.svg",
+      "architecture": "Hopper / SM90",
+      "source_locator": "examples/55_hopper_mixed_dtype_gemm",
+      "code_locator": "examples/55_hopper_mixed_dtype_gemm/55_hopper_int4_bf16_gemm.cu, examples/55_hopper_mixed_dtype_gemm/55_hopper_int4_fp8_gemm.cu, examples/55_hopper_mixed_dtype_gemm/55_hopper_mixed_dtype_gemm.cu, examples/55_hopper_mixed_dtype_gemm/mixed_dtype_utils.hpp · schedule/collective declarations and referenced helper kernels",
+      "role_path": "Load packed operand plus scale/zero-point → convert in producer path → WGMMA",
+      "synchronization_and_memory": "Scale and zero-point travel with the scaled operand; reordered and converted SMEM views are configuration-dependent."
+    },
+    {
+      "id": "cpp-56-hopper-ptr-array-batched-gemm",
+      "output": "graphs/cutlass-warp-specialization/cpp-56-hopper-ptr-array-batched-gemm/cpp-56-hopper-ptr-array-batched-gemm.svg",
+      "architecture": "Hopper / SM90",
+      "source_locator": "examples/56_hopper_ptr_array_batched_gemm",
+      "code_locator": "examples/56_hopper_ptr_array_batched_gemm/56_hopper_ptr_array_batched_gemm.cu · schedule/collective declarations and referenced helper kernels",
+      "role_path": "Pointer-array tile selection → cooperative or ping-pong TMA/WGMMA schedule → batch output",
+      "synchronization_and_memory": "Scheduler metadata selects per-batch pointers; stage barriers are independent of the consumer-WG schedule token."
+    },
+    {
+      "id": "cpp-57-hopper-grouped-gemm",
+      "output": "graphs/cutlass-warp-specialization/cpp-57-hopper-grouped-gemm/cpp-57-hopper-grouped-gemm.svg",
+      "architecture": "Hopper / SM90",
+      "source_locator": "examples/57_hopper_grouped_gemm",
+      "code_locator": "examples/57_hopper_grouped_gemm/57_hopper_grouped_gemm.cu · schedule/collective declarations and referenced helper kernels",
+      "role_path": "Grouped problem visitor → per-group A/B descriptors → persistent WGMMA tiles",
+      "synchronization_and_memory": "Problem metadata persists across tiles; each group’s operand stages release independently before scheduler advance."
+    },
+    {
+      "id": "cpp-61-hopper-gemm-with-topk-and-softmax",
+      "output": "graphs/cutlass-warp-specialization/cpp-61-hopper-gemm-with-topk-and-softmax/cpp-61-hopper-gemm-with-topk-and-softmax.svg",
+      "architecture": "Hopper / SM90",
+      "source_locator": "examples/61_hopper_gemm_with_topk_and_softmax",
+      "code_locator": "examples/61_hopper_gemm_with_topk_and_softmax/61_hopper_gemm_with_topk_and_softmax.cu · schedule/collective declarations and referenced helper kernels",
+      "role_path": "WGMMA GEMM → fused row softmax/top-k visitor → selected values and indices",
+      "synchronization_and_memory": "Accumulator fragments feed reduction scratch before output; top-k/softmax state must finish before epilogue storage is reused."
+    },
+    {
+      "id": "cpp-63-hopper-gemm-with-weight-prefetch",
+      "output": "graphs/cutlass-warp-specialization/cpp-63-hopper-gemm-with-weight-prefetch/cpp-63-hopper-gemm-with-weight-prefetch.svg",
+      "architecture": "Hopper / SM90",
+      "source_locator": "examples/63_hopper_gemm_with_weight_prefetch",
+      "code_locator": "examples/63_hopper_gemm_with_weight_prefetch/63_hopper_gemm_with_weight_prefetch.cu, examples/63_hopper_gemm_with_weight_prefetch/gemm_with_weight_prefetch_commandline.hpp · schedule/collective declarations and referenced helper kernels",
+      "role_path": "Dedicated weight prefetch → normal TMA stage ring → WGMMA consumer → epilogue",
+      "synchronization_and_memory": "Prefetch uses separate SMEM and its own pipeline; prefetched slots are not aliases of the main A/B stage ring."
+    },
+    {
+      "id": "cpp-65-distributed-gemm",
+      "output": "graphs/cutlass-warp-specialization/cpp-65-distributed-gemm/cpp-65-distributed-gemm.svg",
+      "architecture": "Blackwell distributed / communication-fused",
+      "source_locator": "examples/65_distributed_gemm",
+      "code_locator": "examples/65_distributed_gemm/65_distributed_gemm.cu · schedule/collective declarations and referenced helper kernels",
+      "role_path": "Peer communication producer → local TMA/WGMMA GEMM → collective result movement",
+      "synchronization_and_memory": "Remote-ready signals gate consumption; communication buffers, operand stages, and reduction/output storage remain distinct."
+    },
+    {
+      "id": "cpp-67-hopper-fp8-warp-specialized-gemm-with-blockwise-scaling",
+      "output": "graphs/cutlass-warp-specialization/cpp-67-hopper-fp8-warp-specialized-gemm-with-blockwise-scaling/cpp-67-hopper-fp8-warp-specialized-gemm-with-blockwise-scaling.svg",
+      "architecture": "Hopper / SM90",
+      "source_locator": "examples/67_hopper_fp8_warp_specialized_gemm_with_blockwise_scaling",
+      "code_locator": "examples/67_hopper_fp8_warp_specialized_gemm_with_blockwise_scaling/67_hopper_fp8_warp_specialized_gemm_with_blockwise_scaling.cu, examples/67_hopper_fp8_warp_specialized_gemm_with_blockwise_scaling/67_hopper_fp8_warp_specialized_gemm_with_groupwise_scaling.cu, examples/67_hopper_fp8_warp_specialized_gemm_with_blockwise_scaling/hopper_fp8_commandline.hpp · schedule/collective declarations and referenced helper kernels",
+      "role_path": "TMA A/B plus SFA/SFB → blockwise-scaled WGMMA → scaled epilogue",
+      "synchronization_and_memory": "Scale tiles follow the operand stage and release with it; register accumulators persist to the SM90 epilogue."
+    },
+    {
+      "id": "cpp-68-hopper-fp8-warp-specialized-grouped-gemm-with-blockwise-scaling",
+      "output": "graphs/cutlass-warp-specialization/cpp-68-hopper-fp8-warp-specialized-grouped-gemm-with-blockwise-scaling/cpp-68-hopper-fp8-warp-specialized-grouped-gemm-with-blockwise-scaling.svg",
+      "architecture": "Hopper / SM90",
+      "source_locator": "examples/68_hopper_fp8_warp_specialized_grouped_gemm_with_blockwise_scaling",
+      "code_locator": "examples/68_hopper_fp8_warp_specialized_grouped_gemm_with_blockwise_scaling/68_hopper_fp8_warp_specialized_grouped_gemm_with_blockwise_scaling.cu, examples/68_hopper_fp8_warp_specialized_grouped_gemm_with_blockwise_scaling/68_hopper_fp8_warp_specialized_grouped_gemm_with_blockwise_scaling_with_sparse_groups.cu, examples/68_hopper_fp8_warp_specialized_grouped_gemm_with_blockwise_scaling/hopper_fp8_commandline.hpp · schedule/collective declarations and referenced helper kernels",
+      "role_path": "Grouped scheduler → per-group A/B and scale descriptors → scaled WGMMA",
+      "synchronization_and_memory": "Group metadata persists while A/B/SFA/SFB stage slots recycle through producer/consumer barriers."
+    },
+    {
+      "id": "cpp-69-hopper-mixed-dtype-grouped-gemm",
+      "output": "graphs/cutlass-warp-specialization/cpp-69-hopper-mixed-dtype-grouped-gemm/cpp-69-hopper-mixed-dtype-grouped-gemm.svg",
+      "architecture": "Hopper / SM90",
+      "source_locator": "examples/69_hopper_mixed_dtype_grouped_gemm",
+      "code_locator": "examples/69_hopper_mixed_dtype_grouped_gemm/69_hopper_int4_bf16_grouped_gemm.cu, examples/69_hopper_mixed_dtype_grouped_gemm/69_hopper_int4_fp8_grouped_gemm.cu, examples/69_hopper_mixed_dtype_grouped_gemm/69_hopper_mixed_dtype_grouped_gemm.cu, examples/69_hopper_mixed_dtype_grouped_gemm/grouped_mixed_dtype_utils.hpp · schedule/collective declarations and referenced helper kernels",
+      "role_path": "Grouped descriptor load → packed operand conversion/scaling → WGMMA → grouped store",
+      "synchronization_and_memory": "Conversion metadata is group-specific; converted operand stages release only after their WGMMA consumer finishes."
+    },
+    {
+      "id": "cpp-70-blackwell-gemm",
+      "output": "graphs/cutlass-warp-specialization/cpp-70-blackwell-gemm/cpp-70-blackwell-gemm.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/70_blackwell_gemm",
+      "code_locator": "examples/70_blackwell_gemm/70_blackwell_fp16_gemm.cu, examples/70_blackwell_gemm/70_blackwell_fp8_gemm.cu · schedule/collective declarations and referenced helper kernels",
+      "role_path": "Persistent tile scheduler → TMA A/B producer → tcgen05 UMMA → TMEM epilogue",
+      "synchronization_and_memory": "A/B stage barriers gate UMMA; TMEM accumulators release only after the epilogue copies and stores D."
+    },
+    {
+      "id": "cpp-71-blackwell-gemm-with-collective-builder",
+      "output": "graphs/cutlass-warp-specialization/cpp-71-blackwell-gemm-with-collective-builder/cpp-71-blackwell-gemm-with-collective-builder.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/71_blackwell_gemm_with_collective_builder",
+      "code_locator": "examples/71_blackwell_gemm_with_collective_builder/71_blackwell_gemm_with_collective_builder.cu · schedule/collective declarations and referenced helper kernels",
+      "role_path": "CollectiveBuilder selects TMA, tcgen05, scheduler, and epilogue collectives",
+      "synchronization_and_memory": "Auto stage count carves SMEM around the epilogue; TMEM allocation follows the builder-selected UMMA shape."
+    },
+    {
+      "id": "cpp-72-blackwell-narrow-precision-gemm",
+      "output": "graphs/cutlass-warp-specialization/cpp-72-blackwell-narrow-precision-gemm/cpp-72-blackwell-narrow-precision-gemm.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/72_blackwell_narrow_precision_gemm",
+      "code_locator": "examples/72_blackwell_narrow_precision_gemm/72a_blackwell_nvfp4_bf16_gemm.cu, examples/72_blackwell_narrow_precision_gemm/72b_blackwell_nvfp4_nvfp4_gemm.cu, examples/72_blackwell_narrow_precision_gemm/72c_blackwell_mixed_mxfp8_bf16_gemm.cu · schedule/collective declarations and referenced helper kernels",
+      "role_path": "Packed narrow A/B plus scale factors → block-scaled tcgen05 MMA → converted D",
+      "synchronization_and_memory": "Operand and scale stages advance together; scale-factor TMEM/SMEM placement is schedule-dependent and explicitly separate."
+    },
+    {
+      "id": "cpp-73-blackwell-gemm-preferred-cluster",
+      "output": "graphs/cutlass-warp-specialization/cpp-73-blackwell-gemm-preferred-cluster/cpp-73-blackwell-gemm-preferred-cluster.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/73_blackwell_gemm_preferred_cluster",
+      "code_locator": "examples/73_blackwell_gemm_preferred_cluster/blackwell_gemm_preferred_cluster.cu · schedule/collective declarations and referenced helper kernels",
+      "role_path": "Preferred/fallback cluster selection → multicast TMA → cooperative tcgen05 MMA",
+      "synchronization_and_memory": "Cluster-shape choice changes multicast membership, not stage ownership; barriers release only after all consumers finish."
+    },
+    {
+      "id": "cpp-74-blackwell-gemm-streamk",
+      "output": "graphs/cutlass-warp-specialization/cpp-74-blackwell-gemm-streamk/cpp-74-blackwell-gemm-streamk.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/74_blackwell_gemm_streamk",
+      "code_locator": "examples/74_blackwell_gemm_streamk/blackwell_gemm_streamk.cu · schedule/collective declarations and referenced helper kernels",
+      "role_path": "Stream-K scheduler assigns K ranges → partial tcgen05 accumulation → fixup/final output",
+      "synchronization_and_memory": "Partial accumulators persist through Stream-K fixup; workspace/reduction state cannot alias active operand stages."
+    },
+    {
+      "id": "cpp-75-blackwell-grouped-gemm",
+      "output": "graphs/cutlass-warp-specialization/cpp-75-blackwell-grouped-gemm/cpp-75-blackwell-grouped-gemm.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/75_blackwell_grouped_gemm",
+      "code_locator": "examples/75_blackwell_grouped_gemm/75_blackwell_grouped_gemm.cu, examples/75_blackwell_grouped_gemm/75_blackwell_grouped_gemm_block_scaled.cu · schedule/collective declarations and referenced helper kernels",
+      "role_path": "Grouped problem scheduler → per-group descriptors → TMA/tcgen05 tile loop",
+      "synchronization_and_memory": "Problem metadata persists across each group; A/B stages and TMEM accumulators are retired per scheduled tile."
+    },
+    {
+      "id": "cpp-76-blackwell-conv",
+      "output": "graphs/cutlass-warp-specialization/cpp-76-blackwell-conv/cpp-76-blackwell-conv.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/76_blackwell_conv",
+      "code_locator": "examples/76_blackwell_conv/76_blackwell_conv_dgrad.cu, examples/76_blackwell_conv/76_blackwell_conv_fprop.cu, examples/76_blackwell_conv/76_blackwell_conv_wgrad.cu · schedule/collective declarations and referenced helper kernels",
+      "role_path": "fprop/dgrad/wgrad iterator maps convolution to implicit GEMM → tcgen05 → output",
+      "synchronization_and_memory": "Implicit-GEMM operand stages follow convolution coordinates; output staging is separate from the active A/B ring."
+    },
+    {
+      "id": "cpp-77-blackwell-fmha",
+      "output": "graphs/cutlass-warp-specialization/cpp-77-blackwell-fmha/cpp-77-blackwell-fmha.svg",
+      "architecture": "Blackwell attention / sequence kernel",
+      "source_locator": "examples/77_blackwell_fmha",
+      "code_locator": "examples/77_blackwell_fmha/77_blackwell_fmha.cu, examples/77_blackwell_fmha/77_blackwell_fmha_bwd.cu, examples/77_blackwell_fmha/77_blackwell_fmha_gen.cu, examples/77_blackwell_fmha/77_blackwell_mla.cu · schedule/collective declarations and referenced helper kernels",
+      "role_path": "Q/K/V load warps → QK and PV tcgen05 issuer → online softmax → correction/store",
+      "synchronization_and_memory": "Score, probability, and output TMEM regions have distinct handoffs; K/V stages recycle only after MMA consumption."
+    },
+    {
+      "id": "cpp-78-blackwell-emulated-bf16x9-gemm",
+      "output": "graphs/cutlass-warp-specialization/cpp-78-blackwell-emulated-bf16x9-gemm/cpp-78-blackwell-emulated-bf16x9-gemm.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/78_blackwell_emulated_bf16x9_gemm",
+      "code_locator": "examples/78_blackwell_emulated_bf16x9_gemm/78_blackwell_emulated_bf16x9_gemm.cu · schedule/collective declarations and referenced helper kernels",
+      "role_path": "Decompose BF16 operands into nine terms → repeated tcgen05 issues → merged accumulator",
+      "synchronization_and_memory": "All term products accumulate into the same logical result lifetime; operand slices recycle between decomposed issues."
+    },
+    {
+      "id": "cpp-79-blackwell-geforce-gemm",
+      "output": "graphs/cutlass-warp-specialization/cpp-79-blackwell-geforce-gemm/cpp-79-blackwell-geforce-gemm.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/79_blackwell_geforce_gemm",
+      "code_locator": "examples/79_blackwell_geforce_gemm/79a_blackwell_geforce_nvfp4_bf16_gemm.cu, examples/79_blackwell_geforce_gemm/79b_blackwell_geforce_nvfp4_nvfp4_gemm.cu, examples/79_blackwell_geforce_gemm/79c_blackwell_geforce_mixed_mxfp8_mxfp6_bf16_gemm.cu, examples/79_blackwell_geforce_gemm/79d_blackwell_geforce_nvfp4_grouped_gemm.cu · schedule/collective declarations and referenced helper kernels",
+      "role_path": "GeForce-targeted TMA producer → tcgen05 MMA → TMEM epilogue",
+      "synchronization_and_memory": "Device-specific schedule controls 1SM/2SM participation; operand stages release after all participating MMA consumers."
+    },
+    {
+      "id": "cpp-80-blackwell-geforce-sparse-gemm",
+      "output": "graphs/cutlass-warp-specialization/cpp-80-blackwell-geforce-sparse-gemm/cpp-80-blackwell-geforce-sparse-gemm.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/80_blackwell_geforce_sparse_gemm",
+      "code_locator": "examples/80_blackwell_geforce_sparse_gemm/80a_blackwell_geforce_mxfp8_bf16_sparse_gemm.cu, examples/80_blackwell_geforce_sparse_gemm/80b_blackwell_geforce_nvfp4_nvfp4_sparse_gemm.cu · schedule/collective declarations and referenced helper kernels",
+      "role_path": "TMA A/B plus sparse metadata → sparse tcgen05 MMA → TMEM epilogue",
+      "synchronization_and_memory": "Metadata shares the operand stage cadence but occupies distinct storage; both must be ready before sparse MMA."
+    },
+    {
+      "id": "cpp-81-blackwell-gemm-blockwise",
+      "output": "graphs/cutlass-warp-specialization/cpp-81-blackwell-gemm-blockwise/cpp-81-blackwell-gemm-blockwise.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/81_blackwell_gemm_blockwise",
+      "code_locator": "examples/81_blackwell_gemm_blockwise/81_blackwell_gemm_blockwise.cu, examples/81_blackwell_gemm_blockwise/81_blackwell_gemm_groupwise.cu, examples/81_blackwell_gemm_blockwise/81_blackwell_grouped_gemm_blockwise.cu, examples/81_blackwell_gemm_blockwise/81_blackwell_grouped_gemm_groupwise.cu · schedule/collective declarations and referenced helper kernels",
+      "role_path": "TMA operands plus block scales → blockwise tcgen05 MMA → scale-aware epilogue",
+      "synchronization_and_memory": "SFA/SFB lifetimes track their operand tiles; accumulator and output regions remain distinct until epilogue release."
+    },
+    {
+      "id": "cpp-82-blackwell-distributed-gemm",
+      "output": "graphs/cutlass-warp-specialization/cpp-82-blackwell-distributed-gemm/cpp-82-blackwell-distributed-gemm.svg",
+      "architecture": "Blackwell distributed / communication-fused",
+      "source_locator": "examples/82_blackwell_distributed_gemm",
+      "code_locator": "examples/82_blackwell_distributed_gemm/82_blackwell_distributed_gemm.cu · schedule/collective declarations and referenced helper kernels",
+      "role_path": "Communication warp moves peer tiles → TMA/tcgen05 GEMM → collective output reduction",
+      "synchronization_and_memory": "Remote-ready and completion signals guard communication buffers; TMEM accumulators persist across collective handoff."
+    },
+    {
+      "id": "cpp-83-blackwell-sparse-gemm",
+      "output": "graphs/cutlass-warp-specialization/cpp-83-blackwell-sparse-gemm/cpp-83-blackwell-sparse-gemm.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/83_blackwell_sparse_gemm",
+      "code_locator": "examples/83_blackwell_sparse_gemm/83_blackwell_sparse_gemm.cu · schedule/collective declarations and referenced helper kernels",
+      "role_path": "Dense operand plus compressed operand/metadata stages → sparse tcgen05 MMA",
+      "synchronization_and_memory": "Sparse metadata cannot alias its compressed operand while live; both release together after MMA consumption."
+    },
+    {
+      "id": "cpp-84-blackwell-narrow-precision-sparse-gemm",
+      "output": "graphs/cutlass-warp-specialization/cpp-84-blackwell-narrow-precision-sparse-gemm/cpp-84-blackwell-narrow-precision-sparse-gemm.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/84_blackwell_narrow_precision_sparse_gemm",
+      "code_locator": "examples/84_blackwell_narrow_precision_sparse_gemm/84a_blackwell_nvfp4_bf16_sparse_gemm.cu, examples/84_blackwell_narrow_precision_sparse_gemm/84b_blackwell_mixed_mxfp8_bf16_sparse_gemm.cu · schedule/collective declarations and referenced helper kernels",
+      "role_path": "Packed low-precision operands, scales, and sparsity metadata → sparse block-scaled MMA",
+      "synchronization_and_memory": "Operand, scale, and metadata stages advance as one dependency set; TMEM accumulators remain separate."
+    },
+    {
+      "id": "cpp-86-blackwell-mixed-dtype-gemm",
+      "output": "graphs/cutlass-warp-specialization/cpp-86-blackwell-mixed-dtype-gemm/cpp-86-blackwell-mixed-dtype-gemm.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/86_blackwell_mixed_dtype_gemm",
+      "code_locator": "examples/86_blackwell_mixed_dtype_gemm/86_blackwell_mixed_dtype.cu, examples/86_blackwell_mixed_dtype_gemm/mixed_dtype_helper.cuh · schedule/collective declarations and referenced helper kernels",
+      "role_path": "Packed mixed input plus scale/zero data → producer conversion → tcgen05 MMA",
+      "synchronization_and_memory": "Converted fragments and quantization metadata stay live through their MMA issue; epilogue consumes distinct TMEM output."
+    },
+    {
+      "id": "cpp-87-blackwell-geforce-gemm-blockwise",
+      "output": "graphs/cutlass-warp-specialization/cpp-87-blackwell-geforce-gemm-blockwise/cpp-87-blackwell-geforce-gemm-blockwise.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/87_blackwell_geforce_gemm_blockwise",
+      "code_locator": "examples/87_blackwell_geforce_gemm_blockwise/87a_blackwell_geforce_fp8_bf16_gemm_blockwise.cu, examples/87_blackwell_geforce_gemm_blockwise/87b_blackwell_geforce_fp8_bf16_gemm_groupwise.cu, examples/87_blackwell_geforce_gemm_blockwise/87c_blackwell_geforce_fp8_bf16_grouped_gemm_groupwise.cu · schedule/collective declarations and referenced helper kernels",
+      "role_path": "GeForce block-scaled TMA path → SFA/SFB-aware tcgen05 MMA → output",
+      "synchronization_and_memory": "Scale tiles are stage-coupled to A/B; 1SM/2SM schedule selection controls when the shared slot is reusable."
+    },
+    {
+      "id": "cpp-88-hopper-fmha",
+      "output": "graphs/cutlass-warp-specialization/cpp-88-hopper-fmha/cpp-88-hopper-fmha.svg",
+      "architecture": "Hopper attention / sequence kernel",
+      "source_locator": "examples/88_hopper_fmha",
+      "code_locator": "examples/88_hopper_fmha/88_hopper_fmha.cu · schedule/collective declarations and referenced helper kernels",
+      "role_path": "Q/K/V producer → WGMMA QK/PV consumers → online softmax and output epilogue",
+      "synchronization_and_memory": "SM90 keeps scores/probabilities/output in registers and SMEM; K/V stages recycle after WGMMA issue."
+    },
+    {
+      "id": "cpp-89-sm103-fp4-ultra-gemm",
+      "output": "graphs/cutlass-warp-specialization/cpp-89-sm103-fp4-ultra-gemm/cpp-89-sm103-fp4-ultra-gemm.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/89_sm103_fp4_ultra_gemm",
+      "code_locator": "examples/89_sm103_fp4_ultra_gemm/89_sm103_fp4_ultra_gemm.cu · schedule/collective declarations and referenced helper kernels",
+      "role_path": "FP4 operands plus scale factors → SM103 tcgen05 block-scaled MMA → converted output",
+      "synchronization_and_memory": "A/B and SFA/SFB stages advance together; scale-factor and accumulator TMEM columns remain explicitly partitioned."
+    },
+    {
+      "id": "cpp-90-sm103-fp4-ultra-grouped-gemm",
+      "output": "graphs/cutlass-warp-specialization/cpp-90-sm103-fp4-ultra-grouped-gemm/cpp-90-sm103-fp4-ultra-grouped-gemm.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/90_sm103_fp4_ultra_grouped_gemm",
+      "code_locator": "examples/90_sm103_fp4_ultra_grouped_gemm/90_sm103_fp4_ultra_grouped_gemm.cu · schedule/collective declarations and referenced helper kernels",
+      "role_path": "Grouped problem metadata → FP4 operands/scales → SM103 block-scaled MMA",
+      "synchronization_and_memory": "Per-group descriptors persist while operand/scale stages recycle; each group owns a distinct result lifetime."
+    },
+    {
+      "id": "cpp-92-blackwell-moe-gemm",
+      "output": "graphs/cutlass-warp-specialization/cpp-92-blackwell-moe-gemm/cpp-92-blackwell-moe-gemm.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/92_blackwell_moe_gemm",
+      "code_locator": "examples/92_blackwell_moe_gemm/92_blackwell_moe_gemm_blockscaled_rcgrouped.cu, examples/92_blackwell_moe_gemm/92_blackwell_moe_gemm_fp4_grouped.cu, examples/92_blackwell_moe_gemm/92_blackwell_moe_gemm_fp4_regular.cu, examples/92_blackwell_moe_gemm/92_blackwell_moe_gemm_grouped.cu · schedule/collective declarations and referenced helper kernels",
+      "role_path": "Expert scheduler → grouped expert A/B descriptors → tcgen05 expert GEMM → routed output",
+      "synchronization_and_memory": "Expert metadata persists across assigned tiles; active expert operands and TMEM accumulators remain distinct."
+    },
+    {
+      "id": "cpp-93-blackwell-low-latency-gqa",
+      "output": "graphs/cutlass-warp-specialization/cpp-93-blackwell-low-latency-gqa/cpp-93-blackwell-low-latency-gqa.svg",
+      "architecture": "Blackwell low-latency grouped-query attention",
+      "source_locator": "examples/93_blackwell_low_latency_gqa",
+      "code_locator": "examples/93_blackwell_low_latency_gqa/common.cuh, examples/93_blackwell_low_latency_gqa/tgv_gqa.cu, examples/93_blackwell_low_latency_gqa/tgv_gqa.cuh, examples/93_blackwell_low_latency_gqa/tgv_gqa_paged.cuh · schedule/collective declarations and referenced helper kernels",
+      "role_path": "DMA-Q warp, DMA-KV warp, MMA warp, and epilogue warp form a decode pipeline",
+      "synchronization_and_memory": "Named barriers connect Q/KV arrival to MMA and output publication; KV and accumulator storage remain separate."
+    },
+    {
+      "id": "cpp-95-blackwell-gemm-green-context",
+      "output": "graphs/cutlass-warp-specialization/cpp-95-blackwell-gemm-green-context/cpp-95-blackwell-gemm-green-context.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/95_blackwell_gemm_green_context",
+      "code_locator": "examples/95_blackwell_gemm_green_context/95_blackwell_gemm_green_context.cu · schedule/collective declarations and referenced helper kernels",
+      "role_path": "Persistent GEMM executes inside the SM partition supplied by a CUDA green context",
+      "synchronization_and_memory": "Green-context restriction changes launch residency, not A/B or TMEM aliasing; normal producer/consumer release still applies."
+    },
+    {
+      "id": "python-cute-blackwell-efc-activation-custom-epilogue-dense-gemm",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-efc-activation-custom-epilogue-dense-gemm/python-cute-blackwell-efc-activation-custom-epilogue-dense-gemm.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell/efc/activation_custom_epilogue_dense_gemm.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell/efc/activation_custom_epilogue_dense_gemm.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "TMA/tcgen05 mainloop → EFC activation node → custom D store",
+      "synchronization_and_memory": "Accumulator TMEM stays live through the activation callback; epilogue scratch releases after the final store."
+    },
+    {
+      "id": "python-cute-blackwell-efc-custom-epilogue-dense-gemm",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-efc-custom-epilogue-dense-gemm/python-cute-blackwell-efc-custom-epilogue-dense-gemm.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell/efc/custom_epilogue_dense_gemm.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell/efc/custom_epilogue_dense_gemm.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "TMA/tcgen05 mainloop → user-defined EFC visitor → output publication",
+      "synchronization_and_memory": "The visitor consumes TMEM-derived registers and optional C input; its staging is distinct from operand SMEM."
+    },
+    {
+      "id": "python-cute-blackwell-efc-synthetic-custom-epilogue-dense-gemm",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-efc-synthetic-custom-epilogue-dense-gemm/python-cute-blackwell-efc-synthetic-custom-epilogue-dense-gemm.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell/efc/synthetic_custom_epilogue_dense_gemm.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell/efc/synthetic_custom_epilogue_dense_gemm.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "TMA/tcgen05 mainloop → synthetic EFC graph → generated epilogue path",
+      "synchronization_and_memory": "Synthetic visitor dependencies determine accumulator release; output scratch cannot alias live A/B stages."
+    },
+    {
+      "id": "python-cute-blackwell-geforce-kernel-blockscaled-gemm-dense-blockscaled-gemm-persistent-cooperative",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-geforce-kernel-blockscaled-gemm-dense-blockscaled-gemm-persistent-cooperative/python-cute-blackwell-geforce-kernel-blockscaled-gemm-dense-blockscaled-gemm-persistent-cooperative.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell_geforce/kernel/blockscaled_gemm/dense_blockscaled_gemm_persistent_cooperative.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell_geforce/kernel/blockscaled_gemm/dense_blockscaled_gemm_persistent_cooperative.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "Cooperative consumer WGs share block-scaled A/B/SFA/SFB work → tcgen05",
+      "synchronization_and_memory": "Cooperative completion gates each operand/scale stage release; TMEM result remains live to epilogue."
+    },
+    {
+      "id": "python-cute-blackwell-geforce-kernel-blockscaled-gemm-dense-blockscaled-gemm-persistent-pingpong",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-geforce-kernel-blockscaled-gemm-dense-blockscaled-gemm-persistent-pingpong/python-cute-blackwell-geforce-kernel-blockscaled-gemm-dense-blockscaled-gemm-persistent-pingpong.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell_geforce/kernel/blockscaled_gemm/dense_blockscaled_gemm_persistent_pingpong.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell_geforce/kernel/blockscaled_gemm/dense_blockscaled_gemm_persistent_pingpong.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "Ping-pong consumer WGs alternate block-scaled tcgen05 tiles",
+      "synchronization_and_memory": "Scheduler-token handoff is distinct from A/B/SFA/SFB stage barriers; both guard different reuse decisions."
+    },
+    {
+      "id": "python-cute-blackwell-geforce-kernel-dense-gemm-dense-gemm",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-geforce-kernel-dense-gemm-dense-gemm/python-cute-blackwell-geforce-kernel-dense-gemm-dense-gemm.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell_geforce/kernel/dense_gemm/dense_gemm.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell_geforce/kernel/dense_gemm/dense_gemm.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "GeForce TMA producer → tcgen05 MMA consumer → TMEM-to-SMEM epilogue",
+      "synchronization_and_memory": "Schedule-selected 1SM/2SM participation gates stage release; D staging is distinct from the A/B ring."
+    },
+    {
+      "id": "python-cute-blackwell-kernel-attention-fmha-fmha-bwd",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-kernel-attention-fmha-fmha-bwd/python-cute-blackwell-kernel-attention-fmha-fmha-bwd.svg",
+      "architecture": "Blackwell attention / sequence kernel",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/attention/fmha/fmha_bwd.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/attention/fmha/fmha_bwd.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "Load Q/K/V/dO → backward attention MMAs → softmax-gradient reductions → dQ/dK/dV",
+      "synchronization_and_memory": "Gradient reduction barriers gate partials; forward statistics, gradient accumulators, and output stages stay distinct."
+    },
+    {
+      "id": "python-cute-blackwell-kernel-attention-fmha-fmha",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-kernel-attention-fmha-fmha/python-cute-blackwell-kernel-attention-fmha-fmha.svg",
+      "architecture": "Blackwell attention / sequence kernel",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/attention/fmha/fmha.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/attention/fmha/fmha.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "Q/K/V TMA → QK/PV tcgen05 → online softmax/correction → output store",
+      "synchronization_and_memory": "Split probability readiness overlaps PV; score, P, and O TMEM regions release at different handoffs."
+    },
+    {
+      "id": "python-cute-blackwell-kernel-attention-mamba2-ssd-mamba2-ssd",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-kernel-attention-mamba2-ssd-mamba2-ssd/python-cute-blackwell-kernel-attention-mamba2-ssd-mamba2-ssd.svg",
+      "architecture": "Blackwell attention / sequence kernel",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/attention/mamba2_ssd/mamba2_ssd.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/attention/mamba2_ssd/mamba2_ssd.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "State/input load → intra/inter state MMAs → recurrence scan → output",
+      "synchronization_and_memory": "Pipeline barriers carry recurrence state across chunks; state and output accumulator TMEM regions remain distinct."
+    },
+    {
+      "id": "python-cute-blackwell-kernel-attention-mixed-input-fmha-mixed-input-fmha-decode",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-kernel-attention-mixed-input-fmha-mixed-input-fmha-decode/python-cute-blackwell-kernel-attention-mixed-input-fmha-mixed-input-fmha-decode.svg",
+      "architecture": "Blackwell attention / sequence kernel",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/attention/mixed_input_fmha/mixed_input_fmha_decode.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/attention/mixed_input_fmha/mixed_input_fmha_decode.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "Decode Q plus persistent mixed K/V traversal → QK/PV → online softmax",
+      "synchronization_and_memory": "K/V conversion metadata follows each stage; score/P/O TMEM handoffs protect reuse across the decode loop."
+    },
+    {
+      "id": "python-cute-blackwell-kernel-attention-mixed-input-fmha-mixed-input-fmha-prefill-d256",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-kernel-attention-mixed-input-fmha-mixed-input-fmha-prefill-d256/python-cute-blackwell-kernel-attention-mixed-input-fmha-mixed-input-fmha-prefill-d256.svg",
+      "architecture": "Blackwell attention / sequence kernel",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/attention/mixed_input_fmha/mixed_input_fmha_prefill_d256.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/attention/mixed_input_fmha/mixed_input_fmha_prefill_d256.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "D256 mixed-input Q/K/V loads → partitioned QK/PV → online softmax/correction",
+      "synchronization_and_memory": "Head-dimension partitioning extends operand and score lifetimes; stage barriers guard split consumers."
+    },
+    {
+      "id": "python-cute-blackwell-kernel-attention-mixed-input-fmha-mixed-input-fmha-prefill-d512",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-kernel-attention-mixed-input-fmha-mixed-input-fmha-prefill-d512/python-cute-blackwell-kernel-attention-mixed-input-fmha-mixed-input-fmha-prefill-d512.svg",
+      "architecture": "Blackwell attention / sequence kernel",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/attention/mixed_input_fmha/mixed_input_fmha_prefill_d512.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/attention/mixed_input_fmha/mixed_input_fmha_prefill_d512.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "D512 mixed-input Q/K/V loads → wider partitioned QK/PV → online softmax",
+      "synchronization_and_memory": "The wider head dimension increases partitions, not phase count; score/P/O TMEM ownership remains explicit."
+    },
+    {
+      "id": "python-cute-blackwell-kernel-attention-mla-mla-decode-fp16",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-kernel-attention-mla-mla-decode-fp16/python-cute-blackwell-kernel-attention-mla-mla-decode-fp16.svg",
+      "architecture": "Blackwell attention / sequence kernel",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/attention/mla/mla_decode_fp16.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/attention/mla/mla_decode_fp16.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "Latent FP16 Q/KV load → latent QK/PV tcgen05 → online softmax → decode output",
+      "synchronization_and_memory": "Latent KV stages persist through their paired MMAs; probability and output TMEM slices release separately."
+    },
+    {
+      "id": "python-cute-blackwell-kernel-attention-mla-mla-decode-fp8",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-kernel-attention-mla-mla-decode-fp8/python-cute-blackwell-kernel-attention-mla-mla-decode-fp8.svg",
+      "architecture": "Blackwell attention / sequence kernel",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/attention/mla/mla_decode_fp8.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/attention/mla/mla_decode_fp8.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "Latent FP8 Q/KV plus scales → block-scaled QK/PV → online softmax",
+      "synchronization_and_memory": "Scale metadata tracks latent KV stages; scaled operand, probability, and output TMEM storage stay distinct."
+    },
+    {
+      "id": "python-cute-blackwell-kernel-blockscaled-gemm-dense-blockscaled-gemm-persistent-amax",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-kernel-blockscaled-gemm-dense-blockscaled-gemm-persistent-amax/python-cute-blackwell-kernel-blockscaled-gemm-dense-blockscaled-gemm-persistent-amax.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/blockscaled_gemm/dense_blockscaled_gemm_persistent_amax.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/blockscaled_gemm/dense_blockscaled_gemm_persistent_amax.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "Block-scaled tcgen05 GEMM → epilogue amax reduction → scaled D publication",
+      "synchronization_and_memory": "Amax state extends past accumulator conversion; it uses dedicated reduction/output storage before release."
+    },
+    {
+      "id": "python-cute-blackwell-kernel-blockscaled-gemm-dense-blockscaled-gemm-persistent-prefetch",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-kernel-blockscaled-gemm-dense-blockscaled-gemm-persistent-prefetch/python-cute-blackwell-kernel-blockscaled-gemm-dense-blockscaled-gemm-persistent-prefetch.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/blockscaled_gemm/dense_blockscaled_gemm_persistent_prefetch.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/blockscaled_gemm/dense_blockscaled_gemm_persistent_prefetch.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "L2/operand prefetch → A/B/SFA/SFB stage ring → block-scaled tcgen05",
+      "synchronization_and_memory": "Prefetch readiness feeds, but does not alias, active operand/scale stages; TMEM output persists to epilogue."
+    },
+    {
+      "id": "python-cute-blackwell-kernel-blockscaled-gemm-dense-blockscaled-gemm-persistent",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-kernel-blockscaled-gemm-dense-blockscaled-gemm-persistent/python-cute-blackwell-kernel-blockscaled-gemm-dense-blockscaled-gemm-persistent.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/blockscaled_gemm/dense_blockscaled_gemm_persistent.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/blockscaled_gemm/dense_blockscaled_gemm_persistent.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "Persistent scheduler → TMA A/B/SFA/SFB → block-scaled tcgen05 → epilogue",
+      "synchronization_and_memory": "Operand and scale stages advance together; TMEM accumulators release only after output consumption."
+    },
+    {
+      "id": "python-cute-blackwell-kernel-blockscaled-gemm-sm103-dense-blockscaled-gemm-persistent",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-kernel-blockscaled-gemm-sm103-dense-blockscaled-gemm-persistent/python-cute-blackwell-kernel-blockscaled-gemm-sm103-dense-blockscaled-gemm-persistent.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/blockscaled_gemm/sm103_dense_blockscaled_gemm_persistent.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/blockscaled_gemm/sm103_dense_blockscaled_gemm_persistent.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "SM103 persistent FP4 operands/scales → block-scaled tcgen05 → output",
+      "synchronization_and_memory": "SM103 scale layout partitions SFA/SFB from accumulator columns and gates stage reuse with operand readiness."
+    },
+    {
+      "id": "python-cute-blackwell-kernel-blockscaled-grouped-gemm-grouped-blockscaled-gemm",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-kernel-blockscaled-grouped-gemm-grouped-blockscaled-gemm/python-cute-blackwell-kernel-blockscaled-grouped-gemm-grouped-blockscaled-gemm.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/blockscaled_grouped_gemm/grouped_blockscaled_gemm.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/blockscaled_grouped_gemm/grouped_blockscaled_gemm.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "Grouped descriptor scheduler → per-group A/B/SFA/SFB → block-scaled tcgen05",
+      "synchronization_and_memory": "Group metadata outlives individual stages; operand/scale rings and group result lifetimes remain distinct."
+    },
+    {
+      "id": "python-cute-blackwell-kernel-blockscaled-grouped-gemm-sm103-grouped-blockscaled-gemm",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-kernel-blockscaled-grouped-gemm-sm103-grouped-blockscaled-gemm/python-cute-blackwell-kernel-blockscaled-grouped-gemm-sm103-grouped-blockscaled-gemm.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/blockscaled_grouped_gemm/sm103_grouped_blockscaled_gemm.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/blockscaled_grouped_gemm/sm103_grouped_blockscaled_gemm.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "SM103 grouped FP4 descriptors → A/B plus scales → block-scaled tcgen05",
+      "synchronization_and_memory": "Per-group scale layouts persist while stage slots recycle; result TMEM is retired per group."
+    },
+    {
+      "id": "python-cute-blackwell-kernel-blockwise-gemm-blockwise-gemm",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-kernel-blockwise-gemm-blockwise-gemm/python-cute-blackwell-kernel-blockwise-gemm-blockwise-gemm.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/blockwise_gemm/blockwise_gemm.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/blockwise_gemm/blockwise_gemm.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "Block iterator selects subtiles → blockwise A/B loads → tcgen05 accumulation across blocks",
+      "synchronization_and_memory": "Accumulator state persists across block boundaries; each operand block releases before the next reuses its slot."
+    },
+    {
+      "id": "python-cute-blackwell-kernel-blockwise-gemm-contiguous-grouped-gemm",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-kernel-blockwise-gemm-contiguous-grouped-gemm/python-cute-blackwell-kernel-blockwise-gemm-contiguous-grouped-gemm.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/blockwise_gemm/contiguous_grouped_gemm.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/blockwise_gemm/contiguous_grouped_gemm.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "Contiguous group ranges → blockwise tile scheduler → per-group tcgen05 accumulation",
+      "synchronization_and_memory": "Contiguous metadata persists through each group; operand blocks and result accumulators have separate lifetimes."
+    },
+    {
+      "id": "python-cute-blackwell-kernel-blockwise-gemm-masked-grouped-gemm",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-kernel-blockwise-gemm-masked-grouped-gemm/python-cute-blackwell-kernel-blockwise-gemm-masked-grouped-gemm.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/blockwise_gemm/masked_grouped_gemm.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/blockwise_gemm/masked_grouped_gemm.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "Mask selects active groups/blocks → conditional loads → tcgen05 accumulation",
+      "synchronization_and_memory": "Inactive blocks skip ownership; active operand stages release normally and never alias the group mask metadata."
+    },
+    {
+      "id": "python-cute-blackwell-kernel-dense-gemm-dense-gemm-alpha-beta-persistent",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-kernel-dense-gemm-dense-gemm-alpha-beta-persistent/python-cute-blackwell-kernel-dense-gemm-dense-gemm-alpha-beta-persistent.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/dense_gemm/dense_gemm_alpha_beta_persistent.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/dense_gemm/dense_gemm_alpha_beta_persistent.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "Persistent GEMM → load C → alpha·acc + beta·C epilogue → D",
+      "synchronization_and_memory": "C staging and TMEM accumulator are simultaneously live and therefore distinct until the alpha/beta visitor completes."
+    },
+    {
+      "id": "python-cute-blackwell-kernel-dense-gemm-dense-gemm-persistent-dynamic",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-kernel-dense-gemm-dense-gemm-persistent-dynamic/python-cute-blackwell-kernel-dense-gemm-dense-gemm-persistent-dynamic.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/dense_gemm/dense_gemm_persistent_dynamic.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/dense_gemm/dense_gemm_persistent_dynamic.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "CLC/dynamic scheduler assigns tiles → TMA/tcgen05 mainloop → epilogue",
+      "synchronization_and_memory": "Scheduler response state persists independently of A/B stages; tile retirement publishes the next work request."
+    },
+    {
+      "id": "python-cute-blackwell-kernel-dense-gemm-dense-gemm-persistent-prefetch",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-kernel-dense-gemm-dense-gemm-persistent-prefetch/python-cute-blackwell-kernel-dense-gemm-dense-gemm-persistent-prefetch.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/dense_gemm/dense_gemm_persistent_prefetch.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/dense_gemm/dense_gemm_persistent_prefetch.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "Initial and rolling prefetch → normal A/B stage ring → tcgen05 → epilogue",
+      "synchronization_and_memory": "Prefetch state is separate from the consumed operand slot; both use different readiness/release events."
+    },
+    {
+      "id": "python-cute-blackwell-kernel-dense-gemm-dense-gemm-persistent",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-kernel-dense-gemm-dense-gemm-persistent/python-cute-blackwell-kernel-dense-gemm-dense-gemm-persistent.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/dense_gemm/dense_gemm_persistent.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/dense_gemm/dense_gemm_persistent.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "Static persistent tile scheduler → TMA A/B → tcgen05 → TMA store",
+      "synchronization_and_memory": "A/B stages recycle per K tile; TMEM accumulator spans the full K loop and epilogue handoff."
+    },
+    {
+      "id": "python-cute-blackwell-kernel-distributed-all-reduce-tma",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-kernel-distributed-all-reduce-tma/python-cute-blackwell-kernel-distributed-all-reduce-tma.svg",
+      "architecture": "Blackwell distributed / communication-fused",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/distributed/all_reduce_tma.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/distributed/all_reduce_tma.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "TMA loads peer shards → local reduction → TMA publishes reduced shard",
+      "synchronization_and_memory": "Peer-ready and store-complete barriers protect communication buffers; TMEM is unused for this copy/reduce path."
+    },
+    {
+      "id": "python-cute-blackwell-kernel-distributed-distributed-all-gather-gemm-blackwell",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-kernel-distributed-distributed-all-gather-gemm-blackwell/python-cute-blackwell-kernel-distributed-distributed-all-gather-gemm-blackwell.svg",
+      "architecture": "Blackwell distributed / communication-fused",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/distributed/distributed_all_gather_gemm_blackwell.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/distributed/distributed_all_gather_gemm_blackwell.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "All-gather producer exposes remote A/B shards → tcgen05 GEMM consumes them",
+      "synchronization_and_memory": "Remote-ready signals gate operand stages; gathered buffers persist until every local MMA consumer releases them."
+    },
+    {
+      "id": "python-cute-blackwell-kernel-distributed-distributed-gemm-all-reduce-blackwell",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-kernel-distributed-distributed-gemm-all-reduce-blackwell/python-cute-blackwell-kernel-distributed-distributed-gemm-all-reduce-blackwell.svg",
+      "architecture": "Blackwell distributed / communication-fused",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/distributed/distributed_gemm_all_reduce_blackwell.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/distributed/distributed_gemm_all_reduce_blackwell.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "Local tcgen05 GEMM → distributed all-reduce → final D publication",
+      "synchronization_and_memory": "TMEM accumulator converts before collective scratch; reduction buffers persist until peer completion."
+    },
+    {
+      "id": "python-cute-blackwell-kernel-distributed-distributed-gemm-all-reduce-lamport-blackwell",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-kernel-distributed-distributed-gemm-all-reduce-lamport-blackwell/python-cute-blackwell-kernel-distributed-distributed-gemm-all-reduce-lamport-blackwell.svg",
+      "architecture": "Blackwell distributed / communication-fused",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/distributed/distributed_gemm_all_reduce_lamport_blackwell.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/distributed/distributed_gemm_all_reduce_lamport_blackwell.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "Local GEMM → Lamport-style flag/data all-reduce → output",
+      "synchronization_and_memory": "Lamport flags establish shard visibility; ping-pong communication buffers cannot overlap the shard being consumed."
+    },
+    {
+      "id": "python-cute-blackwell-kernel-distributed-distributed-gemm-all-reduce-ldxstmc-blackwell",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-kernel-distributed-distributed-gemm-all-reduce-ldxstmc-blackwell/python-cute-blackwell-kernel-distributed-distributed-gemm-all-reduce-ldxstmc-blackwell.svg",
+      "architecture": "Blackwell distributed / communication-fused",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/distributed/distributed_gemm_all_reduce_ldxstmc_blackwell.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/distributed/distributed_gemm_all_reduce_ldxstmc_blackwell.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "Local GEMM → LDX/STMC peer reduction path → output",
+      "synchronization_and_memory": "Peer load/store completion gates communication-stage reuse; TMEM accumulator is distinct from distributed scratch."
+    },
+    {
+      "id": "python-cute-blackwell-kernel-distributed-distributed-gemm-blockscaled-all-reduce-ldmcxstmc-blackwell",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-kernel-distributed-distributed-gemm-blockscaled-all-reduce-ldmcxstmc-blackwell/python-cute-blackwell-kernel-distributed-distributed-gemm-blockscaled-all-reduce-ldmcxstmc-blackwell.svg",
+      "architecture": "Blackwell distributed / communication-fused",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/distributed/distributed_gemm_blockscaled_all_reduce_ldmcxstmc_blackwell.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/distributed/distributed_gemm_blockscaled_all_reduce_ldmcxstmc_blackwell.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "Block-scaled GEMM → LDMC/XSTMC distributed reduction → scaled output",
+      "synchronization_and_memory": "Scale metadata, TMEM result, and peer-reduction scratch overlap in time and therefore use separate allocations."
+    },
+    {
+      "id": "python-cute-blackwell-kernel-distributed-distributed-gemm-reduce-scatter-blackwell",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-kernel-distributed-distributed-gemm-reduce-scatter-blackwell/python-cute-blackwell-kernel-distributed-distributed-gemm-reduce-scatter-blackwell.svg",
+      "architecture": "Blackwell distributed / communication-fused",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/distributed/distributed_gemm_reduce_scatter_blackwell.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/distributed/distributed_gemm_reduce_scatter_blackwell.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "Local GEMM → reduce-scatter partitions the result → shard store",
+      "synchronization_and_memory": "Each output shard releases after its peer reduction/store; collective scratch is separate from the TMEM accumulator."
+    },
+    {
+      "id": "python-cute-blackwell-kernel-grouped-gemm-grouped-gemm",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-kernel-grouped-gemm-grouped-gemm/python-cute-blackwell-kernel-grouped-gemm-grouped-gemm.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/grouped_gemm/grouped_gemm.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/grouped_gemm/grouped_gemm.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "Grouped scheduler loads problem descriptors → per-group TMA/tcgen05 → group output",
+      "synchronization_and_memory": "Descriptor state persists across the group while operand stages and TMEM results retire per tile."
+    },
+    {
+      "id": "python-cute-blackwell-kernel-mixed-input-gemm-grouped-mixed-input-gemm-acc-scale",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-kernel-mixed-input-gemm-grouped-mixed-input-gemm-acc-scale/python-cute-blackwell-kernel-mixed-input-gemm-grouped-mixed-input-gemm-acc-scale.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/mixed_input_gemm/grouped_mixed_input_gemm_acc_scale.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/mixed_input_gemm/grouped_mixed_input_gemm_acc_scale.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "Grouped mixed-input conversion → tcgen05 → accumulator-scale epilogue",
+      "synchronization_and_memory": "Per-group conversion metadata and accumulator scale are live with the result and use distinct storage."
+    },
+    {
+      "id": "python-cute-blackwell-kernel-mixed-input-gemm-grouped-mixed-input-gemm",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-kernel-mixed-input-gemm-grouped-mixed-input-gemm/python-cute-blackwell-kernel-mixed-input-gemm-grouped-mixed-input-gemm.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/mixed_input_gemm/grouped_mixed_input_gemm.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/mixed_input_gemm/grouped_mixed_input_gemm.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "Grouped descriptors → packed operand conversion/scaling → tcgen05 → D",
+      "synchronization_and_memory": "Conversion metadata is group-specific; converted operand stages release after their tcgen05 consumer."
+    },
+    {
+      "id": "python-cute-blackwell-kernel-mixed-input-gemm-mixed-input-gemm",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-kernel-mixed-input-gemm-mixed-input-gemm/python-cute-blackwell-kernel-mixed-input-gemm-mixed-input-gemm.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/mixed_input_gemm/mixed_input_gemm.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/mixed_input_gemm/mixed_input_gemm.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "Packed mixed input plus scale/zero → producer conversion → tcgen05 → epilogue",
+      "synchronization_and_memory": "Converted fragments and quantization metadata remain live through MMA and distinct from TMEM output."
+    },
+    {
+      "id": "python-cute-blackwell-kernel-moe-torch-grouped-mm",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-kernel-moe-torch-grouped-mm/python-cute-blackwell-kernel-moe-torch-grouped-mm.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/moe/torch_grouped_mm.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/moe/torch_grouped_mm.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "Torch grouped-MoE descriptors → expert tile scheduler → tcgen05 expert GEMM",
+      "synchronization_and_memory": "Expert routing metadata persists across assigned tiles; operand stages and expert result lifetimes are separate."
+    },
+    {
+      "id": "python-cute-blackwell-kernel-moe-torch-scaled-grouped-mm",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-kernel-moe-torch-scaled-grouped-mm/python-cute-blackwell-kernel-moe-torch-scaled-grouped-mm.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/moe/torch_scaled_grouped_mm.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell/kernel/moe/torch_scaled_grouped_mm.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "Scaled grouped-MoE descriptors → expert operands/scales → tcgen05 → routed output",
+      "synchronization_and_memory": "Expert scale metadata tracks operand stages; routing, scale, and result storage remain distinct."
+    },
+    {
+      "id": "python-cute-blackwell-tutorial-tutorial-gemm-fp16-gemm-2",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-tutorial-tutorial-gemm-fp16-gemm-2/python-cute-blackwell-tutorial-tutorial-gemm-fp16-gemm-2.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell/tutorial/tutorial_gemm/fp16_gemm_2.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell/tutorial/tutorial_gemm/fp16_gemm_2.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "Separate TMA, MMA, and epilogue warps implement the first full FP16 GEMM pipeline",
+      "synchronization_and_memory": "Mbarriers hand off A/B stages and TMEM result; TMA store releases the output stage."
+    },
+    {
+      "id": "python-cute-blackwell-tutorial-tutorial-gemm-fp16-gemm-3-1",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-tutorial-tutorial-gemm-fp16-gemm-3-1/python-cute-blackwell-tutorial-tutorial-gemm-fp16-gemm-3-1.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell/tutorial/tutorial_gemm/fp16_gemm_3_1.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell/tutorial/tutorial_gemm/fp16_gemm_3_1.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "CLC dynamically assigns persistent GEMM tiles to TMA/MMA/epilogue roles",
+      "synchronization_and_memory": "CLC response and tile-complete signals are separate from A/B stage barriers and TMEM release."
+    },
+    {
+      "id": "python-cute-blackwell-tutorial-tutorial-gemm-fp16-gemm-3",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-tutorial-tutorial-gemm-fp16-gemm-3/python-cute-blackwell-tutorial-tutorial-gemm-fp16-gemm-3.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell/tutorial/tutorial_gemm/fp16_gemm_3.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell/tutorial/tutorial_gemm/fp16_gemm_3.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "Static persistent scheduler advances GEMM tiles through TMA, MMA, and epilogue roles",
+      "synchronization_and_memory": "Tile advance waits for output retirement while K-stage reuse remains controlled by producer/consumer barriers."
+    },
+    {
+      "id": "python-cute-blackwell-tutorial-tutorial-gemm-fp16-gemm-4",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-tutorial-tutorial-gemm-fp16-gemm-4/python-cute-blackwell-tutorial-tutorial-gemm-fp16-gemm-4.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell/tutorial/tutorial_gemm/fp16_gemm_4.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell/tutorial/tutorial_gemm/fp16_gemm_4.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "Runtime preferred/fallback cluster shape selects multicast TMA and cooperative MMA",
+      "synchronization_and_memory": "Cluster choice changes multicast participants; stage release waits for the chosen consumer set."
+    },
+    {
+      "id": "python-cute-blackwell-tutorial-tutorial-gemm-fp16-gemm-5",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-tutorial-tutorial-gemm-fp16-gemm-5/python-cute-blackwell-tutorial-tutorial-gemm-fp16-gemm-5.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell/tutorial/tutorial_gemm/fp16_gemm_5.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell/tutorial/tutorial_gemm/fp16_gemm_5.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "Initial plus rolling L2 prefetch runs ahead of TMA/MMA GEMM stages",
+      "synchronization_and_memory": "Prefetch completion and A/B-stage readiness are separate events; their storage does not alias while live."
+    },
+    {
+      "id": "python-cute-blackwell-tutorial-tutorial-gemm-fp16-gemm-6",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-tutorial-tutorial-gemm-fp16-gemm-6/python-cute-blackwell-tutorial-tutorial-gemm-fp16-gemm-6.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell/tutorial/tutorial_gemm/fp16_gemm_6.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell/tutorial/tutorial_gemm/fp16_gemm_6.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "Programmatic dependent launch overlaps kernel launch sequencing with persistent GEMM",
+      "synchronization_and_memory": "Dependent-launch completion is a launch-level event; in-kernel A/B and TMEM lifetimes retain normal barriers."
+    },
+    {
+      "id": "python-cute-blackwell-tutorial-tutorial-tma-tma-v1",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-tutorial-tutorial-tma-tma-v1/python-cute-blackwell-tutorial-tutorial-tma-tma-v1.svg",
+      "architecture": "Blackwell CuTeDSL TMA tutorial",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell/tutorial/tutorial_tma/tma_v1.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell/tutorial/tutorial_tma/tma_v1.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "TMA load warp → SMEM transform warps → TMA store warp",
+      "synchronization_and_memory": "A single input/output stage is transferred by mbarriers; TMEM is not used."
+    },
+    {
+      "id": "python-cute-blackwell-tutorial-tutorial-tma-tma-v2",
+      "output": "graphs/cutlass-warp-specialization/python-cute-blackwell-tutorial-tutorial-tma-tma-v2/python-cute-blackwell-tutorial-tutorial-tma-tma-v2.svg",
+      "architecture": "Blackwell CuTeDSL TMA tutorial",
+      "source_locator": "examples/python/CuTeDSL/cute/blackwell/tutorial/tutorial_tma/tma_v2.py",
+      "code_locator": "examples/python/CuTeDSL/cute/blackwell/tutorial/tutorial_tma/tma_v2.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "Persistent scheduler drives multistage TMA load → transform → TMA store",
+      "synchronization_and_memory": "Independent load/store pipeline states recycle stage j only after both consumer and store completion; TMEM is unused."
+    },
+    {
+      "id": "python-cute-ext-blackwell-dense-block-scaled-gemm",
+      "output": "graphs/cutlass-warp-specialization/python-cute-ext-blackwell-dense-block-scaled-gemm/python-cute-ext-blackwell-dense-block-scaled-gemm.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/python/CuTeDSL/cute_ext/blackwell/dense_block_scaled_gemm.py",
+      "code_locator": "examples/python/CuTeDSL/cute_ext/blackwell/dense_block_scaled_gemm.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "CuTe extension stages A/B and block scales → tcgen05 → scaled epilogue",
+      "synchronization_and_memory": "Operand and scale readiness are coupled; scale storage and TMEM accumulator remain separately addressable."
+    },
+    {
+      "id": "python-cute-ext-blackwell-dense-gemm-2sm",
+      "output": "graphs/cutlass-warp-specialization/python-cute-ext-blackwell-dense-gemm-2sm/python-cute-ext-blackwell-dense-gemm-2sm.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/python/CuTeDSL/cute_ext/blackwell/dense_gemm_2sm.py",
+      "code_locator": "examples/python/CuTeDSL/cute_ext/blackwell/dense_gemm_2sm.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "Two-SM cooperative TMA/tcgen05 mainloop → shared epilogue ownership",
+      "synchronization_and_memory": "Both SM participants must release operand stages; distributed TMEM accumulator ownership converges before store."
+    },
+    {
+      "id": "python-cute-ext-blackwell-dense-gemm-cute-pipeline",
+      "output": "graphs/cutlass-warp-specialization/python-cute-ext-blackwell-dense-gemm-cute-pipeline/python-cute-ext-blackwell-dense-gemm-cute-pipeline.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/python/CuTeDSL/cute_ext/blackwell/dense_gemm_cute_pipeline.py",
+      "code_locator": "examples/python/CuTeDSL/cute_ext/blackwell/dense_gemm_cute_pipeline.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "CuTe Pipeline objects coordinate TMA producer, tcgen05 consumer, and epilogue",
+      "synchronization_and_memory": "Pipeline states explicitly own acquire/commit/wait/release transitions for A/B and result storage."
+    },
+    {
+      "id": "python-cute-ext-blackwell-dense-gemm-ptr-array",
+      "output": "graphs/cutlass-warp-specialization/python-cute-ext-blackwell-dense-gemm-ptr-array/python-cute-ext-blackwell-dense-gemm-ptr-array.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/python/CuTeDSL/cute_ext/blackwell/dense_gemm_ptr_array.py",
+      "code_locator": "examples/python/CuTeDSL/cute_ext/blackwell/dense_gemm_ptr_array.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "Pointer-array scheduler selects per-batch A/B/C/D → tcgen05 GEMM",
+      "synchronization_and_memory": "Pointer metadata persists for the tile while operand stages and TMEM result release independently."
+    },
+    {
+      "id": "python-cute-ext-blackwell-dense-gemm",
+      "output": "graphs/cutlass-warp-specialization/python-cute-ext-blackwell-dense-gemm/python-cute-ext-blackwell-dense-gemm.svg",
+      "architecture": "Blackwell / SM100-family",
+      "source_locator": "examples/python/CuTeDSL/cute_ext/blackwell/dense_gemm.py",
+      "code_locator": "examples/python/CuTeDSL/cute_ext/blackwell/dense_gemm.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "CuTe extension TMA producer → tcgen05 MMA → TMEM epilogue",
+      "synchronization_and_memory": "A/B mbarriers guard stage reuse; output staging remains distinct until the final store."
+    },
+    {
+      "id": "python-cute-hopper-kernel-attention-fmha",
+      "output": "graphs/cutlass-warp-specialization/python-cute-hopper-kernel-attention-fmha/python-cute-hopper-kernel-attention-fmha.svg",
+      "architecture": "Hopper attention / sequence kernel",
+      "source_locator": "examples/python/CuTeDSL/cute/hopper/kernel/attention/fmha.py",
+      "code_locator": "examples/python/CuTeDSL/cute/hopper/kernel/attention/fmha.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "Q/K/V load producer → WGMMA QK/PV → online softmax → output",
+      "synchronization_and_memory": "SM90 stores scores/P/output in registers and SMEM; K/V stage release follows WGMMA consumption."
+    },
+    {
+      "id": "python-cute-hopper-kernel-dense-gemm-dense-gemm-fp8-2xacc",
+      "output": "graphs/cutlass-warp-specialization/python-cute-hopper-kernel-dense-gemm-dense-gemm-fp8-2xacc/python-cute-hopper-kernel-dense-gemm-dense-gemm-fp8-2xacc.svg",
+      "architecture": "Hopper / SM90",
+      "source_locator": "examples/python/CuTeDSL/cute/hopper/kernel/dense_gemm/dense_gemm_fp8_2xacc.py",
+      "code_locator": "examples/python/CuTeDSL/cute/hopper/kernel/dense_gemm/dense_gemm_fp8_2xacc.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "TMA FP8 operands → WGMMA alternates two accumulator sets → epilogue",
+      "synchronization_and_memory": "Two register accumulator sets overlap successive WGMMA groups and remain distinct until their epilogue turn."
+    },
+    {
+      "id": "python-cute-hopper-kernel-dense-gemm-dense-gemm-fp8-gelu-persistent",
+      "output": "graphs/cutlass-warp-specialization/python-cute-hopper-kernel-dense-gemm-dense-gemm-fp8-gelu-persistent/python-cute-hopper-kernel-dense-gemm-dense-gemm-fp8-gelu-persistent.svg",
+      "architecture": "Hopper / SM90",
+      "source_locator": "examples/python/CuTeDSL/cute/hopper/kernel/dense_gemm/dense_gemm_fp8_gelu_persistent.py",
+      "code_locator": "examples/python/CuTeDSL/cute/hopper/kernel/dense_gemm/dense_gemm_fp8_gelu_persistent.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "Persistent FP8 TMA/WGMMA → fused GELU epilogue → D",
+      "synchronization_and_memory": "Register accumulator stays live through GELU; epilogue scratch and operand SMEM stages remain distinct."
+    },
+    {
+      "id": "python-cute-hopper-kernel-dense-gemm-dense-gemm-persistent",
+      "output": "graphs/cutlass-warp-specialization/python-cute-hopper-kernel-dense-gemm-dense-gemm-persistent/python-cute-hopper-kernel-dense-gemm-dense-gemm-persistent.svg",
+      "architecture": "Hopper / SM90",
+      "source_locator": "examples/python/CuTeDSL/cute/hopper/kernel/dense_gemm/dense_gemm_persistent.py",
+      "code_locator": "examples/python/CuTeDSL/cute/hopper/kernel/dense_gemm/dense_gemm_persistent.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "Persistent tile scheduler → TMA A/B → WGMMA → epilogue",
+      "synchronization_and_memory": "A/B stages recycle per K tile; register accumulator persists across the K loop and output conversion."
+    },
+    {
+      "id": "python-cute-hopper-kernel-dense-gemm-dense-gemm",
+      "output": "graphs/cutlass-warp-specialization/python-cute-hopper-kernel-dense-gemm-dense-gemm/python-cute-hopper-kernel-dense-gemm-dense-gemm.svg",
+      "architecture": "Hopper / SM90",
+      "source_locator": "examples/python/CuTeDSL/cute/hopper/kernel/dense_gemm/dense_gemm.py",
+      "code_locator": "examples/python/CuTeDSL/cute/hopper/kernel/dense_gemm/dense_gemm.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "TMA A/B producer → WGMMA consumer → epilogue store",
+      "synchronization_and_memory": "Producer/consumer barriers recycle A/B stages; SM90 keeps the accumulator in registers, not TMEM."
+    },
+    {
+      "id": "python-cute-hopper-kernel-grouped-gemm-grouped-gemm",
+      "output": "graphs/cutlass-warp-specialization/python-cute-hopper-kernel-grouped-gemm-grouped-gemm/python-cute-hopper-kernel-grouped-gemm-grouped-gemm.svg",
+      "architecture": "Hopper / SM90",
+      "source_locator": "examples/python/CuTeDSL/cute/hopper/kernel/grouped_gemm/grouped_gemm.py",
+      "code_locator": "examples/python/CuTeDSL/cute/hopper/kernel/grouped_gemm/grouped_gemm.py · @cute.kernel entry and role-specific load/MMA/epilogue methods",
+      "role_path": "Grouped problem scheduler → per-group TMA descriptors → WGMMA → group output",
+      "synchronization_and_memory": "Problem metadata persists across each group while A/B stages and register results retire per tile."
+    }
+  ]
+}

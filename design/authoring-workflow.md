@@ -20,7 +20,9 @@ does not need to clutter the primary graph.
 
 ## 3. Define the semantic axis and loops
 
-Create prologue, mainloop, tail/drain, and epilogue sections as applicable.
+Create exactly three top-level sections: prologue, mainloop, and epilogue. Put
+bootstrap work in prologue, repeated work and loop-tail/drain events inside
+mainloop, and final publication in epilogue.
 Declare repeated loops separately from visual sections, including the iterator
 and whether the figure shows every iteration or one representative iteration.
 For a representative iteration, declare its indexing contract: the concrete
@@ -48,6 +50,12 @@ Use stable IDs in operation `reads` and `writes`. Give every SMEM/TMEM resource:
 
 Register-only temporaries and GMEM operands can remain in operation labels when
 their lifetimes are not part of the on-chip allocation story.
+
+For large collections of related kernels, a `collection-0.1` catalog may record
+one compact reconstruction per SVG. Each record must retain a concrete source
+and code locator, the source-specific role/operation path, and its
+synchronization plus memory-lifetime consequence. Use a full `0.3` kernel spec
+when the graph claims exact operations, handoffs, allocation IDs, or lifetimes.
 
 ## 6. Define physical allocations and relationships
 

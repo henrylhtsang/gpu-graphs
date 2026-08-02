@@ -10,7 +10,11 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from gpu_graph.model import load_spec  # noqa: E402
-from gpu_graph.validation import SpecError, validate_spec  # noqa: E402
+from gpu_graph.validation import (  # noqa: E402
+    SpecError,
+    validate_kernel_collection,
+    validate_spec,
+)
 
 
 class ValidationTests(unittest.TestCase):
@@ -172,6 +176,35 @@ class ValidationTests(unittest.TestCase):
         operation["detail"] = "sQ[0] × sK₀ → TMEM S₀"
         with self.assertRaisesRegex(SpecError, "must contain Kⱼ"):
             validate_spec(broken)
+
+
+class KernelCollectionValidationTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.spec = load_spec(
+            ROOT
+            / "specs"
+            / "kernels"
+            / "cutlass-warp-specialization"
+            / "catalog.json"
+        )
+
+    def test_cutlass_collection_is_valid(self) -> None:
+        validate_kernel_collection(self.spec)
+
+    def test_collection_rejects_a_generic_duplicate_reconstruction(self) -> None:
+        broken = copy.deepcopy(self.spec)
+        broken["kernels"][1]["role_path"] = broken["kernels"][0]["role_path"]
+        broken["kernels"][1]["synchronization_and_memory"] = broken["kernels"][0][
+            "synchronization_and_memory"
+        ]
+        with self.assertRaisesRegex(SpecError, "must be source-specific"):
+            validate_kernel_collection(broken)
+
+    def test_collection_rejects_bad_visible_tokens(self) -> None:
+        broken = copy.deepcopy(self.spec)
+        broken["kernels"][0]["visible_tokens"] = ["only one"]
+        with self.assertRaisesRegex(SpecError, "visible_tokens"):
+            validate_kernel_collection(broken)
 
 
 if __name__ == "__main__":

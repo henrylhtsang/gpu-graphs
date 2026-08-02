@@ -27,9 +27,21 @@
 - The kernel spec is the semantic source of truth. The SVG is the presentation
   source of truth and must be authored directly by the AI/LLM from that spec;
   the PNG alone is generated. Never edit a PNG independently.
+- Shared architecture topology is not enough to distinguish a kernel view. Each
+  graph must visibly integrate its code-derived variant path: the operation or
+  role that differs, the synchronization it adds or changes, and the resulting
+  memory-lifetime consequence. A filename-specific caption does not satisfy
+  this requirement.
 - Every SVG must be owned by exactly one `specs/topics/<topic>.json` authoring
-  contract. Detailed reconstruction graphs must additionally be owned by a
-  `specs/kernels/**/*.json` semantic spec.
+  contract and exactly one `specs/kernels/**/*.json` semantic spec or collection
+  record. Repository QA rejects missing or duplicate ownership in either layer.
+- A large, closely related source collection may use one validated
+  `collection-0.1` kernel catalog under `specs/kernels/<topic>/`. It must contain
+  exactly one source-derived record per SVG; QA must join the record ID, source
+  locator, role path, synchronization, and memory consequence back to visible
+  SVG content. Existing labels may be named with `visible_tokens` when the full
+  catalog prose would overload the figure. A catalog is not permission to
+  generate SVGs from a template.
 
 ## SVG and PNG pairs
 

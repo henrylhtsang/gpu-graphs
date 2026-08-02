@@ -69,6 +69,10 @@ Decorative elements need no semantic identity.
      essential information or legibility.
    - Use exactly three top-level timeline phases: prologue, mainloop, and
      epilogue. Keep loop-tail/exit work inside the mainloop phase.
+   - When several kernels share an architecture skeleton, visibly integrate a
+     source-specific variant path. Name its operation or role, the handoff it
+     changes, and the memory lifetime it changes; do not rely on a generic
+     skeleton plus a filename or focus caption.
 3. Establish large regions first.
    - Title/context, primary execution structure, synchronization, memory, and
      notes should have an explicit reading order.

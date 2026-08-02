@@ -1,4 +1,4 @@
-<svg data-authoring="llm-direct" data-authoring-profile="direct-role-memory" data-structure-version="three-phase-role-memory-v1" data-topic-id="fa3-cute" data-graph-id="sm90-forward-overlap" data-source-id="flash-attention" xmlns="http://www.w3.org/2000/svg" width="2400" height="1980" viewBox="0 0 2400 1980" role="img" aria-labelledby="title desc">
+<svg data-authoring="llm-direct" data-authoring-profile="direct-role-memory" data-structure-version="three-phase-role-memory-v1" data-topic-id="fa3-cute" data-graph-id="sm90-forward-overlap" data-kernel-id="sm90-forward-overlap" data-source-id="flash-attention" xmlns="http://www.w3.org/2000/svg" width="2400" height="1980" viewBox="0 0 2400 1980" role="img" aria-labelledby="title desc">
   <title id="title">FA3-CuTe FlashAttention-4 SM90 forward overlap for head dimension 128</title>
   <desc id="desc">A timeline of the CuTeDSL Hopper forward kernel. A TMA producer fills a two-stage K and V pipeline. Two consumer warpgroups alternate a named-barrier issue token. Within each consumer warpgroup, a new QK WGMMA overlaps an older PV WGMMA; wait-group one exposes the completed scores while PV remains in flight, then wait-group zero gates probability conversion and output rescaling.</desc>
   <defs>
@@ -29,7 +29,7 @@
     <marker id="arrow-token" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="#b97808"/></marker>
   </defs>
 
-  <rect width="2400" height="1750" fill="#f8fafb"/>
+  <rect width="2400" height="1980" fill="#f8fafb"/>
   <g transform="translate(48 20) scale(1.28)">
 
   <rect width="1800" height="1000" fill="#f8fafb"/>
@@ -168,7 +168,7 @@
   <rect class="load outline" x="1005" y="832" width="565" height="58" rx="9"/>
   <text class="box-text" x="1287" y="854">K/V stage 0 ⇄ K/V stage 1</text>
   <text class="small" x="1287" y="878" text-anchor="middle">independent circular shared-memory pipeline managed by producer/consumer states</text>
-  <text class="small code" x="1730" y="915" text-anchor="end">flash_attn/cute/flash_fwd_sm90.py</text>
+  <text class="small code source-specific" data-source-locator="flash_attn/cute/flash_fwd_sm90.py" x="1730" y="915" text-anchor="end">flash_attn/cute/flash_fwd_sm90.py</text>
   </g>
 
   <text x="70" y="1332" font-size="20" font-weight="780" fill="#526a79" letter-spacing="1.2">ON-CHIP MEMORY ALLOCATIONS</text>

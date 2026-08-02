@@ -23,9 +23,11 @@ scripts/
   render-svg.sh
 schema/
   kernel.schema.json
+  kernel-collection.schema.json
   topic.schema.json
 specs/
   kernels/<topic>/<kernel>.json
+  kernels/<topic>/catalog.json   # scalable one-record-per-graph collection
   topics/<topic>.json
 src/gpu_graph/
   model.py              # loading and lifecycle resolution
@@ -62,14 +64,24 @@ the SVG; they do not generate its composition or markup. See
 [`design/authoring-workflow.md`](design/authoring-workflow.md) and
 [`design/llm-svg-authoring.md`](design/llm-svg-authoring.md) before adding one.
 
+Large source collections may use a validated `collection-0.1` catalog. Each
+record still owns exactly one SVG and preserves its implementation locator,
+role path, synchronization contract, and memory consequence. The catalog is a
+semantic ledger; it does not generate SVG markup or coordinates. A record may
+name concise `visible_tokens` already present in a dense figure so QA can prove
+the source-derived semantic join without forcing catalog prose into the layout.
+
 Every topic, including overview collections, must also have a topic authoring
 spec under `specs/topics/`. It pins the inspected implementation repository and
 commit, defines the authoring brief, owns every SVG in the topic, and declares
-the minimum semantic structure QA expects. A reconstruction graph is covered by
-both layers: its topic spec enforces repository-wide direct authorship, while
-its kernel spec enforces exact operation, synchronization, and lifetime facts.
+the minimum semantic structure QA expects. Every graph is covered by both
+layers: its topic spec enforces repository-wide direct authorship, while its
+kernel spec or collection record enforces exact operation, synchronization,
+and lifetime facts. QA rejects unowned and multiply-owned SVGs in either layer.
 Every graph uses exactly three top-level phases—prologue, mainloop, and
 epilogue—and aligns SMEM/TMEM lifetime and reuse bars to that same event axis.
+Related kernels may share a role skeleton, but every view also exposes its
+source-derived variant path, synchronization, and memory consequence.
 
 Before committing a specification-backed graph, run `make qa`. It executes the
 ordered spec → LLM-authored SVG → automated layout QA → PNG parity loop. The QA

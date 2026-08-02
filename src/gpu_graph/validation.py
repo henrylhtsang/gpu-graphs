@@ -482,3 +482,75 @@ def validate_topic_spec(spec: dict[str, Any]) -> None:
         for class_name in source_classes
     ):
         raise SpecError(f"{topic_id}: qa.source_text_classes must contain class names")
+
+
+def validate_kernel_collection(spec: dict[str, Any]) -> None:
+    """Validate a compact code-derived spec catalog with one record per SVG."""
+    if spec.get("schema_version") != "collection-0.1":
+        raise SpecError("kernel collection schema_version must be collection-0.1")
+
+    collection_id = spec.get("id")
+    topic = spec.get("topic")
+    if not isinstance(collection_id, str) or ID_PATTERN.fullmatch(collection_id) is None:
+        raise SpecError("kernel collection id must be lowercase kebab-case")
+    if not isinstance(topic, str) or ID_PATTERN.fullmatch(topic) is None:
+        raise SpecError("kernel collection topic must be lowercase kebab-case")
+
+    source = spec.get("source")
+    if not isinstance(source, dict):
+        raise SpecError(f"{collection_id}: source provenance is required")
+    for field in ("repository", "commit", "observed"):
+        if not isinstance(source.get(field), str) or not source[field].strip():
+            raise SpecError(f"{collection_id}: source.{field} is required")
+    if len(source["commit"].strip()) < 7:
+        raise SpecError(f"{collection_id}: source.commit must pin a revision")
+
+    records = spec.get("kernels")
+    if not isinstance(records, list) or not records:
+        raise SpecError(f"{collection_id}: kernels must be a non-empty list")
+    indexed = _unique(records, "kernel record")
+    outputs: set[str] = set()
+    semantic_pairs: set[tuple[str, str]] = set()
+    for record in indexed.values():
+        output = record.get("output", "")
+        path = PurePosixPath(output)
+        if (
+            path.is_absolute()
+            or len(path.parts) < 3
+            or path.parts[0] != "graphs"
+            or path.parts[1] != topic
+            or path.suffix != ".svg"
+            or ".." in path.parts
+        ):
+            raise SpecError(f'{record["id"]}: invalid collection output {output!r}')
+        if path.stem != record["id"]:
+            raise SpecError(f'{record["id"]}: output stem must equal the kernel record id')
+        if output in outputs:
+            raise SpecError(f'{record["id"]}: duplicate collection output {output}')
+        outputs.add(output)
+
+        for field in (
+            "architecture",
+            "source_locator",
+            "code_locator",
+            "role_path",
+            "synchronization_and_memory",
+        ):
+            if not isinstance(record.get(field), str) or not record[field].strip():
+                raise SpecError(f'{record["id"]}: {field} is required')
+        visible_tokens = record.get("visible_tokens")
+        if visible_tokens is not None and (
+            not isinstance(visible_tokens, list)
+            or len(visible_tokens) < 2
+            or any(not isinstance(token, str) or not token.strip() for token in visible_tokens)
+            or len(visible_tokens) != len(set(visible_tokens))
+        ):
+            raise SpecError(
+                f'{record["id"]}: visible_tokens must contain at least two unique text entries'
+            )
+        semantic_pair = (record["role_path"], record["synchronization_and_memory"])
+        if semantic_pair in semantic_pairs:
+            raise SpecError(
+                f'{record["id"]}: role/synchronization-memory reconstruction must be source-specific'
+            )
+        semantic_pairs.add(semantic_pair)

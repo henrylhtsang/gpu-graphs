@@ -1,4 +1,4 @@
-<svg data-authoring="llm-direct" data-authoring-profile="direct-role-memory" data-topic-id="cutlass-warp-specialization" data-graph-id="python-cute-blackwell-kernel-grouped-gemm-grouped-gemm" data-source-id="cutlass" xmlns="http://www.w3.org/2000/svg" width="2400" height="1680" viewBox="0 0 2400 1680" role="img" aria-labelledby="title desc">
+<svg data-authoring="llm-direct" data-authoring-profile="direct-role-memory" data-structure-version="three-phase-role-memory-v1" data-kernel-id="python-cute-blackwell-kernel-grouped-gemm-grouped-gemm" data-topic-id="cutlass-warp-specialization" data-graph-id="python-cute-blackwell-kernel-grouped-gemm-grouped-gemm" data-source-id="cutlass" xmlns="http://www.w3.org/2000/svg" width="2400" height="1680" viewBox="0 0 2400 1680" role="img" aria-labelledby="title desc">
   <title id="title">CUTLASS grouped gemm warp-specialization timeline</title>
   <desc id="desc">Warp and warp-group role timeline plus SMEM and TMEM partition for CUTLASS examples/python/CuTeDSL/cute/blackwell/kernel/grouped_gemm/grouped_gemm.py. Focus: grouped-problem metadata scheduling across persistent tiles.</desc>
   <defs>
@@ -41,7 +41,10 @@
   <rect class="mem" x="235.0" y="1223" width="674.3333333333334" height="92" rx="12" fill="#cfe9df"/><text class="mem-name" x="572.1666666666667" y="1260">accumulator stage(s)</text><text class="mem-note" x="572.1666666666667" y="1289">UMMA output</text><rect class="mem" x="925.3333333333334" y="1223" width="674.3333333333334" height="92" rx="12" fill="#cfe9df"/><text class="mem-name" x="1262.5" y="1260">scale-factor region</text><text class="mem-note" x="1262.5" y="1289">block-scaled paths</text><rect class="mem" x="1615.6666666666667" y="1223" width="674.3333333333334" height="92" rx="12" fill="#cfe9df"/><text class="mem-name" x="1952.8333333333335" y="1260">reused columns</text><text class="mem-note" x="1952.8333333333335" y="1289">after epilogue release</text>
   <text class="note" x="250" y="1394">Lifetime axis: seed inputs in prologue → stage j consumed and released in mainloop → result/output storage released in epilogue; reused slots never overlap.</text>
   <rect x="70" y="1405" width="2260" height="62" rx="11" fill="#fff7df" stroke="#b87912" stroke-width="1.5"/>
-  <text class="note" x="100" y="1443">Example focus: grouped-problem metadata scheduling across persistent tiles. Exact IDs, stage counts, and extents remain configuration-dependent.</text>
+  <g class="source-specific" data-source-locator="examples/python/CuTeDSL/cute/blackwell/kernel/grouped_gemm/grouped_gemm.py">
+    <text class="note" x="100" y="1432">SOURCE-DERIVED VARIANT · Grouped scheduler loads problem descriptors → per-group TMA/tcgen05 → group output</text>
+    <text class="source-delta" x="100" y="1460">SYNC + MEMORY · Descriptor state persists across the group while operand stages and TMEM results retire per tile.</text>
+  </g>
   <text class="panel" x="70" y="1515">MEMORY LIFETIMES · SAME PROLOGUE / MAINLOOP / EPILOGUE AXIS</text>
   <rect x="60" y="1535" width="2280" height="110" rx="12" fill="#fff" stroke="#d4e0e7" stroke-width="1.5"/>
   <text class="memory-label" x="90" y="1590">STAGES</text>

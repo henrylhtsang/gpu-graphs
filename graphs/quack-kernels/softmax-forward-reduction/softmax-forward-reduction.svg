@@ -1,4 +1,4 @@
-<svg data-authoring="llm-direct" data-authoring-profile="direct-role-memory" data-structure-version="three-phase-role-memory-v1" data-topic-id="quack-kernels" data-graph-id="softmax-forward-reduction" data-source-id="quack" xmlns="http://www.w3.org/2000/svg" width="2400" height="1840" viewBox="0 0 2400 1840" role="img" aria-labelledby="title desc">
+<svg data-authoring="llm-direct" data-authoring-profile="direct-role-memory" data-structure-version="three-phase-role-memory-v1" data-topic-id="quack-kernels" data-graph-id="softmax-forward-reduction" data-kernel-id="softmax-forward-reduction" data-source-id="quack" xmlns="http://www.w3.org/2000/svg" width="2400" height="1840" viewBox="0 0 2400 1840" role="img" aria-labelledby="title desc">
   <title id="title">QuACK softmax forward · row/cluster reduction</title>
   <desc id="desc">QuACK softmax forward · row/cluster reduction. One CTA tile per row group; wide rows span a CTA cluster along N. Invariant: the same predicate covers load and store; OOB logits cannot enter max or denominator.</desc>
   <defs>
@@ -21,10 +21,10 @@
     <marker id="arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#526d7c"/></marker>
     <marker id="gold" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#b87912"/></marker>
   </defs>
-  <rect width="2400" height="1500" fill="#f8fafb"/>
+  <rect width="2400" height="1840" fill="#f8fafb"/>
   <text class="title" x="70" y="66">QuACK softmax forward · row/cluster reduction</text>
   <text class="subtitle" x="70" y="108">One CTA tile per row group; wide rows span a CTA cluster along N.</text>
-  <text class="subtitle" x="70" y="145">CuTe DSL entry point: <tspan class="source">quack/softmax.py · Softmax.kernel()</tspan></text>
+  <text class="subtitle" x="70" y="145">CuTe DSL entry point: <tspan class="source source-specific" data-source-locator="quack/softmax.py · Softmax.kernel()">quack/softmax.py · Softmax.kernel()</tspan></text>
   <text class="panel-title" x="70" y="195">WARP / WARP-GROUP ROLE TIMELINE</text>
   <text class="role-summary" x="455" y="195">cooperative CTA: participating warps follow the same phase sequence; no dedicated producer / consumer warp roles</text>
   <rect x="60" y="215" width="2280" height="730" rx="12" fill="#fff" stroke="#d4e0e7" stroke-width="1.5"/>

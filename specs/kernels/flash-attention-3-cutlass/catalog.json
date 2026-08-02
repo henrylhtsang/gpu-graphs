@@ -1,0 +1,27 @@
+{
+  "schema_version": "collection-0.1",
+  "id": "flash-attention-3-cutlass",
+  "topic": "flash-attention-3-cutlass",
+  "title": "CUTLASS SM90 FlashAttention-3 reconstruction catalog",
+  "source": {
+    "repository": "https://github.com/Dao-AILab/flash-attention",
+    "commit": "2402cb0",
+    "observed": "2026-08-01"
+  },
+  "authoring": {
+    "goal": "Join the Hopper scheduler and intra-warpgroup overlap diagram to the inspected CUTLASS mainloop.",
+    "note": "The SVG is directly LLM-authored; this record only supplies the source-derived semantic contract."
+  },
+  "kernels": [
+    {
+      "id": "hopper-forward-overlap",
+      "output": "graphs/flash-attention-3-cutlass/hopper-forward-overlap.svg",
+      "architecture": "Hopper / SM90",
+      "source_locator": "hopper/mainloop_fwd_sm90_tma_gmma_ws.hpp · CollectiveMainloopFwdSm90",
+      "code_locator": "hopper/mainloop_fwd_sm90_tma_gmma_ws.hpp:34,591,955 · CollectiveMainloopFwdSm90 load and mma paths",
+      "role_path": "TMA producer fills Q/K/V → two consumer WGs ping-pong a scheduler token and issue QK then RS-PV → epilogue publishes O",
+      "synchronization_and_memory": "Named barriers govern consumer-WG issue order independently of the K/V stage ring; Q plus K/V live in SMEM, stage j releases to j+1 after WGMMA issue, and old P/O persist in registers because TMEM is unavailable.",
+      "visible_tokens": ["issue QKⱼ → issue PVⱼ₊₁ → wait QKⱼ → softmax in Sⱼ → wait PVⱼ₊₁ → pack/write Pⱼ → rescale O → next j−1", "old P remains live until PV completes; O persists to epilogue · TMEM unavailable"]
+    }
+  ]
+}

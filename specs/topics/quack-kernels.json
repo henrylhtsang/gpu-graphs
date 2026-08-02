@@ -46,6 +46,7 @@
     "required_classes": [
       { "class": "phase", "minimum": 3 },
       { "class": "phase-band", "minimum": 3 },
+      { "class": "source-specific", "minimum": 1 },
       { "class": "lane", "minimum": 4 },
       { "class": "operation", "minimum": 7 },
       { "class": "sync", "minimum": 1 },

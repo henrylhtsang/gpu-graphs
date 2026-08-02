@@ -25,6 +25,7 @@
     "min_width": 2400,
     "required_classes": [
       { "class": "phase-band", "minimum": 3 },
+      { "class": "source-specific", "minimum": 1 },
       { "class": "resource-lifetime", "minimum": 2 },
       { "class": "life-box", "minimum": 2 }
     ],

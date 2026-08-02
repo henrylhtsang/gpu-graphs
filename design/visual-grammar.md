@@ -65,6 +65,11 @@ boundary.
 Color identifies broad data or operation classes. It never carries the only
 meaning; every block and lifetime is labeled.
 
+For a family of related kernels, reuse of the broad visual grammar is expected,
+but reuse of an unchanged semantic story is not. Put the source-specific path
+inside or immediately adjacent to the aligned role timeline, and pair it with
+its synchronization and storage consequence.
+
 ## Operation language
 
 Prefer structured, compact labels:

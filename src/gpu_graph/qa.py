@@ -401,6 +401,7 @@ def inspect_direct_svg(
     metadata_expectations = {
         "data-authoring": "llm-direct",
         "data-authoring-profile": topic_spec["qa"]["profile"],
+        "data-structure-version": "three-phase-role-memory-v1",
         "data-topic-id": topic_spec["id"],
         "data-graph-id": svg_path.stem,
     }
@@ -429,6 +430,14 @@ def inspect_direct_svg(
                 f"svg.semantic-class: {class_name!r} count {actual} is below "
                 f"required minimum {requirement['minimum']}"
             )
+
+    if "source-specific" in elements_by_class:
+        for element in elements_by_class["source-specific"]:
+            if not element.get("data-source-locator", "").strip():
+                issues.append(
+                    "svg.source-specific: source-specific content requires "
+                    "a non-empty data-source-locator"
+                )
 
     for class_name in topic_spec["qa"].get("source_text_classes", []):
         elements = elements_by_class.get(class_name, [])
@@ -463,6 +472,46 @@ def inspect_direct_svg(
     if "TMEM" not in visible_text:
         issues.append("svg.memory-lifetimes: graph must identify TMEM usage or non-use")
     return issues
+
+
+def inspect_collection_svg(record: dict[str, Any], content: str) -> list[str]:
+    """Check the semantic join from one collection record to its direct SVG."""
+    try:
+        root = ElementTree.fromstring(content)
+    except ElementTree.ParseError as error:
+        return [f"svg.parse: {error}"]
+    if root.get("data-kernel-id") != record["id"]:
+        return [
+            "svg.collection-root: data-kernel-id must be "
+            f'{record["id"]!r}, found {root.get("data-kernel-id")!r}'
+        ]
+
+    source_specific = [
+        element
+        for element in root.iter()
+        if "source-specific" in element.get("class", "").split()
+    ]
+    if len(source_specific) != 1:
+        return [
+            "svg.collection-source: expected exactly one source-specific group, "
+            f"found {len(source_specific)}"
+        ]
+    if source_specific[0].get("data-source-locator") != record["source_locator"]:
+        return ["svg.collection-source: source locator does not match the kernel record"]
+
+    visible_text = " ".join(" ".join(element.itertext()) for element in root.iter())
+    expected = record.get(
+        "visible_tokens",
+        (
+            f'SOURCE-DERIVED VARIANT · {record["role_path"]}',
+            f'SYNC + MEMORY · {record["synchronization_and_memory"]}',
+        ),
+    )
+    return [
+        f"svg.collection-coverage: missing {text!r}"
+        for text in expected
+        if text not in visible_text
+    ]
 
 
 def png_dimensions(path: Path) -> tuple[int, int]:

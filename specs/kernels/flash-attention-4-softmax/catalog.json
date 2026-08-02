@@ -1,0 +1,27 @@
+{
+  "schema_version": "collection-0.1",
+  "id": "flash-attention-4-softmax",
+  "topic": "flash-attention-4-softmax",
+  "title": "SM100 FlashAttention-4 softmax warpgroup reconstruction catalog",
+  "source": {
+    "repository": "https://github.com/Dao-AILab/flash-attention",
+    "commit": "2402cb0",
+    "observed": "2026-08-01"
+  },
+  "authoring": {
+    "goal": "Join the softmax warpgroup diagram to softmax_loop and softmax_step in the inspected SM100 forward kernel.",
+    "note": "The SVG is directly LLM-authored; this record only supplies the source-derived semantic contract."
+  },
+  "kernels": [
+    {
+      "id": "sm100-softmax-warpgroup",
+      "output": "graphs/flash-attention-4-softmax/sm100-softmax-warpgroup.svg",
+      "architecture": "Blackwell / SM100",
+      "source_locator": "flash_attn/cute/flash_fwd_sm100.py · softmax_loop / softmax_step",
+      "code_locator": "flash_attn/cute/flash_fwd_sm100.py:1876,2245 · softmax_loop and softmax_step",
+      "role_path": "One four-warp softmax WG waits for a Q-stage score tile → loads TMEM S to registers and updates online max/sum → publishes scale plus split P to correction and PV consumers",
+      "synchronization_and_memory": "Pipeline barriers separate Q-stage S/P/O regions; alpha is published early, the first three quarters of P let PV start, and the final quarter gates completion while score TMEM becomes reusable after its register load.",
+      "visible_tokens": ["TMEM → registers", "first ¾ P starts PV + corrected O; final ¼ gates completion and final row stats"]
+    }
+  ]
+}

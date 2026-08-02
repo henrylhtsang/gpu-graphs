@@ -35,7 +35,7 @@
   <text class="title" x="68" y="62">FlashAttention-4 forward · SM100 kernel structure</text>
   <text class="subtitle" x="68" y="98">Who does the work, which events connect the roles, and when SMEM/TMEM storage can be reused.</text>
   <text class="subtitle" x="68" y="132">NVIDIA Blackwell SM100 · path: dense TMA  ·  Q stages: 2  ·  KV stages: 3  ·  P publish: 96 + 32 cols  ·  split-KV: no  ·  tile: N=128, D=Dv=128  ·  scope: representative 1-CTA steady state</text>
-  <text class="source" x="68" y="164">flash_attn/cute/flash_fwd_sm100.py · inspected 2026-08-01</text>
+  <text class="source source-specific" data-source-locator="flash_attn/cute/flash_fwd_sm100.py · FlashAttentionForwardSm100.kernel" x="68" y="164">flash_attn/cute/flash_fwd_sm100.py · inspected 2026-08-01</text>
   <text class="section" x="68" y="214">WARP-ROLE EXECUTION · REPRESENTATIVE STEADY STATE</text>
   <text class="axis" x="2312.5" y="214">semantic event order · widths are not cycle-accurate</text>
   <rect x="50" y="230" width="4100" height="1242" rx="12" fill="#fff" stroke="#d4e0e7" stroke-width="1.5"/>

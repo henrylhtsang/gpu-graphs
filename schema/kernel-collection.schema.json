@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gpu-graphs.local/schema/kernel-collection-0.1.json",
+  "title": "GPU kernel reconstruction collection",
+  "type": "object",
+  "required": ["schema_version", "id", "topic", "title", "source", "kernels"],
+  "properties": {
+    "schema_version": { "const": "collection-0.1" },
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "topic": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "title": { "type": "string", "minLength": 1 },
+    "source": {
+      "type": "object",
+      "required": ["repository", "commit", "observed"],
+      "properties": {
+        "repository": { "type": "string", "minLength": 1 },
+        "commit": { "type": "string", "minLength": 7 },
+        "observed": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "authoring": { "type": "object" },
+    "kernels": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "output",
+          "architecture",
+          "source_locator",
+          "code_locator",
+          "role_path",
+          "synchronization_and_memory"
+        ],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+          "output": { "type": "string", "pattern": "^graphs/[a-z0-9][a-z0-9/-]*\\.svg$" },
+          "architecture": { "type": "string", "minLength": 1 },
+          "source_locator": { "type": "string", "minLength": 1 },
+          "code_locator": { "type": "string", "minLength": 1 },
+          "role_path": { "type": "string", "minLength": 1 },
+          "synchronization_and_memory": { "type": "string", "minLength": 1 },
+          "visible_tokens": {
+            "type": "array",
+            "minItems": 2,
+            "uniqueItems": true,
+            "items": { "type": "string", "minLength": 1 }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
