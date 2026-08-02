@@ -1,0 +1,105 @@
+<svg data-authoring="llm-direct" data-authoring-profile="direct-role-memory" data-structure-version="three-phase-role-memory-v1" data-topic-id="fa3-cute" data-graph-id="sm90-backward-pipeline" data-kernel-id="sm90-backward-pipeline" data-source-id="flash-attention" xmlns="http://www.w3.org/2000/svg" width="3000" height="2200" viewBox="0 0 3000 2200" role="img" aria-labelledby="title desc">
+  <title id="title">FlashAttention CuTe SM90 backward · producer, WGMMA, and gradient handoffs</title>
+  <desc id="desc">A three-phase reconstruction of the dense head-dimension-128 FlashAttentionBackwardSm90 kernel. Warp 0 loads fixed K and V plus staged Q, dO, LSE, and dPsum. Two consumer warpgroups reconstruct P and dS and issue WGMMA for dV, dQ, and dK. Warp 1 drains shared dQ through bulk reduce-add. The epilogue reuses K and V shared storage for dK and dV, and SM90 has no tensor memory.</desc>
+  <defs>
+    <style>
+      text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; fill: #172b38; }
+      .title { font-size: 38px; font-weight: 760; }
+      .subtitle { font-size: 18px; fill: #526a79; }
+      .phase { font-size: 16px; font-weight: 760; fill: #456171; }
+      .lane-title { font-size: 20px; font-weight: 760; }
+      .lane-note { font-size: 15px; fill: #607685; }
+      .box-text { font-size: 17px; font-weight: 720; text-anchor: middle; }
+      .box-note { font-size: 13px; fill: #536d7b; text-anchor: middle; }
+      .panel-title { font-size: 19px; font-weight: 780; fill: #526a79; letter-spacing: 1.1px; }
+      .memory-label { font-size: 18px; font-weight: 780; }
+      .code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 14px; fill: #607685; }
+      .outline { stroke: #314c5c; stroke-width: 1.7; }
+      .grid { stroke: #dbe5ea; stroke-width: 1.2; }
+      .arrow { fill: none; stroke: #526f7e; stroke-width: 2.1; marker-end: url(#arrow); }
+      .token-arrow { fill: none; stroke: #b87500; stroke-width: 2.4; marker-end: url(#gold); }
+      .release { fill: none; stroke: #b87500; stroke-width: 2.1; stroke-dasharray: 8 6; marker-end: url(#gold); }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#526f7e"/></marker>
+    <marker id="gold" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#b87500"/></marker>
+  </defs>
+  <rect width="3000" height="2200" fill="#f8fafb"/>
+  <text class="title" x="70" y="66">FlashAttention CuTe SM90 backward · D=128 dense path</text>
+  <text class="subtitle" x="70" y="108">K/V are fixed for one n-block; Qⱼ and dOⱼ stream through the row loop. Horizontal distance is semantic order, not cycles.</text>
+  <text class="subtitle" x="70" y="140">Inputs from preprocessing: saved LSEⱼ and Dⱼ = rowsum(dOⱼ ⊙ Oⱼ).</text>
+
+  <rect x="60" y="178" width="2880" height="1030" rx="14" fill="#fff" stroke="#cfdae1" stroke-width="1.5"/>
+  <rect class="phase-band" data-phase-id="prologue" x="430" y="178" width="420" height="1030" fill="#e8f2f7"/>
+  <rect class="phase-band" data-phase-id="mainloop" x="850" y="178" width="1510" height="1030" fill="#fbfcfd"/>
+  <rect class="phase-band" data-phase-id="epilogue" x="2360" y="178" width="580" height="1030" fill="#fff5df"/>
+  <text class="phase" x="640" y="204" text-anchor="middle">PROLOGUE · K/V + Q₀/dO₀</text>
+  <text class="phase" x="1605" y="204" text-anchor="middle">MAINLOOP · Qⱼ/dOⱼ + prefetch j+1</text>
+  <text class="phase" x="2650" y="204" text-anchor="middle">EPILOGUE · dV / dK stores</text>
+  <line class="grid" x1="430" y1="178" x2="430" y2="1208"/><line class="grid" x1="850" y1="178" x2="850" y2="1208"/><line class="grid" x1="2360" y1="178" x2="2360" y2="1208"/>
+  <line class="grid" x1="60" y1="380" x2="2940" y2="380"/><line class="grid" x1="60" y1="560" x2="2940" y2="560"/><line class="grid" x1="60" y1="740" x2="2940" y2="740"/><line class="grid" x1="60" y1="920" x2="2940" y2="920"/><line class="grid" x1="60" y1="1100" x2="2940" y2="1100"/>
+
+  <text class="lane-title" x="85" y="265">Warp 0 · TMA producer</text><text class="lane-note" x="85" y="291">loads fixed K/V and staged row operands</text>
+  <rect class="outline" x="470" y="232" width="335" height="78" rx="11" fill="#d7e8f2"/><text class="box-text" x="638" y="263">TMA K, V → sK, sV</text><text class="box-note" x="638" y="287">fixed for this n-block</text>
+  <rect class="outline" x="880" y="232" width="300" height="78" rx="11" fill="#d7e8f2"/><text class="box-text" x="1030" y="263">wait empty Q stage</text><text class="box-note" x="1030" y="287">producer acquire</text>
+  <rect class="outline" x="1210" y="232" width="340" height="78" rx="11" fill="#d7e8f2"/><text class="box-text" x="1380" y="263">Qⱼ + LSEⱼ → SMEM</text><text class="box-note" x="1380" y="287">commit Q stage j</text>
+  <rect class="outline" x="1580" y="232" width="350" height="78" rx="11" fill="#d7e8f2"/><text class="box-text" x="1755" y="263">dOⱼ + Dⱼ → SMEM</text><text class="box-note" x="1755" y="287">commit dO stage j</text>
+  <rect class="outline" x="1980" y="232" width="330" height="78" rx="11" fill="#d7e8f2"/><text class="box-text" x="2145" y="263">prefetch Qⱼ₊₁ / dOⱼ₊₁</text><text class="box-note" x="2145" y="287">after consumer release</text>
+  <path class="arrow" d="M805 271H877"/><path class="arrow" d="M1180 271H1207"/><path class="arrow" d="M1550 271H1577"/><path class="arrow" d="M1930 271H1977"/>
+
+  <text class="lane-title" x="85" y="445">Consumer WG0 · rows 0–63</text><text class="lane-note" x="85" y="471">WGMMA + pointwise P/dS</text>
+  <rect class="outline" x="880" y="412" width="210" height="78" rx="11" fill="#eef3f5"/><text class="box-text" x="985" y="443">wait Qⱼ / dOⱼ</text><text class="box-note" x="985" y="467">pipeline full</text>
+  <rect class="outline" x="1120" y="412" width="220" height="78" rx="11" fill="#b8dfd4"/><text class="box-text" x="1230" y="443">Sⱼ = QⱼKᵀ</text><text class="box-note" x="1230" y="467">WGMMA 1</text>
+  <rect class="outline" x="1370" y="412" width="235" height="78" rx="11" fill="#b8dfd4"/><text class="box-text" x="1488" y="443">dPⱼ = dOⱼVᵀ</text><text class="box-note" x="1488" y="467">WGMMA 2</text>
+  <rect class="outline" x="1635" y="412" width="260" height="78" rx="11" fill="#88cdb8"/><text class="box-text" x="1765" y="443">Pⱼ; dSⱼ=Pⱼ(dPⱼ−Dⱼ)</text><text class="box-note" x="1765" y="467">PdS barrier before overwrite</text>
+  <rect class="outline" x="1925" y="412" width="195" height="78" rx="11" fill="#b8dfd4"/><text class="box-text" x="2023" y="443">dV += PⱼᵀdOⱼ</text><text class="box-note" x="2023" y="467">WGMMA 3</text>
+  <rect class="outline" x="2150" y="412" width="180" height="78" rx="11" fill="#b8dfd4"/><text class="box-text" x="2240" y="443">dQⱼ = dSⱼK</text><text class="box-note" x="2240" y="467">WGMMA 4</text>
+  <path class="arrow" d="M1090 451H1117"/><path class="arrow" d="M1340 451H1367"/><path class="arrow" d="M1605 451H1632"/><path class="arrow" d="M1895 451H1922"/><path class="arrow" d="M2120 451H2147"/>
+
+  <text class="lane-title" x="85" y="625">Consumer WG1 · rows 64–127</text><text class="lane-note" x="85" y="651">same loop, partitioned fragments</text>
+  <rect class="outline" x="1010" y="592" width="220" height="78" rx="11" fill="#eef3f5"/><text class="box-text" x="1120" y="623">wait staged operands</text><text class="box-note" x="1120" y="647">staggered from WG0</text>
+  <rect class="outline" x="1260" y="592" width="220" height="78" rx="11" fill="#d8c5e8"/><text class="box-text" x="1370" y="623">Sⱼ / dPⱼ fragments</text><text class="box-note" x="1370" y="647">ordered WGMMA pair</text>
+  <rect class="outline" x="1510" y="592" width="245" height="78" rx="11" fill="#b99bd2"/><text class="box-text" x="1633" y="623">publish Pⱼ then dSⱼ</text><text class="box-note" x="1633" y="647">shared PdS stage</text>
+  <rect class="outline" x="1785" y="592" width="225" height="78" rx="11" fill="#d8c5e8"/><text class="box-text" x="1898" y="623">dK += dSⱼᵀQⱼ</text><text class="box-note" x="1898" y="647">WGMMA 5</text>
+  <rect class="outline" x="2040" y="592" width="265" height="78" rx="11" fill="#d8c5e8"/><text class="box-text" x="2173" y="623">release Qⱼ / dOⱼ stages</text><text class="box-note" x="2173" y="647">slots become j+1</text>
+  <path class="arrow" d="M1230 631H1257"/><path class="arrow" d="M1480 631H1507"/><path class="arrow" d="M1755 631H1782"/><path class="arrow" d="M2010 631H2037"/>
+  <path class="token-arrow" d="M1765 490V548H1898V589"/>
+
+  <text class="lane-title" x="85" y="805">Warp 1 · dQ drain</text><text class="lane-note" x="85" y="831">shared staging → GMEM accumulation</text>
+  <rect class="outline" x="1460" y="772" width="245" height="78" rx="11" fill="#f8e2ad"/><text class="box-text" x="1583" y="803">wait dQFull[WG]</text><text class="box-note" x="1583" y="827">named barrier</text>
+  <rect class="outline" x="1740" y="772" width="310" height="78" rx="11" fill="#f2d394"/><text class="box-text" x="1895" y="803">SMEM → bulk reduce-add</text><text class="box-note" x="1895" y="827">accumulate GMEM dQ</text>
+  <rect class="outline" x="2085" y="772" width="245" height="78" rx="11" fill="#f8e2ad"/><text class="box-text" x="2208" y="803">arrive dQEmpty[WG]</text><text class="box-note" x="2208" y="827">release shared slot</text>
+  <path class="token-arrow" d="M2240 490V700H1583V769"/><path class="arrow" d="M1705 811H1737"/><path class="release" d="M2050 811H2082"/>
+
+  <text class="lane-title" x="85" y="985">Consumer epilogue</text><text class="lane-note" x="85" y="1011">register dV/dK reuse fixed operand SMEM</text>
+  <rect class="outline" x="2365" y="952" width="255" height="78" rx="11" fill="#f2d394"/><text class="box-text" x="2493" y="983">dV regs → aliased sV</text><text class="box-note" x="2493" y="1007">after last V consumer</text>
+  <rect class="outline" x="2645" y="952" width="255" height="78" rx="11" fill="#f2d394"/><text class="box-text" x="2773" y="983">dK regs → aliased sK</text><text class="box-note" x="2773" y="1007">TMA store dV, then dK</text>
+  <path class="token-arrow" d="M2023 490V900H2493V949"/><path class="token-arrow" d="M1898 670V885H2773V949"/><path class="arrow" d="M2620 991H2642"/>
+
+  <rect x="460" y="1122" width="1880" height="58" rx="10" fill="#fff4d6" stroke="#bd7a08"/>
+  <text class="box-text" x="1400" y="1157">dSⱼ is the fan-out point for dQⱼ and dK accumulation</text>
+  <text class="code source-specific" data-source-locator="flash_attn/cute/flash_bwd_sm90.py · FlashAttentionBackwardSm90.kernel" x="2910" y="1160" text-anchor="end">flash_attn/cute/flash_bwd_sm90.py · FlashAttentionBackwardSm90.kernel</text>
+
+  <text class="panel-title" x="70" y="1270">ON-CHIP MEMORY ALLOCATIONS</text>
+  <rect x="60" y="1290" width="2880" height="345" rx="14" fill="#fff" stroke="#cfdae1"/>
+  <text class="memory-label" x="90" y="1350">SMEM</text>
+  <rect class="outline" x="210" y="1320" width="420" height="78" rx="10" fill="#d7e8f2"/><text class="box-text" x="420" y="1350">Q stage 0 ⇄ 1</text><text class="box-note" x="420" y="1376">with LSE rows</text>
+  <rect class="outline" x="650" y="1320" width="420" height="78" rx="10" fill="#d7e8f2"/><text class="box-text" x="860" y="1350">dO stage 0 ⇄ 1</text><text class="box-note" x="860" y="1376">with D rows</text>
+  <rect class="outline" x="1090" y="1320" width="420" height="78" rx="10" fill="#d8ebe5"/><text class="box-text" x="1300" y="1350">sK / sV fixed operands</text><text class="box-note" x="1300" y="1376">become sdK / sdV in epilogue</text>
+  <rect class="outline" x="1530" y="1320" width="420" height="78" rx="10" fill="#cfe9df"/><text class="box-text" x="1740" y="1350">P / dS stage ring</text><text class="box-note" x="1740" y="1376">named-barrier protected</text>
+  <rect class="outline" x="1970" y="1320" width="420" height="78" rx="10" fill="#f8e2ad"/><text class="box-text" x="2180" y="1350">dQ shared handoff</text><text class="box-note" x="2180" y="1376">WG producer ↔ warp 1</text>
+  <rect class="outline" x="2410" y="1320" width="480" height="78" rx="10" fill="#d8ebe5"/><text class="box-text" x="2650" y="1350">dK / dV FP32 accumulators</text><text class="box-note" x="2650" y="1376">register-resident through loop</text>
+  <text class="memory-label" x="90" y="1490">TMEM</text>
+  <rect class="outline" x="210" y="1455" width="2680" height="82" rx="10" fill="#e8eef2"/><text class="box-text" x="1550" y="1487">not available on SM90</text><text class="box-note" x="1550" y="1514">S, dP, dK, dV, and dQ accumulator fragments remain in registers; operands and handoffs use SMEM</text>
+  <text class="box-note" x="1550" y="1598">sV → sdV and sK → sdK only after the final dKV consumer</text>
+
+  <text class="panel-title" x="70" y="1690">MEMORY LIFETIMES · SAME PROLOGUE / MAINLOOP / EPILOGUE AXIS</text>
+  <rect x="60" y="1710" width="2880" height="420" rx="14" fill="#fff" stroke="#cfdae1"/>
+  <line class="grid" x1="430" y1="1710" x2="430" y2="2130"/><line class="grid" x1="850" y1="1710" x2="850" y2="2130"/><line class="grid" x1="2360" y1="1710" x2="2360" y2="2130"/>
+  <text class="phase" x="640" y="1738" text-anchor="middle">PROLOGUE</text><text class="phase" x="1605" y="1738" text-anchor="middle">MAINLOOP</text><text class="phase" x="2650" y="1738" text-anchor="middle">EPILOGUE</text>
+  <text class="memory-label" x="90" y="1796">sK / sdK</text><g class="resource-lifetime" data-resource-id="sk-sdk-alias"><rect class="life-box outline" x="470" y="1760" width="1860" height="54" rx="9" fill="#d8ebe5"/><text class="box-text" x="1400" y="1793">sK · fixed operand until final dQ/dK issue</text><rect class="life-box outline" x="2390" y="1760" width="500" height="54" rx="9" fill="#f2d394"/><text class="box-text" x="2640" y="1793">same bytes → sdK → GMEM</text></g>
+  <text class="memory-label" x="90" y="1866">sV / sdV</text><g class="resource-lifetime" data-resource-id="sv-sdv-alias"><rect class="life-box outline" x="470" y="1830" width="1540" height="54" rx="9" fill="#d8ebe5"/><text class="box-text" x="1240" y="1863">sV · fixed operand until final dP/dV issue</text><rect class="life-box outline" x="2040" y="1830" width="850" height="54" rx="9" fill="#f2d394"/><text class="box-text" x="2465" y="1863">same bytes → sdV → GMEM</text></g>
+  <text class="memory-label" x="90" y="1936">Q / dO</text><g class="resource-lifetime" data-resource-id="q-do-ring"><rect class="life-box outline" x="470" y="1900" width="1780" height="54" rx="9" fill="#d7e8f2"/><text class="box-text" x="1360" y="1933">Qⱼ,dOⱼ consumed while Qⱼ₊₁,dOⱼ₊₁ occupy the alternate stage</text></g>
+  <text class="memory-label" x="90" y="2006">P / dS</text><g class="resource-lifetime" data-resource-id="p-ds-ring"><rect class="life-box outline" x="970" y="1970" width="1180" height="54" rx="9" fill="#cfe9df"/><text class="box-text" x="1560" y="2003">Pⱼ → barrier → dSⱼ; stage releases after dQ/dK consumers</text></g>
+  <text class="memory-label" x="90" y="2076">REG</text><g class="resource-lifetime" data-resource-id="dk-dv-regs"><rect class="life-box outline" x="1180" y="2040" width="1530" height="54" rx="9" fill="#b8dfd4"/><text class="box-text" x="1945" y="2073">FP32 dK/dV accumulators · mainloop → epilogue</text></g>
+  <path class="token-arrow" d="M1380 310V365H985V409"/><path class="token-arrow" d="M1755 310V350H1120V589"/><path class="release" d="M2173 670V720H2145V313"/>
+</svg>

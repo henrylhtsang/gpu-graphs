@@ -1,7 +1,7 @@
 {
   "schema_version": "topic-0.1",
   "id": "fa3-cute",
-  "title": "FlashAttention-4 CuTeDSL SM90",
+  "title": "FlashAttention CuTeDSL SM90 forward and backward",
   "coverage": { "glob": "graphs/fa3-cute/*.svg" },
   "sources": [
     {
@@ -9,15 +9,15 @@
       "kind": "implementation",
       "repository": "https://github.com/Dao-AILab/flash-attention",
       "commit": "2402cb0",
-      "paths": ["flash_attn/cute/flash_fwd_sm90.py"],
-      "evidence": "The role split and overlap were inspected around mma_one_n_block_intrawg_overlap and its producer, pipeline, and storage setup."
+      "paths": ["flash_attn/cute/flash_fwd_sm90.py", "flash_attn/cute/flash_bwd_sm90.py"],
+      "evidence": "Forward overlap was inspected around mma_one_n_block_intrawg_overlap. Backward roles, five GEMM sequence, named barriers, dQ bulk-reduction path, and SMEM epilogue reuse were inspected in FlashAttentionBackwardSm90."
     }
   ],
   "authoring": {
-    "goal": "Reconstruct the dense D=128 SM90 forward overlap between the TMA producer and two consumer warpgroups.",
+    "goal": "Reconstruct dense D=128 SM90 forward overlap and backward gradient flow across the TMA producer, dQ store warp, and consumer warpgroups.",
     "audience": "GPU kernel engineers familiar with Hopper WGMMA and TMA pipelines.",
-    "reading_order": ["producer loads", "consumer token alternation", "intra-warpgroup QK/PV overlap", "SMEM lifetime and register residency"],
-    "required_content": ["prologue, mainloop, and epilogue phases", "two-stage K/V ring with j to j+1 reuse", "two consumer warpgroups", "named-barrier scheduler token", "wait-group semantics", "aligned SMEM/register lifetimes", "SM90 has no TMEM"],
+    "reading_order": ["phase boundaries and warp-role ownership", "source-specific forward or backward operation chain", "cross-role pipeline and named-barrier handoffs", "SMEM lifetime, reuse, and register residency"],
+    "required_content": ["exactly three top-level phases: prologue, mainloop, and epilogue", "producer and consumer warp roles", "source-specific major WGMMA sequence", "cross-role pipeline or named-barrier synchronization", "stage-indexed current and adjacent loop operands where the implementation overlaps iterations", "aligned SMEM/register lifetimes and epilogue reuse", "SM90 has no TMEM"],
     "excluded_content": ["cycle-accurate widths", "unselected head dimensions"]
   },
   "qa": {

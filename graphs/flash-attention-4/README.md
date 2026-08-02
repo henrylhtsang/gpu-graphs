@@ -5,8 +5,8 @@ Blackwell GPUs.
 
 The topic-wide direct-authoring contract is in
 [`specs/topics/flash-attention-4.json`](../../specs/topics/flash-attention-4.json).
-The detailed timeline additionally uses the reconstruction spec below. Both
-SVGs are authored directly by an LLM after source inspection; no layout
+The detailed forward timeline additionally uses the reconstruction spec below.
+All SVGs are authored directly by an LLM after source inspection; no layout
 generator is used.
 
 - `blackwell-forward-dependencies.svg`: simplified steady-state overlap and
@@ -25,3 +25,7 @@ generator is used.
   Its loop-resident Q resources, next-iteration K/V carries, physical reuse, and
   configuration-specific Q/O separation are validated rather than encoded as
   independent drawing coordinates.
+- `backward-sm100-kernel-structure.svg`: three-phase dense D=128, one-CTA
+  backward reconstruction. It shows load warp 13, MMA warp 12, compute warps
+  4–11, dQ-reduction warps 0–3, the S/dP → P/dS gradient chain, and aligned
+  SMEM/TMEM aliases including `S→P`, `dP→dS→dQ`, `sQ→sdK`, and `sdO→sdV`.

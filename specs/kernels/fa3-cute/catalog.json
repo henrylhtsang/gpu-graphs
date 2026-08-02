@@ -2,14 +2,14 @@
   "schema_version": "collection-0.1",
   "id": "fa3-cute",
   "topic": "fa3-cute",
-  "title": "CuTe DSL SM90 FlashAttention forward reconstruction catalog",
+  "title": "CuTe DSL SM90 FlashAttention forward and backward reconstruction catalog",
   "source": {
     "repository": "https://github.com/Dao-AILab/flash-attention",
     "commit": "2402cb0",
     "observed": "2026-08-01"
   },
   "authoring": {
-    "goal": "Join the SM90 overlap diagram to the inspected CuTe DSL forward implementation.",
+    "goal": "Join the SM90 forward and backward overlap diagrams to their inspected CuTe DSL implementations.",
     "note": "The SVG is directly LLM-authored; this record only supplies the source-derived semantic contract."
   },
   "kernels": [
@@ -22,6 +22,16 @@
       "role_path": "TMA producer fills Q and two-stage K/V → consumer WGs alternate the issue token and overlap new QK with old PV → output epilogue stores O",
       "synchronization_and_memory": "Named barriers serialize each consumer WG's QK→PV issue pair while wait groups expose QK before old PV retires; Q persists in SMEM, K/V stage j releases to j+1, and S/P/O remain in registers because SM90 has no TMEM.",
       "visible_tokens": ["QK and old PV were both issued; waits retire them in order", "Q persists; K/V stage j releases after WGMMA issue, then the slot becomes j+1"]
+    },
+    {
+      "id": "sm90-backward-pipeline",
+      "output": "graphs/fa3-cute/sm90-backward-pipeline.svg",
+      "architecture": "Hopper / SM90",
+      "source_locator": "flash_attn/cute/flash_bwd_sm90.py · FlashAttentionBackwardSm90.kernel",
+      "code_locator": "flash_attn/cute/flash_bwd_sm90.py:46,630,854,1109,1468 · kernel, load, mma, and mma_one_m_block",
+      "role_path": "Warp 0 TMA-loads K/V and staged Qj/dOj/statistics → two consumer WGs reconstruct P and dS then issue dV/dQ/dK WGMMA → warp 1 bulk-reduce-adds dQ while the consumers stage and TMA-store dV/dK",
+      "synchronization_and_memory": "Q/dO pipeline barriers protect j to j+1 reuse; the PdS named barrier separates P and dS occupants; dQ-full/empty barriers protect shared reduction staging; sV and sK are reused only in the epilogue as dV and dK output tiles; SM90 has no TMEM.",
+      "visible_tokens": ["dSⱼ is the fan-out point for dQⱼ and dK accumulation", "sV → sdV and sK → sdK only after the final dKV consumer"]
     }
   ]
 }

@@ -1,7 +1,7 @@
 {
   "schema_version": "topic-0.1",
   "id": "flash-attention-4",
-  "title": "FlashAttention-4 SM100",
+  "title": "FlashAttention-4 SM100 forward and backward",
   "coverage": { "glob": "graphs/flash-attention-4/*.svg" },
   "sources": [
     {
@@ -9,15 +9,15 @@
       "kind": "implementation",
       "repository": "https://github.com/Dao-AILab/flash-attention",
       "commit": "2402cb0",
-      "paths": ["flash_attn/cute/flash_fwd_sm100.py"],
-      "evidence": "Warp roles, TMA order, QK/PV issue order, softmax/correction handoffs, and SMEM/TMEM layouts were inspected in the SM100 forward implementation and recorded in the reconstruction spec."
+      "paths": ["flash_attn/cute/flash_fwd_sm100.py", "flash_attn/cute/flash_bwd_sm100.py"],
+      "evidence": "Forward roles and QK/PV overlap were inspected in flash_fwd_sm100.py. Backward load, MMA, compute, dQ reduction, dKV epilogue roles, pipeline handoffs, and SMEM/TMEM aliases were inspected in FlashAttentionBackwardSm100."
     }
   ],
   "authoring": {
-    "goal": "Explain both the compact dependency story and the complete three-phase SM100 forward reconstruction.",
+    "goal": "Explain code-derived SM100 forward and backward schedules with enough role, synchronization, and on-chip lifetime detail to reconstruct each selected path.",
     "audience": "GPU kernel engineers familiar with Blackwell TMA, tcgen05, SMEM, and TMEM.",
-    "reading_order": ["warp roles", "prologue/mainloop/epilogue operation order", "ready and release handoffs", "SMEM/TMEM lifetimes and reuse"],
-    "required_content": ["exactly three top-level phases: prologue, mainloop, and epilogue", "two Q stages", "separate QK and PV issues", "split softmax publication", "correction role", "SMEM/TMEM lifetimes and reuse on the same event axis"],
+    "reading_order": ["phase boundaries and warp-role ownership", "source-specific forward or backward operation chain", "ready and release handoffs with their mechanisms", "SMEM/TMEM lifetimes, sequential aliases, and epilogue reuse"],
+    "required_content": ["exactly three top-level phases: prologue, mainloop, and epilogue", "source-specific active warp roles", "stage-indexed major matrix operations and pointwise work", "cross-role readiness and release synchronization", "SMEM/TMEM lifetimes and reuse on the same event axis", "configuration-dependent alias or separation decisions"],
     "excluded_content": ["cycle-accurate timing", "host launch plumbing"]
   },
   "qa": {

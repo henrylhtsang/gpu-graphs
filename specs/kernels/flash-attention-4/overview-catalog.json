@@ -2,14 +2,14 @@
   "schema_version": "collection-0.1",
   "id": "flash-attention-4-overview",
   "topic": "flash-attention-4",
-  "title": "SM100 FlashAttention-4 compact forward reconstruction catalog",
+  "title": "SM100 FlashAttention-4 compact forward and backward reconstruction catalog",
   "source": {
     "repository": "https://github.com/Dao-AILab/flash-attention",
     "commit": "2402cb0",
     "observed": "2026-08-01"
   },
   "authoring": {
-    "goal": "Join the compact SM100 dependency overview to the inspected forward kernel without duplicating the full reconstruction spec.",
+    "goal": "Join compact SM100 forward and backward dependency views to the inspected kernels without duplicating the full forward reconstruction spec.",
     "note": "The SVG is directly LLM-authored; the detailed forward-sm100-kernel-structure view remains covered by its full schema-0.3 spec."
   },
   "kernels": [
@@ -22,6 +22,16 @@
       "role_path": "TMA warp seeds Q0/Q1 and K0/V0 then streams Kj/Vj → MMA warp issues separate QK0/QK1 and PV0/PV1 → two softmax WGs plus correction feed the output epilogue",
       "synchronization_and_memory": "Q-stage and K/V pipeline barriers coordinate split P and corrected O; Q0/Q1 persist in SMEM, K/V stage j releases before j+1 reuse, and separate TMEM score/output regions retain S0/S1 and O0/O1 through final PV.",
       "visible_tokens": ["MAINLOOP · Kj/Vj + Kj+1/Vj+1", "Q₀/Q₁ persist; K/V stage j releases before its physical slot is reused for j+1"]
+    },
+    {
+      "id": "backward-sm100-kernel-structure",
+      "output": "graphs/flash-attention-4/backward-sm100-kernel-structure.svg",
+      "architecture": "Blackwell / SM100",
+      "source_locator": "flash_attn/cute/flash_bwd_sm100.py · FlashAttentionBackwardSm100.kernel",
+      "code_locator": "flash_attn/cute/flash_bwd_sm100.py:49,1025,1089-1626,2262,2882,3547,3829 · warp dispatch, MMA, compute, dQ reduction, and dKV epilogue",
+      "role_path": "Load warp 13 stages K/V and Qj/dOj/statistics → MMA warp 12 issues S,dP,dV,dK,dQ → compute warps 4-11 reconstruct P and dS plus drain dK/dV → reduce warps 0-3 bulk-reduce-add dQ",
+      "synchronization_and_memory": "UMMA/async pipelines protect every producer-consumer handoff; compute barriers make S→P and dP→dS aliasing safe; TMEM S/P share one region and dP/dS/dQ share another sequentially; sQ→sdK and sdO→sdV alias only for epilogue staging.",
+      "visible_tokens": ["TMEM S→P and dP→dS→dQ are sequential aliases, not simultaneous tiles", "sQ → sdK and sdO → sdV after their final operand consumers"]
     }
   ]
 }

@@ -1,7 +1,7 @@
 {
   "schema_version": "topic-0.1",
   "id": "flash-attention-3-cutlass",
-  "title": "FlashAttention-3 CUTLASS SM90",
+  "title": "FlashAttention-3 CUTLASS SM90 forward and backward",
   "coverage": { "glob": "graphs/flash-attention-3-cutlass/*.svg" },
   "sources": [
     {
@@ -9,15 +9,15 @@
       "kind": "implementation",
       "repository": "https://github.com/Dao-AILab/flash-attention",
       "commit": "2402cb0",
-      "paths": ["hopper/mainloop_fwd_sm90_tma_gmma_ws.hpp"],
-      "evidence": "The D=128 RS-PV path, named barriers, WGMMA issue order, wait groups, and K/V pipelines were inspected in the Hopper forward mainloop."
+      "paths": ["hopper/mainloop_fwd_sm90_tma_gmma_ws.hpp", "hopper/mainloop_bwd_sm90_tma_gmma_ws.hpp", "hopper/flash_bwd_kernel_sm90.h"],
+      "evidence": "Forward RS-PV overlap was inspected in the Hopper forward mainloop. Backward producer subroles, five-WGMMA gradient path, dQ bulk-reduce handoff, and union-backed epilogue reuse were inspected in FlashAttnBwdSm90 and CollectiveMainloopBwdSm90."
     }
   ],
   "authoring": {
-    "goal": "Reconstruct the Hopper forward role overlap and distinguish scheduler-token ping-pong from the K/V stage ring.",
+    "goal": "Reconstruct Hopper forward overlap and backward gradient flow, including producer subroles, named barriers, and SMEM reuse.",
     "audience": "GPU kernel engineers familiar with CUTLASS Hopper attention.",
-    "reading_order": ["producer pipeline", "consumer warpgroup roles", "QK/PV issue and wait order", "register and SMEM residency"],
-    "required_content": ["prologue, mainloop, and epilogue phases", "two consumer warpgroups", "RS-PV", "named-barrier token", "two-stage K/V pipeline with j to j+1 reuse", "aligned SMEM/register lifetimes", "SM90 has no TMEM"],
+    "reading_order": ["phase boundaries and producer subroles", "source-specific forward or backward WGMMA chain", "pipeline and named-barrier handoffs", "register residency and union-backed SMEM reuse"],
+    "required_content": ["exactly three top-level phases: prologue, mainloop, and epilogue", "producer and consumer warpgroup ownership", "source-specific major WGMMA sequence", "cross-role pipeline or named-barrier synchronization", "stage-indexed current and adjacent loop operands where the implementation overlaps iterations", "aligned SMEM/register lifetimes and epilogue reuse", "SM90 has no TMEM"],
     "excluded_content": ["cycle-accurate widths", "non-D=128 variants"]
   },
   "qa": {

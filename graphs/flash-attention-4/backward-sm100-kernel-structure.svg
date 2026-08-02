@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg data-authoring="llm-direct" data-authoring-profile="direct-role-memory" data-structure-version="three-phase-role-memory-v1" data-topic-id="flash-attention-4" data-graph-id="backward-sm100-kernel-structure" data-kernel-id="backward-sm100-kernel-structure" data-source-id="flash-attention" xmlns="http://www.w3.org/2000/svg" width="3600" height="2450" viewBox="0 0 3600 2450" role="img" aria-labelledby="title desc">
+  <title id="title">FlashAttention-4 backward · SM100 role, synchronization, and memory timeline</title>
+  <desc id="desc">A three-phase reconstruction of the dense head-dimension-128 one-CTA FlashAttentionBackwardSm100 path. Load warp 13 stages fixed K and V plus streamed Q, dO, LSE, and D. MMA warp 12 owns tensor memory and issues S, dP, dV, dQ, and dK. Compute warps reconstruct P and dS, reduce warps drain dQ, and the epilogue reuses operand shared memory for dK and dV staging. Tensor-memory sequential aliases are aligned to the same semantic event axis.</desc>
+  <defs>
+    <style>
+      text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; fill: #172b38; }
+      .title { font-size: 40px; font-weight: 760; }
+      .subtitle { font-size: 18px; fill: #526a79; }
+      .phase { font-size: 16px; font-weight: 760; fill: #456171; letter-spacing: .7px; }
+      .lane-title { font-size: 20px; font-weight: 760; }
+      .lane-note { font-size: 14px; fill: #607685; }
+      .box-text { font-size: 16px; font-weight: 720; text-anchor: middle; }
+      .box-note { font-size: 12px; fill: #536d7b; text-anchor: middle; }
+      .panel-title { font-size: 19px; font-weight: 780; fill: #526a79; letter-spacing: 1.1px; }
+      .memory { font-size: 17px; font-weight: 780; }
+      .memory-note { font-size: 13px; fill: #607685; }
+      .code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 14px; fill: #607685; }
+      .outline { stroke: #314c5c; stroke-width: 1.6; }
+      .grid { stroke: #dbe5ea; stroke-width: 1.2; }
+      .ready { fill: none; stroke: #b87500; stroke-width: 2.3; marker-end: url(#gold); }
+      .release { fill: none; stroke: #b87500; stroke-width: 2.1; stroke-dasharray: 8 6; marker-end: url(#gold); }
+      .flow { fill: none; stroke: #526f7e; stroke-width: 2.1; marker-end: url(#arrow); }
+      .sync-label { font-size: 12px; font-weight: 700; fill: #8b5c08; paint-order: stroke; stroke: #fff; stroke-width: 5px; }
+      .alias-label { font-size: 13px; font-weight: 720; fill: #8b5c08; text-anchor: middle; }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#526f7e"/></marker>
+    <marker id="gold" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#b87500"/></marker>
+    <pattern id="wait" width="8" height="8" patternUnits="userSpaceOnUse"><path d="M-2 2L2-2M0 8L8 0M6 10L10 6" stroke="#c7d1d7" stroke-width="2"/></pattern>
+  </defs>
+
+  <rect width="3600" height="2450" fill="#f8fafb"/>
+  <text class="title" x="70" y="66">FlashAttention-4 backward · SM100 dense D=128, one CTA</text>
+  <text class="subtitle" x="70" y="108">Fixed K/V serve one n-block while Qⱼ, dOⱼ, saved LSEⱼ, and Dⱼ stream across the row loop. Widths show semantic order, not cycles.</text>
+  <text class="subtitle" x="70" y="140">Selected path: tile M×N=128×128 · Q stages=2 · dO stages=1 · no 2-CTA relay · nondeterministic dQ reduce-add.</text>
+
+  <rect x="60" y="178" width="3480" height="1130" rx="14" fill="#fff" stroke="#cfdae1" stroke-width="1.5"/>
+  <rect class="phase-band" data-phase-id="prologue" x="500" y="178" width="460" height="1130" fill="#e8f2f7"/>
+  <rect class="phase-band" data-phase-id="mainloop" x="960" y="178" width="1860" height="1130" fill="#fbfcfd"/>
+  <rect class="phase-band" data-phase-id="epilogue" x="2820" y="178" width="720" height="1130" fill="#fff5df"/>
+  <text class="phase" x="730" y="204" text-anchor="middle">PROLOGUE · FIXED K/V + Q₀/dO₀/STATS₀</text>
+  <text class="phase" x="1890" y="204" text-anchor="middle">MAINLOOP · Qⱼ/dOⱼ/STATSⱼ + PREFETCH j+1</text>
+  <text class="phase" x="3180" y="204" text-anchor="middle">EPILOGUE · dK/dV + TMEM DRAIN</text>
+  <line class="grid" x1="500" y1="178" x2="500" y2="1308"/><line class="grid" x1="960" y1="178" x2="960" y2="1308"/><line class="grid" x1="2820" y1="178" x2="2820" y2="1308"/>
+  <line class="grid" x1="60" y1="390" x2="3540" y2="390"/><line class="grid" x1="60" y1="570" x2="3540" y2="570"/><line class="grid" x1="60" y1="750" x2="3540" y2="750"/><line class="grid" x1="60" y1="930" x2="3540" y2="930"/><line class="grid" x1="60" y1="1110" x2="3540" y2="1110"/><line class="grid" x1="60" y1="1290" x2="3540" y2="1290"/>
+
+  <text class="lane-title" x="85" y="265">Load producer · warp 13</text><text class="lane-note" x="85" y="291">TMA inputs → staged SMEM</text>
+  <rect class="outline" x="530" y="232" width="190" height="86" rx="11" fill="#d7e8f2"/><text class="box-text" x="625" y="265">TMA K, V</text><text class="box-note" x="625" y="289">fixed → sK, sV</text>
+  <rect class="outline" x="740" y="232" width="190" height="86" rx="11" fill="#d7e8f2"/><text class="box-text" x="835" y="258">TMA Q₀, dO₀</text><text class="box-note" x="835" y="282">LSE₀, D₀ too</text><text class="box-note" x="835" y="300">commit pipelines</text>
+  <rect class="outline" x="995" y="232" width="215" height="86" rx="11" fill="url(#wait)"/><text class="box-text" x="1103" y="265">wait empty stages</text><text class="box-note" x="1103" y="289">Q/dO producer acquire</text>
+  <rect class="outline" x="1230" y="232" width="250" height="86" rx="11" fill="#d7e8f2"/><text class="box-text" x="1355" y="258">TMA Qⱼ, dOⱼ</text><text class="box-note" x="1355" y="282">LSEⱼ, Dⱼ → SMEM</text><text class="box-note" x="1355" y="300">full-stage commit</text>
+  <rect class="outline" x="2440" y="232" width="330" height="86" rx="11" fill="#d7e8f2"/><text class="box-text" x="2605" y="258">prefetch Qⱼ₊₁, dOⱼ₊₁</text><text class="box-note" x="2605" y="282">LSEⱼ₊₁, Dⱼ₊₁</text><text class="box-note" x="2605" y="300">after stage release</text>
+  <path class="flow" d="M720 275H737"/><path class="flow" d="M930 275H992"/><path class="flow" d="M1210 275H1227"/>
+
+  <text class="lane-title" x="85" y="445">MMA issuer · warp 12</text><text class="lane-note" x="85" y="471">owns TMEM; issues tcgen05</text>
+  <rect class="outline" x="530" y="412" width="190" height="86" rx="11" fill="#d8c5e8"/><text class="box-text" x="625" y="445">allocate TMEM</text><text class="box-note" x="625" y="469">1-CTA columns</text>
+  <rect class="outline" x="995" y="412" width="170" height="86" rx="11" fill="url(#wait)"/><text class="box-text" x="1080" y="445">acquire Q/dO</text><text class="box-note" x="1080" y="469">TMA→MMA pipes</text>
+  <rect class="outline" x="1185" y="412" width="210" height="86" rx="11" fill="#c9e6dc"/><text class="box-text" x="1290" y="445">Sⱼ = QⱼKᵀ</text><text class="box-note" x="1290" y="469">tcgen05 → TMEM S</text>
+  <rect class="outline" x="1415" y="412" width="225" height="86" rx="11" fill="#c9e6dc"/><text class="box-text" x="1528" y="445">dPⱼ = dOⱼVᵀ</text><text class="box-note" x="1528" y="469">tcgen05 → TMEM dP</text>
+  <rect class="outline" x="1900" y="412" width="155" height="86" rx="11" fill="url(#wait)"/><text class="box-text" x="1978" y="445">wait dSⱼ</text><text class="box-note" x="1978" y="469">compute→MMA</text>
+  <rect class="outline" x="2075" y="412" width="195" height="86" rx="11" fill="#c9e6dc"/><text class="box-text" x="2173" y="438">dV += PⱼᵀdOⱼ</text><text class="box-note" x="2173" y="462">TMEM accumulator</text><text class="box-note" x="2173" y="480">dKV pipeline</text>
+  <rect class="outline" x="2290" y="412" width="180" height="86" rx="11" fill="#c9e6dc"/><text class="box-text" x="2380" y="445">dQⱼ = dSⱼK</text><text class="box-note" x="2380" y="469">TMEM dQ</text>
+  <rect class="outline" x="2490" y="412" width="260" height="86" rx="11" fill="#c9e6dc"/><text class="box-text" x="2620" y="438">dK += dSⱼᵀQⱼ</text><text class="box-note" x="2620" y="462">TMEM accumulator</text><text class="box-note" x="2620" y="480">release Q/dO stages</text>
+  <rect class="outline" x="3290" y="412" width="210" height="86" rx="11" fill="#d8c5e8"/><text class="box-text" x="3395" y="445">free TMEM</text><text class="box-note" x="3395" y="469">after all drains</text>
+  <path class="flow" d="M1165 455H1182"/><path class="flow" d="M1395 455H1412"/><path class="flow" d="M2055 455H2072"/><path class="flow" d="M2270 455H2287"/><path class="flow" d="M2470 455H2487"/>
+
+  <text class="lane-title" x="85" y="625">Compute WG0 · warps 4–7</text><text class="lane-note" x="85" y="651">reconstruct P and dS from TMEM</text>
+  <rect class="outline" x="1195" y="592" width="175" height="86" rx="11" fill="url(#wait)"/><text class="box-text" x="1283" y="625">wait Sⱼ</text><text class="box-note" x="1283" y="649">MMA→compute</text>
+  <rect class="outline" x="1390" y="592" width="245" height="86" rx="11" fill="#b99bd2"/><text class="box-text" x="1513" y="618">TMEM Sⱼ → regs</text><text class="box-note" x="1513" y="642">Pⱼ = exp(Sⱼ−LSEⱼ)</text><text class="box-note" x="1513" y="660">S-read barrier before P alias</text>
+  <rect class="outline" x="1655" y="592" width="225" height="86" rx="11" fill="#b99bd2"/><text class="box-text" x="1768" y="618">TMEM dPⱼ → regs</text><text class="box-note" x="1768" y="642">dSⱼ=Pⱼ(dPⱼ−Dⱼ)</text><text class="box-note" x="1768" y="660">dP-read barrier</text>
+  <rect class="outline" x="1900" y="592" width="220" height="86" rx="11" fill="#88cdb8"/><text class="box-text" x="2010" y="625">regs → TMEM dSⱼ</text><text class="box-note" x="2010" y="649">dS pipeline commit</text>
+  <rect class="outline" x="2530" y="592" width="240" height="86" rx="11" fill="#eef3f5"/><text class="box-text" x="2650" y="625">release Qⱼ / dOⱼ</text><text class="box-note" x="2650" y="649">slots become j+1</text>
+  <path class="flow" d="M1370 635H1387"/><path class="flow" d="M1635 635H1652"/><path class="flow" d="M1880 635H1897"/>
+
+  <text class="lane-title" x="85" y="805">Compute WG1 · warps 8–11</text><text class="lane-note" x="85" y="831">staggered fragments + dKV drain</text>
+  <rect class="outline" x="1350" y="772" width="210" height="86" rx="11" fill="#eef3f5"/><text class="box-text" x="1455" y="805">stagger behind WG0</text><text class="box-note" x="1455" y="829">S/P pipeline phase</text>
+  <rect class="outline" x="1580" y="772" width="245" height="86" rx="11" fill="#d8c5e8"/><text class="box-text" x="1703" y="805">Pⱼ / dSⱼ fragments</text><text class="box-note" x="1703" y="829">same reconstruction path</text>
+  <rect class="outline" x="2440" y="772" width="330" height="86" rx="11" fill="#f8e2ad"/><text class="box-text" x="2605" y="798">wait final dK/dV</text><text class="box-note" x="2605" y="822">TMEM→register drain begins</text><text class="box-note" x="2605" y="840">after row loop exit</text>
+  <rect class="outline" x="2860" y="772" width="290" height="86" rx="11" fill="#f2d394"/><text class="box-text" x="3005" y="798">TMEM dV/dK → regs</text><text class="box-note" x="3005" y="822">convert / partition fragments</text><text class="box-note" x="3005" y="840">epilogue producer</text>
+  <rect class="outline" x="3170" y="772" width="330" height="86" rx="11" fill="#f2d394"/><text class="box-text" x="3335" y="798">regs → sdV / sdK → GMEM</text><text class="box-note" x="3335" y="822">aliased operand SMEM staging</text><text class="box-note" x="3335" y="840">TMA or direct store path</text>
+  <path class="flow" d="M1560 815H1577"/><path class="flow" d="M2770 815H2857"/><path class="flow" d="M3150 815H3167"/>
+
+  <text class="lane-title" x="85" y="985">dQ reduction · warps 0–3</text><text class="lane-note" x="85" y="1011">TMEM → registers → staged SMEM → GMEM</text>
+  <rect class="outline" x="2250" y="952" width="190" height="86" rx="11" fill="url(#wait)"/><text class="box-text" x="2345" y="985">wait dQⱼ</text><text class="box-note" x="2345" y="1009">MMA→reduce pipe</text>
+  <rect class="outline" x="2460" y="952" width="240" height="86" rx="11" fill="#f8e2ad"/><text class="box-text" x="2580" y="978">TMEM dQⱼ → regs</text><text class="box-note" x="2580" y="1002">regs → sdQaccum</text><text class="box-note" x="2580" y="1020">arrive dQ full</text>
+  <rect class="outline" x="2860" y="952" width="300" height="86" rx="11" fill="#f2d394"/><text class="box-text" x="3010" y="978">bulk reduce-add dQ</text><text class="box-note" x="3010" y="1002">sdQaccum → GMEM dQ</text><text class="box-note" x="3010" y="1020">release dQ empty</text>
+  <path class="flow" d="M2440 995H2457"/><path class="flow" d="M2700 995H2857"/>
+
+  <text class="lane-title" x="85" y="1165">Relay / spare roles</text><text class="lane-note" x="85" y="1191">selected one-CTA path</text>
+  <rect class="outline" x="995" y="1132" width="450" height="86" rx="11" fill="#eef3f5"/><text class="box-text" x="1220" y="1165">warp 14 relay inactive</text><text class="box-note" x="1220" y="1189">enabled only by the 2-CTA path</text>
+  <rect class="outline" x="1470" y="1132" width="310" height="86" rx="11" fill="#eef3f5"/><text class="box-text" x="1625" y="1165">warp 15 has no role</text><text class="box-note" x="1625" y="1189">configuration-specific idle lane</text>
+
+  <path class="ready" d="M1355 318V365H1080V409"/><text class="sync-label" x="1120" y="360">Q/dO/LSE/D TMA→MMA pipelines</text>
+  <path class="ready" d="M1290 498V548H1283V589"/><text class="sync-label" x="1320" y="545">S full</text>
+  <path class="ready" d="M1528 498V565H1768V589"/><text class="sync-label" x="1565" y="560">dP full</text>
+  <path class="ready" d="M2010 592V540H1978V501"/><text class="sync-label" x="2025" y="552">dS ready</text>
+  <path class="ready" d="M2380 498V900H2345V949"/><text class="sync-label" x="2400" y="900">dQ ready</text>
+  <path class="ready" d="M2720 498V540H2790V735H2605V769"/><text class="sync-label" x="2798" y="730" text-anchor="end">dKV final after loop exit</text>
+  <path class="release" d="M2650 678V705H2810V350H2605V321"/><text class="sync-label" x="2670" y="699">consumer release → prefetch j+1</text>
+
+  <rect x="470" y="1235" width="2250" height="40" rx="9" fill="#fff4d6" stroke="#bd7a08"/>
+  <text class="box-text" x="1595" y="1261">Compute barriers make the S→P and dP→dS/dQ overwrites legal only after every reader finishes.</text>
+  <text class="code source-specific" data-source-locator="flash_attn/cute/flash_bwd_sm100.py · FlashAttentionBackwardSm100.kernel" x="3510" y="1262" text-anchor="end">flash_attn/cute/flash_bwd_sm100.py · FlashAttentionBackwardSm100.kernel</text>
+
+  <text class="panel-title" x="70" y="1360">PHYSICAL ON-CHIP ALLOCATIONS · SELECTED PATH</text>
+  <rect x="60" y="1380" width="3480" height="390" rx="14" fill="#fff" stroke="#cfdae1"/>
+  <text class="memory" data-allocation-id="smem-q-dk" x="90" y="1444">SMEM · sQ / sdK</text>
+  <rect class="outline" x="310" y="1408" width="610" height="72" rx="10" fill="#d7e8f2"/><text class="box-text" x="615" y="1437">sQ stage 0 ⇄ stage 1</text><text class="box-note" x="615" y="1461">same allocation sized to later stage sdK</text>
+  <text class="memory" data-allocation-id="smem-do-dv" x="90" y="1534">SMEM · sdO / sdV</text>
+  <rect class="outline" x="310" y="1498" width="610" height="72" rx="10" fill="#d7e8f2"/><text class="box-text" x="615" y="1527">sdO stage 0</text><text class="box-note" x="615" y="1551">same allocation sized to later stage sdV</text>
+  <text class="memory" data-allocation-id="smem-operands" x="960" y="1444">SMEM · fixed + handoff</text>
+  <rect class="outline" x="1210" y="1408" width="500" height="72" rx="10" fill="#d8ebe5"/><text class="box-text" x="1460" y="1437">sK / sV fixed operands</text><text class="box-note" x="1460" y="1461">plus sLSE, sD stats rows</text>
+  <rect class="outline" x="1730" y="1408" width="500" height="72" rx="10" fill="#cfe9df"/><text class="box-text" x="1980" y="1437">sdS + sdQaccum handoffs</text><text class="box-note" x="1980" y="1461">compute→MMA and reduce→GMEM</text>
+  <text class="memory" data-allocation-id="tmem-regions" x="960" y="1534">TMEM · column regions</text>
+  <rect class="outline" x="1210" y="1498" width="390" height="72" rx="10" fill="#d8c5e8"/><text class="box-text" x="1405" y="1527">offset 0 · S → P</text><text class="box-note" x="1405" y="1551">sequential alias</text>
+  <rect class="outline" x="1620" y="1498" width="460" height="72" rx="10" fill="#d8c5e8"/><text class="box-text" x="1850" y="1527">offset 256 · dP → dS → dQ</text><text class="box-note" x="1850" y="1551">sequential alias in 1-CTA path</text>
+  <rect class="outline" x="2100" y="1498" width="360" height="72" rx="10" fill="#c9e6dc"/><text class="box-text" x="2280" y="1527">offset 128 · dV</text><text class="box-note" x="2280" y="1551">loop accumulator</text>
+  <rect class="outline" x="2480" y="1498" width="410" height="72" rx="10" fill="#c9e6dc"/><text class="box-text" x="2685" y="1527">dK · after dP span</text><text class="box-note" x="2685" y="1551">loop accumulator</text>
+  <rect x="310" y="1605" width="3230" height="62" rx="9" fill="#fff4d6" stroke="#bd7a08"/>
+  <text class="alias-label" x="1925" y="1630">TMEM S→P and dP→dS→dQ are sequential aliases, not simultaneous tiles</text>
+  <text class="alias-label" x="1925" y="1652">sQ → sdK and sdO → sdV after their final operand consumers</text>
+  <text class="memory-note" x="310" y="1732">Dⱼ denotes dPsum / rowsum(dOⱼ ⊙ Oⱼ), produced by the preprocessing kernel and consumed with saved LSEⱼ.</text>
+
+  <text class="panel-title" x="70" y="1830">MEMORY LIFETIMES · SAME PROLOGUE / MAINLOOP / EPILOGUE AXIS</text>
+  <rect x="60" y="1850" width="3480" height="520" rx="14" fill="#fff" stroke="#cfdae1"/>
+  <line class="grid" x1="500" y1="1850" x2="500" y2="2370"/><line class="grid" x1="960" y1="1850" x2="960" y2="2370"/><line class="grid" x1="2820" y1="1850" x2="2820" y2="2370"/>
+  <text class="phase" x="730" y="1878" text-anchor="middle">PROLOGUE</text><text class="phase" x="1890" y="1878" text-anchor="middle">MAINLOOP</text><text class="phase" x="3180" y="1878" text-anchor="middle">EPILOGUE</text>
+
+  <text class="memory" x="90" y="1940">sQ / sdK</text>
+  <g class="resource-lifetime" data-resource-id="sq-sdk-alias"><rect class="life-box outline" x="530" y="1905" width="2220" height="52" rx="9" fill="#d7e8f2"/><text class="box-text" x="1640" y="1938">sQ₀ / sQⱼ ring · live until final dK issue</text><rect class="life-box outline" x="2860" y="1905" width="630" height="52" rx="9" fill="#f2d394"/><text class="box-text" x="3175" y="1938">same bytes → sdK → GMEM</text></g>
+  <text class="memory" x="90" y="2010">sdO / sdV</text>
+  <g class="resource-lifetime" data-resource-id="sdo-sdv-alias"><rect class="life-box outline" x="740" y="1975" width="1710" height="52" rx="9" fill="#d7e8f2"/><text class="box-text" x="1595" y="2008">sdOⱼ · live until final dP/dV issue</text><rect class="life-box outline" x="2860" y="1975" width="630" height="52" rx="9" fill="#f2d394"/><text class="box-text" x="3175" y="2008">same bytes → sdV → GMEM</text></g>
+  <text class="memory" x="90" y="2080">TMEM S / P</text>
+  <g class="resource-lifetime" data-resource-id="tmem-s-p"><rect class="life-box outline" x="1190" y="2045" width="390" height="52" rx="9" fill="#d8c5e8"/><text class="box-text" x="1385" y="2078">Sⱼ · readers active</text><rect class="life-box outline" x="1600" y="2045" width="470" height="52" rx="9" fill="#b99bd2"/><text class="box-text" x="1835" y="2078">same columns → Pⱼ</text></g>
+  <text class="memory" x="90" y="2150">TMEM dP / dS / dQ</text>
+  <g class="resource-lifetime" data-resource-id="tmem-dp-ds-dq"><rect class="life-box outline" x="1420" y="2115" width="360" height="52" rx="9" fill="#d8c5e8"/><text class="box-text" x="1600" y="2148">dPⱼ</text><rect class="life-box outline" x="1800" y="2115" width="330" height="52" rx="9" fill="#b99bd2"/><text class="box-text" x="1965" y="2148">same columns → dSⱼ</text><rect class="life-box outline" x="2150" y="2115" width="480" height="52" rx="9" fill="#f8e2ad"/><text class="box-text" x="2390" y="2148">same columns → dQⱼ → reduce</text></g>
+  <text class="memory" x="90" y="2220">TMEM dK / dV</text>
+  <g class="resource-lifetime" data-resource-id="tmem-dkv"><rect class="life-box outline" x="2075" y="2185" width="1035" height="52" rx="9" fill="#c9e6dc"/><text class="box-text" x="2593" y="2218">dK and dV accumulate across Qⱼ rows, then drain in epilogue</text></g>
+  <text class="memory" x="90" y="2290">SMEM dQ handoff</text>
+  <g class="resource-lifetime" data-resource-id="smem-dq"><rect class="life-box outline" x="2450" y="2255" width="710" height="52" rx="9" fill="#f8e2ad"/><text class="box-text" x="2805" y="2288">sdQaccum full → bulk reduce-add → empty</text></g>
+  <text class="memory-note" x="530" y="2342">Bars share the role timeline's phase boundaries; small gaps mark required barriers before physical bytes change identity.</text>
+</svg>
