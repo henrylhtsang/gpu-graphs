@@ -19,8 +19,10 @@
 - When a topic contains multiple diagrams, put each SVG/PNG pair in its own
   `graphs/<topic>/<content-name>/` mini-directory.
 - Use lowercase kebab-case for directory and file names.
-- Treat SVG files as the editable source of truth. Do not edit generated PNGs
-  independently.
+- For hand-authored graphs, SVG is the editable source of truth. For
+  specification-backed graphs, the kernel spec is the semantic source and the
+  renderer is the presentation source; their SVG and PNG files are generated
+  artifacts. Never edit a PNG independently.
 
 ## SVG and PNG pairs
 
@@ -38,32 +40,83 @@
 - Keep SVG text as text when practical, embed required styles, include a
   meaningful `<title>` and `<desc>`, and use a `viewBox` so the graph scales.
 
-## Specification-backed graph QA
+## Required AI/LLM workflow for specification-backed graphs
 
-Use this production flow for every generated kernel graph:
+AI agents must use this production loop for every generated kernel graph:
 
 ```text
-specification
-    → semantic validation
-    → deterministic SVG generation
-    → generic + renderer-specific SVG QA
-    → PNG rendering
-    → SVG/PNG artifact parity
-    → visual review
-    ↺ fix the spec or renderer and repeat
+inspect repository + evidence
+    → edit semantic specification or reusable renderer
+    → validate schema + kernel invariants
+    → generate deterministic SVG
+    → run generic + renderer-specific SVG QA
+    → render PNG + verify SVG/PNG parity
+    → visually inspect full graph and dense crops
+    ↺ classify failures, fix the correct layer, and repeat
 ```
 
-- Treat `specs/kernels/**/*.json` as the semantic source of truth for generated
-  kernel graphs. Change the spec or renderer; do not patch generated SVG markup.
-- Run `make qa` before finishing a specification-backed graph change. It must
-  pass spec validation, deterministic SVG generation, renderer-specific layout
-  QA, PNG rendering, and SVG/PNG dimension parity.
-- When visual review finds a repeatable collision, clipping, or coverage bug,
-  add it to the renderer QA contract and regression tests instead of fixing only
-  the current graph.
-- Keep kernel facts in specifications and reusable presentation policy in
-  renderers. Shorten a spec label only when doing so preserves the reconstruction
-  information.
+Follow these steps in order:
+
+1. Inspect before editing.
+   - Read this file, the topic README, the kernel spec, and the relevant files
+     under `design/`.
+   - Run `git status --short` and preserve unrelated user changes.
+   - Identify whether the graph is hand-authored or specification-backed.
+2. Put each change in its owning layer.
+   - Kernel facts, role ownership, operations, synchronization, and memory
+     lifetimes belong in `specs/kernels/**/*.json`.
+   - Reusable layout, wrapping, routing, and visual encoding belong in a
+     renderer under `src/gpu_graph/`.
+   - Cross-graph semantic invariants belong in `validation.py` and the schema.
+   - Generated SVG and PNG files must not receive hand patches.
+3. Preserve evidence and uncertainty.
+   - Prefer primary implementation sources. Record source IDs, locators, and
+     concise factual notes in the spec.
+   - Do not invent cycle timing, storage aliasing, synchronization, or operation
+     order. Make unknown or configuration-dependent facts explicit.
+4. Use the fast feedback loop while authoring.
+
+   ```sh
+   make check
+   make generate
+   make svg-qa
+   ```
+
+5. Run the full pre-completion gate.
+
+   ```sh
+   make qa
+   ```
+
+   It must pass semantic validation, deterministic generation, renderer-specific
+   collision and coverage checks, PNG rendering, and SVG/PNG dimension parity.
+6. Perform visual QA even when automation passes.
+   - Open the generated PNG at full-graph scale and at 100% scale.
+   - Inspect dense timeline, synchronization, and memory regions separately.
+   - Confirm that text does not overlap or clip, connectors remain traceable,
+     phases are distinct, and the reconstruction story is understandable.
+   - Do not declare completion based only on `make qa`.
+7. Turn repeatable visual failures into system checks.
+   - Add a renderer QA rule and a deliberately broken regression test for any
+     collision, clipping, stale-artifact, or semantic-coverage failure that can
+     recur.
+   - Do not solve a renderer problem by nudging one generated graph.
+8. Finish with artifact verification.
+   - Run `git diff --check` and confirm the expected SVG and PNG both changed.
+   - Report the checks run and link the absolute SVG and PNG paths on separate
+     lines.
+
+Classify failures before editing:
+
+| Failure | Fix here |
+| --- | --- |
+| Missing or incorrect kernel fact | Kernel spec |
+| Invalid reference, lifetime, loop scope, or alias claim | Spec, schema, or semantic validator |
+| Fact exists but is absent from the graph | Renderer semantic coverage |
+| Text, boxes, annotations, or arrows collide | Reusable renderer layout and SVG QA |
+| Label is unnecessarily verbose | Spec label, while preserving detail/evidence elsewhere |
+| SVG is stale | Regenerate; do not hand-edit it |
+| PNG is stale or mismatched | Re-render from SVG; do not hand-edit it |
 
 ## Topic documentation
 
