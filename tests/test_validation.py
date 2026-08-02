@@ -46,6 +46,30 @@ class ValidationTests(unittest.TestCase):
         with self.assertRaisesRegex(SpecError, "width must be"):
             validate_spec(broken)
 
+    def test_view_requires_a_qa_profile_not_a_renderer(self) -> None:
+        broken = copy.deepcopy(self.spec)
+        broken["views"][0]["renderer"] = broken["views"][0].pop("qa_profile")
+        with self.assertRaisesRegex(SpecError, "scripted renderers are not allowed"):
+            validate_spec(broken)
+
+    def test_view_requires_an_llm_authoring_brief(self) -> None:
+        broken = copy.deepcopy(self.spec)
+        del broken["views"][0]["authoring"]
+        with self.assertRaisesRegex(SpecError, "requires an authoring brief"):
+            validate_spec(broken)
+
+    def test_authoring_brief_requires_concrete_content_requirements(self) -> None:
+        broken = copy.deepcopy(self.spec)
+        broken["views"][0]["authoring"]["required_content"] = []
+        with self.assertRaisesRegex(SpecError, "authoring.required_content"):
+            validate_spec(broken)
+
+    def test_spec_requires_an_implementation_source(self) -> None:
+        broken = copy.deepcopy(self.spec)
+        broken["sources"][0]["kind"] = "documentation"
+        with self.assertRaisesRegex(SpecError, "implementation source is required"):
+            validate_spec(broken)
+
     def test_overlapping_alias_lifetimes_are_rejected(self) -> None:
         broken = copy.deepcopy(self.spec)
         resource = next(item for item in broken["resources"] if item["id"] == "svj1")

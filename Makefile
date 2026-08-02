@@ -8,20 +8,19 @@ CUTLASS_ROOT ?= $(HOME)/cutlass
 help:
 	@echo "make png        Render missing or outdated PNG companions"
 	@echo "make png-force  Regenerate every PNG companion"
-	@echo "make generate   Regenerate diagrams backed by repository generators"
+	@echo "make generate   Regenerate legacy non-specification diagrams"
 	@echo "make check      Validate schema-backed kernel graph specifications"
-	@echo "make svg-qa     Check generated SVG freshness, coverage, bounds, and collisions"
-	@echo "make qa         Run the complete spec -> SVG -> QA -> PNG artifact loop"
+	@echo "make svg-qa     Check LLM-authored SVG coverage, bounds, and collisions"
+	@echo "make qa         Run the spec -> LLM-authored SVG -> QA -> PNG artifact loop"
 	@echo "make check-cutlass-inventory  Audit warp-specialized CUTLASS coverage"
 
 generate:
-	@python3 scripts/generate-kernel-graphs.py
 	@python3 scripts/generate-quack-infographs.py
 	@python3 scripts/generate-cutlass-warp-specialization.py
 
 check:
 	@set -e; for spec in $$(find specs/kernels -type f -name '*.json' | sort); do \
-		PYTHONPATH=src python3 -m gpu_graph.cli "$$spec" /tmp/gpu-graph-check.svg --check; \
+		PYTHONPATH=src python3 -m gpu_graph.cli "$$spec"; \
 	done
 	@python3 -m unittest discover -s tests
 
@@ -33,7 +32,6 @@ artifact-qa:
 
 qa:
 	@$(MAKE) --no-print-directory check
-	@$(MAKE) --no-print-directory generate
 	@$(MAKE) --no-print-directory svg-qa
 	@$(MAKE) --no-print-directory png
 	@$(MAKE) --no-print-directory artifact-qa

@@ -1,5 +1,5 @@
 {
-  "schema_version": "0.2",
+  "schema_version": "0.3",
   "id": "forward-sm100-kernel-structure",
   "topic": "flash-attention-4",
   "title": "FlashAttention-4 forward · SM100 kernel structure",
@@ -8,10 +8,38 @@
   "views": [
     {
       "id": "timeline",
-      "renderer": "reconstruction-timeline",
+      "qa_profile": "reconstruction-timeline",
       "output": "graphs/flash-attention-4/forward-sm100-kernel-structure.svg",
       "primary": true,
-      "width": 4200
+      "width": 4200,
+      "authoring": {
+        "goal": "Let a GPU kernel engineer reconstruct the representative FlashAttention-4 SM100 forward schedule and its on-chip storage reuse without reading every source line.",
+        "audience": "GPU kernel engineers familiar with TMA, tcgen05, SMEM, TMEM, and warp specialization.",
+        "composition_hint": "A wide semantic timeline with aligned warp-role lanes above SMEM/TMEM allocation lifetimes and clearly separated prologue, mainloop, and epilogue phases.",
+        "reading_order": [
+          "phase boundaries and warp-role ownership",
+          "per-role operation sequence",
+          "cross-role ready and release synchronization",
+          "SMEM and TMEM lifetimes, persistence, aliasing, and reuse",
+          "configuration-sensitive reconstruction notes"
+        ],
+        "required_content": [
+          "show K0, Q0, Q1, and V0 loads in the prologue",
+          "use symbolic Kj and Vj in the mainloop and show Kj+1 and Vj+1 prefetch overlap",
+          "show both Q tiles and both QK and PV tcgen05 issues",
+          "show both softmax stage lanes from score wait and TMEM load through split P publication and final statistics",
+          "show partial 96-column and final 32-column P readiness as separate synchronization events",
+          "show output correction, final TMEM-to-SMEM transfer, and TMA output store",
+          "show SMEM and TMEM physical allocation lifetimes on the same semantic axis",
+          "show loop-resident Q, K/V ring carry, score-to-P reuse, output accumulators, and configuration-specific Q/O separation"
+        ],
+        "excluded_content": [
+          "unmeasured cycle timing or performance claims",
+          "host launch plumbing and pointer arithmetic",
+          "every arithmetic instruction inside softmax",
+          "every repeated K/V iteration"
+        ]
+      }
     }
   ],
   "configuration": [
@@ -28,6 +56,7 @@
   "sources": [
     {
       "id": "fa4-forward-sm100",
+      "kind": "implementation",
       "label": "flash_attn/cute/flash_fwd_sm100.py",
       "url": "https://github.com/Dao-AILab/flash-attention/blob/main/flash_attn/cute/flash_fwd_sm100.py",
       "observed": "2026-08-01"

@@ -13,6 +13,17 @@ The primary graph must answer eight questions:
 
 ## Required semantic facts
 
+A kernel specification is a reconstruction of inspected implementation code,
+not a design sketch inferred from a kernel name, paper, or existing graph. Read
+the target kernel and the helpers/templates that determine the displayed path
+before encoding facts. Use papers and documentation as context, but use code as
+the primary evidence for role assignment, ordering, synchronization, storage,
+and lifetimes.
+
+Every authoritative kernel spec must register at least one source with
+`kind: "implementation"`. Documentation and papers may supplement that source,
+but cannot replace direct code inspection.
+
 Every reconstruction-oriented specification declares:
 
 - a concrete kernel configuration with machine-readable parameter IDs;

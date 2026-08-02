@@ -1,4 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="4200" height="2596" viewBox="0 0 4200 2596" role="img" aria-labelledby="title desc">
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="4200" height="2596" viewBox="0 0 4200 2596" role="img" aria-labelledby="title desc" data-kernel-id="forward-sm100-kernel-structure" data-view-id="timeline" data-qa-profile="reconstruction-timeline">
   <title id="title">FlashAttention-4 forward · SM100 kernel structure</title>
   <desc id="desc">Who does the work, which events connect the roles, and when SMEM/TMEM storage can be reused. Warp-role operations, cross-role synchronization, and aligned SMEM/TMEM lifetimes.</desc>
   <defs>
@@ -23,8 +24,12 @@
       .ready { fill: none; stroke: #ad7616; stroke-width: 2.2; marker-end: url(#gold); }
       .release { fill: none; stroke: #ad7616; stroke-width: 2.2; stroke-dasharray: 7 5; marker-end: url(#gold); }
     </style>
-    <marker id="gold" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#ad7616"/></marker>
-    <pattern id="wait-pattern" width="8" height="8" patternUnits="userSpaceOnUse"><path d="M-2 2L2-2M0 8L8 0M6 10L10 6" stroke="#c7d1d7" stroke-width="2"/></pattern>
+    <marker id="gold" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0L10 5L0 10Z" fill="#ad7616"/>
+    </marker>
+    <pattern id="wait-pattern" width="8" height="8" patternUnits="userSpaceOnUse">
+      <path d="M-2 2L2-2M0 8L8 0M6 10L10 6" stroke="#c7d1d7" stroke-width="2"/>
+    </pattern>
   </defs>
   <rect width="4200" height="2596" fill="#f8fafb"/>
   <text class="title" x="68" y="62">FlashAttention-4 forward · SM100 kernel structure</text>
@@ -35,8 +40,486 @@
   <text class="axis" x="2312.5" y="214">semantic event order · widths are not cycle-accurate</text>
   <rect x="50" y="230" width="4100" height="1242" rx="12" fill="#fff" stroke="#d4e0e7" stroke-width="1.5"/>
   <line class="grid" x1="478" y1="230" x2="478" y2="1472"/>
-<rect x="1202.3" y="230" width="110.0" height="1242" fill="#f3f6f8"/><line class="grid" x1="1312.3" y1="230" x2="1312.3" y2="1472"/><rect x="3360.5" y="230" width="150.0" height="1242" fill="#f3f6f8"/><line class="grid" x1="3510.5" y1="230" x2="3510.5" y2="1472"/><text class="phase" x="851.1" y="249">PROLOGUE</text><text class="phase" x="2336.4" y="249">MAINLOOP · REPEAT OVER j (ONE ITERATION + LOOP EXIT SHOWN)</text><text class="phase" x="3817.8" y="249">EPILOGUE</text><line class="grid" x1="500.0" y1="230" x2="500.0" y2="1472"/><text class="axis" x="500.0" y="270">K₀ LOAD</text><line class="grid" x1="792.6" y1="230" x2="792.6" y2="1472"/><text class="axis" x="792.6" y="270">Q₀ / Q₁</text><line class="grid" x1="1085.2" y1="230" x2="1085.2" y2="1472"/><text class="axis" x="1085.2" y="270">V₀ READY</text><line class="grid" x1="1487.8" y1="230" x2="1487.8" y2="1472"/><text class="axis" x="1487.8" y="270">QK₀ · Kⱼ</text><line class="grid" x1="1780.4" y1="230" x2="1780.4" y2="1472"/><text class="axis" x="1780.4" y="270">QK₁ / PREFETCH j+1</text><line class="grid" x1="2073.0" y1="230" x2="2073.0" y2="1472"/><text class="axis" x="2073.0" y="270">α₀ READY</text><line class="grid" x1="2365.7" y1="230" x2="2365.7" y2="1472"/><text class="axis" x="2365.7" y="270">EXP / α₁ READY</text><line class="grid" x1="2658.3" y1="230" x2="2658.3" y2="1472"/><text class="axis" x="2658.3" y="270">¾ P₀ → PV₀</text><line class="grid" x1="2950.9" y1="230" x2="2950.9" y2="1472"/><text class="axis" x="2950.9" y="270">¾ P₁ → PV₁</text><line class="grid" x1="3243.5" y1="230" x2="3243.5" y2="1472"/><text class="axis" x="3243.5" y="270">FINAL STATS</text><line class="grid" x1="3686.1" y1="230" x2="3686.1" y2="1472"/><text class="axis" x="3686.1" y="270">O FINAL</text><line class="grid" x1="4125.0" y1="230" x2="4125.0" y2="1472"/><text class="axis" x="4125.0" y="270">STORE</text><text class="role" x="76" y="331">Load producer · warp 14</text><text class="role-note" x="76" y="357">Issue TMA Q/K/V loads into staged SMEM</text><line class="lane" x1="50" y1="463" x2="4150" y2="463"/><text class="role" x="76" y="502">MMA issuer · warp 12</text><text class="role-note" x="76" y="528">Issue tcgen05 QK and PV; own TMEM allocation</text><line class="lane" x1="50" y1="634" x2="4150" y2="634"/><text class="role" x="76" y="673">Softmax · Q stage 0 · warps 0–3</text><text class="role-note" x="76" y="699">Load S; mask + online max/sum; publish α and split P</text><line class="lane" x1="50" y1="836" x2="4150" y2="836"/><text class="role" x="76" y="875">Softmax · Q stage 1 · warps 4–7</text><text class="role-note" x="76" y="901">Same softmax program, staggered behind Q stage 0</text><line class="lane" x1="50" y1="1038" x2="4150" y2="1038"/><text class="role" x="76" y="1077">Output correction · warps 8–11</text><text class="role-note" x="76" y="1103">Rescale prior O and finalize TMEM O into SMEM</text><line class="lane" x1="50" y1="1342" x2="4150" y2="1342"/><text class="role" x="76" y="1381">Output store · warp 13</text><text class="role-note" x="76" y="1407">Consume staged SMEM O and publish GMEM output</text><path class="ready" d="M845.3 402.0 H845.3 V481.0 H987.8"/><path class="ready" d="M1020.8 402.0 H1020.8 V481.0 H1536.7"/><path class="ready" d="M669.7 402.0 H669.7 V481.0 H987.8"/><path class="ready" d="M1522.9 573.0 H1522.9 V652.0 H1522.9"/><path class="ready" d="M1745.3 573.0 H1745.3 V854.0 H1745.3"/><path class="ready" d="M2037.9 744.0 H2037.9 V1056.0 H2037.9"/><path class="ready" d="M2257.4 946.0 H2257.4 V1158.0 H2257.4"/><path class="ready" d="M2491.5 652.0 H2491.5 V573.0 H2491.5"/><path class="ready" d="M2593.9 652.0 H2593.9 V573.0 H2593.9"/><path class="ready" d="M2710.9 854.0 H2710.9 V573.0 H2794.9"/><path class="ready" d="M2813.3 854.0 H2813.3 V573.0 H2813.3"/><path class="release" d="M2228.1 1056.0 H2228.1 V573.0 H2414.5"/><path class="release" d="M2447.6 1056.0 H2447.6 V573.0 H2794.9"/><path class="release" d="M2229.0 1056.0 H2593.9 V744.0 H2604.7"/><path class="release" d="M2448.4 1056.0 H2813.3 V946.0 H2824.2"/><path class="ready" d="M3282.4 744.0 H3284.4 V1056.0 H3515.5"/><path class="ready" d="M3340.9 946.0 H3343.0 V1056.0 H3691.1"/><path class="ready" d="M3671.5 1148.0 H3671.5 V1360.0 H3691.1"/><path class="ready" d="M3847.0 1148.0 H3847.0 V1360.0 H3847.0"/><g class="operation" data-operation-id="load-q0"><rect class="op-box" x="680.6" y="310" width="165.6" height="92" rx="10" fill="#d7e8f2"/><text class="op" x="763.3" y="353.5">TMA Q₀</text><text class="op-detail" x="763.3" y="368.5">GMEM → sQ[0]</text></g><g class="operation" data-operation-id="load-q1"><rect class="op-box" x="856.1" y="310" width="165.6" height="92" rx="10" fill="#d7e8f2"/><text class="op" x="938.9" y="353.5">TMA Q₁</text><text class="op-detail" x="938.9" y="368.5">GMEM → sQ[1]</text></g><g class="operation" data-operation-id="load-k"><rect class="op-box" x="505.0" y="310" width="165.6" height="92" rx="10" fill="#d7e8f2"/><text class="op" x="587.8" y="353.5">TMA K₀</text><text class="op-detail" x="587.8" y="368.5">GMEM → current K slot</text></g><g class="operation" data-operation-id="load-v"><rect class="op-box" x="1031.7" y="310" width="165.6" height="92" rx="10" fill="#d7e8f2"/><text class="op" x="1114.5" y="353.5">TMA V₀</text><text class="op-detail" x="1114.5" y="368.5">GMEM → current V slot</text></g><g class="operation" data-operation-id="load-k-next"><rect class="op-box" x="1668.4" y="310" width="165.6" height="92" rx="10" fill="#d7e8f2"/><text class="op" x="1751.2" y="346.0">TMA Kⱼ₊₁</text><text class="op-detail" x="1751.2" y="361.0">prefetch → KV ring</text><text class="op-detail" x="1751.2" y="376.0">slot 2</text></g><g class="operation" data-operation-id="load-v-next"><rect class="op-box" x="1844.0" y="310" width="165.6" height="92" rx="10" fill="#d7e8f2"/><text class="op" x="1926.7" y="346.0">TMA Vⱼ₊₁</text><text class="op-detail" x="1926.7" y="361.0">prefetch → released</text><text class="op-detail" x="1926.7" y="376.0">slot 0</text></g><g class="operation" data-operation-id="mma-wait-q0"><rect class="op-box" x="987.8" y="481" width="209.5" height="92" rx="10" fill="url(#wait-pattern)"/><text class="op" x="1092.5" y="532.0">wait Q₀/K</text></g><g class="operation" data-operation-id="mma-qk0"><rect class="op-box" x="1317.3" y="481" width="209.5" height="92" rx="10" fill="#c9e6dc"/><text class="op" x="1422.0" y="524.5">tcgen05 QK₀</text><text class="op-detail" x="1422.0" y="539.5">sQ[0] × sKⱼ → TMEM S₀</text></g><g class="operation" data-operation-id="mma-qk1"><rect class="op-box" x="1536.7" y="481" width="209.5" height="92" rx="10" fill="#c9e6dc"/><text class="op" x="1641.4" y="524.5">tcgen05 QK₁</text><text class="op-detail" x="1641.4" y="539.5">sQ[1] × sKⱼ → TMEM S₁</text></g><g class="operation" data-operation-id="mma-wait-p0"><rect class="op-box" x="2414.5" y="481" width="77.8" height="92" rx="10" fill="url(#wait-pattern)"/><text class="op" x="2453.4" y="517.0">acquire</text><text class="op" x="2453.4" y="532.0">¾ P₀ +</text><text class="op" x="2453.4" y="547.0">O₀</text></g><g class="operation" data-operation-id="mma-pv0"><rect class="op-box" x="2502.3" y="481" width="282.6" height="92" rx="10" fill="#c9e6dc"/><text class="op" x="2643.6" y="524.5">tcgen05 PV₀</text><text class="op-detail" x="2643.6" y="539.5">P₀ × Vⱼ; issue after ¾ P; final ¼ mbar</text></g><g class="operation" data-operation-id="mma-pv1"><rect class="op-box" x="2794.9" y="481" width="311.9" height="92" rx="10" fill="#c9e6dc"/><text class="op" x="2950.9" y="524.5">tcgen05 PV₁</text><text class="op-detail" x="2950.9" y="539.5">P₁ × Vⱼ; issue after ¾ P; final ¼ mbar</text></g><g class="operation" data-operation-id="soft0-wait"><rect class="op-box" x="1448.9" y="652" width="92.4" height="92" rx="10" fill="url(#wait-pattern)"/><text class="op" x="1495.1" y="703.0">wait S₀</text></g><g class="operation" data-operation-id="soft0-load-s"><rect class="op-box" x="1551.3" y="652" width="165.6" height="92" rx="10" fill="#d9d0e8"/><text class="op" x="1634.1" y="695.5">TMEM S₀ → regs</text><text class="op-detail" x="1634.1" y="710.5">tcgen05.ld 32×32b</text></g><g class="operation" data-operation-id="soft0-rowmax"><rect class="op-box" x="1726.9" y="652" width="209.5" height="92" rx="10" fill="#b4dccf"/><text class="op" x="1831.6" y="695.5">mask + row max</text><text class="op-detail" x="1831.6" y="710.5">update m₀; compute α₀</text></g><g class="operation" data-operation-id="soft0-publish-scale"><rect class="op-box" x="1946.4" y="652" width="92.4" height="92" rx="10" fill="#d9d0e8"/><text class="op" x="1992.6" y="673.0">publish</text><text class="op" x="1992.6" y="688.0">α₀</text><text class="op-detail" x="1992.6" y="703.0">sScale +</text><text class="op-detail" x="1992.6" y="718.0">named</text><text class="op-detail" x="1992.6" y="733.0">barrier</text></g><g class="operation" data-operation-id="soft0-exp"><rect class="op-box" x="2048.8" y="652" width="238.7" height="92" rx="10" fill="#b4dccf"/><text class="op" x="2168.1" y="695.5">subtract m₀ + exp2</text><text class="op-detail" x="2168.1" y="710.5">scores → probability regs</text></g><g class="operation" data-operation-id="soft0-p-first"><rect class="op-box" x="2297.5" y="652" width="194.8" height="92" rx="10" fill="#d9d0e8"/><text class="op" x="2394.9" y="688.0">store first ¾ P₀</text><text class="op-detail" x="2394.9" y="703.0">regs → aliased TMEM;</text><text class="op-detail" x="2394.9" y="718.0">release</text></g><g class="operation" data-operation-id="soft0-p-last"><rect class="op-box" x="2502.3" y="652" width="92.4" height="92" rx="10" fill="#d9d0e8"/><text class="op" x="2548.5" y="665.5">store</text><text class="op" x="2548.5" y="680.5">final ¼</text><text class="op" x="2548.5" y="695.5">P₀</text><text class="op-detail" x="2548.5" y="710.5">commit</text><text class="op-detail" x="2548.5" y="725.5">last-split</text><text class="op-detail" x="2548.5" y="740.5">mbar</text></g><g class="operation" data-operation-id="soft0-sum"><rect class="op-box" x="2604.7" y="652" width="121.7" height="92" rx="10" fill="#b4dccf"/><text class="op" x="2665.6" y="680.5">update</text><text class="op" x="2665.6" y="695.5">running ℓ₀</text><text class="op-detail" x="2665.6" y="710.5">after correction</text><text class="op-detail" x="2665.6" y="725.5">consumes α₀</text></g><g class="operation" data-operation-id="soft0-final-stats"><rect class="op-box" x="3175.3" y="652" width="107.0" height="92" rx="10" fill="#d9d0e8"/><text class="op" x="3228.8" y="665.5">publish</text><text class="op" x="3228.8" y="680.5">final ℓ₀ /</text><text class="op" x="3228.8" y="695.5">m₀</text><text class="op-detail" x="3228.8" y="710.5">sScale →</text><text class="op-detail" x="3228.8" y="725.5">correction</text><text class="op-detail" x="3228.8" y="740.5">barrier</text></g><g class="operation" data-operation-id="soft1-wait"><rect class="op-box" x="1668.4" y="854" width="92.4" height="92" rx="10" fill="url(#wait-pattern)"/><text class="op" x="1714.6" y="905.0">wait S₁</text></g><g class="operation" data-operation-id="soft1-load-s"><rect class="op-box" x="1770.8" y="854" width="165.6" height="92" rx="10" fill="#d9d0e8"/><text class="op" x="1853.6" y="897.5">TMEM S₁ → regs</text><text class="op-detail" x="1853.6" y="912.5">tcgen05.ld 32×32b</text></g><g class="operation" data-operation-id="soft1-rowmax"><rect class="op-box" x="1946.4" y="854" width="209.5" height="92" rx="10" fill="#b4dccf"/><text class="op" x="2051.1" y="897.5">mask + row max</text><text class="op-detail" x="2051.1" y="912.5">update m₁; compute α₁</text></g><g class="operation" data-operation-id="soft1-publish-scale"><rect class="op-box" x="2165.8" y="854" width="92.4" height="92" rx="10" fill="#d9d0e8"/><text class="op" x="2212.0" y="875.0">publish</text><text class="op" x="2212.0" y="890.0">α₁</text><text class="op-detail" x="2212.0" y="905.0">sScale +</text><text class="op-detail" x="2212.0" y="920.0">named</text><text class="op-detail" x="2212.0" y="935.0">barrier</text></g><g class="operation" data-operation-id="soft1-exp"><rect class="op-box" x="2268.2" y="854" width="238.7" height="92" rx="10" fill="#b4dccf"/><text class="op" x="2387.6" y="897.5">subtract m₁ + exp2</text><text class="op-detail" x="2387.6" y="912.5">scores → probability regs</text></g><g class="operation" data-operation-id="soft1-p-first"><rect class="op-box" x="2517.0" y="854" width="194.8" height="92" rx="10" fill="#d9d0e8"/><text class="op" x="2614.4" y="890.0">store first ¾ P₁</text><text class="op-detail" x="2614.4" y="905.0">regs → aliased TMEM;</text><text class="op-detail" x="2614.4" y="920.0">release</text></g><g class="operation" data-operation-id="soft1-p-last"><rect class="op-box" x="2721.8" y="854" width="92.4" height="92" rx="10" fill="#d9d0e8"/><text class="op" x="2768.0" y="867.5">store</text><text class="op" x="2768.0" y="882.5">final ¼</text><text class="op" x="2768.0" y="897.5">P₁</text><text class="op-detail" x="2768.0" y="912.5">commit</text><text class="op-detail" x="2768.0" y="927.5">last-split</text><text class="op-detail" x="2768.0" y="942.5">mbar</text></g><g class="operation" data-operation-id="soft1-sum"><rect class="op-box" x="2824.2" y="854" width="121.7" height="92" rx="10" fill="#b4dccf"/><text class="op" x="2885.0" y="882.5">update</text><text class="op" x="2885.0" y="897.5">running ℓ₁</text><text class="op-detail" x="2885.0" y="912.5">after correction</text><text class="op-detail" x="2885.0" y="927.5">consumes α₁</text></g><g class="operation" data-operation-id="soft1-final-stats"><rect class="op-box" x="3233.8" y="854" width="107.0" height="92" rx="10" fill="#d9d0e8"/><text class="op" x="3287.4" y="867.5">publish</text><text class="op" x="3287.4" y="882.5">final ℓ₁ /</text><text class="op" x="3287.4" y="897.5">m₁</text><text class="op-detail" x="3287.4" y="912.5">sScale →</text><text class="op-detail" x="3287.4" y="927.5">correction</text><text class="op-detail" x="3287.4" y="942.5">barrier</text></g><g class="operation" data-operation-id="corr-wait0"><rect class="op-box" x="1946.4" y="1056" width="92.4" height="92" rx="10" fill="url(#wait-pattern)"/><text class="op" x="1992.6" y="1107.0">wait α₀</text></g><g class="operation" data-operation-id="corr-rescale0"><rect class="op-box" x="2048.8" y="1056" width="180.2" height="92" rx="10" fill="#b4dccf"/><text class="op" x="2138.9" y="1092.0">rescale O₀</text><text class="op-detail" x="2138.9" y="1107.0">TMEM → regs; release to</text><text class="op-detail" x="2138.9" y="1122.0">PV₀</text></g><g class="operation" data-operation-id="corr-wait1"><rect class="op-box" x="2165.8" y="1158" width="92.4" height="92" rx="10" fill="url(#wait-pattern)"/><text class="op" x="2212.0" y="1209.0">wait α₁</text></g><g class="operation" data-operation-id="corr-rescale1"><rect class="op-box" x="2268.2" y="1056" width="180.2" height="92" rx="10" fill="#b4dccf"/><text class="op" x="2358.3" y="1092.0">rescale O₁</text><text class="op-detail" x="2358.3" y="1107.0">TMEM → regs; release to</text><text class="op-detail" x="2358.3" y="1122.0">PV₁</text></g><g class="operation" data-operation-id="corr-final0"><rect class="op-box" x="3515.5" y="1056" width="165.6" height="92" rx="10" fill="#d9d0e8"/><text class="op" x="3598.3" y="1099.5">final O₀</text><text class="op-detail" x="3598.3" y="1114.5">TMEM → regs → sO[0]</text></g><g class="operation" data-operation-id="corr-final1"><rect class="op-box" x="3691.1" y="1056" width="165.6" height="92" rx="10" fill="#d9d0e8"/><text class="op" x="3773.9" y="1099.5">final O₁</text><text class="op-detail" x="3773.9" y="1114.5">TMEM → regs → sO[1]</text></g><g class="operation" data-operation-id="epi-wait"><rect class="op-box" x="3691.1" y="1360" width="165.6" height="92" rx="10" fill="url(#wait-pattern)"/><text class="op" x="3773.9" y="1411.0">wait sO[0:1]</text></g><g class="operation" data-operation-id="epi-store"><rect class="op-box" x="3866.7" y="1360" width="253.3" height="92" rx="10" fill="#f2d394"/><text class="op" x="3993.3" y="1403.5">TMA store O₀/O₁</text><text class="op-detail" x="3993.3" y="1418.5">SMEM → GMEM</text></g><g class="handoff-annotation" data-handoff-id="q0-ready"><text class="handoff" x="852.3" y="432.0">Q₀ ready</text><text class="handoff-mech" x="852.3" y="447.0">pipeline_q[0]</text></g><g class="handoff-annotation" data-handoff-id="q1-ready"><text class="handoff" x="1027.8" y="432.0">Q₁ ready</text><text class="handoff-mech" x="1027.8" y="447.0">pipeline_q[1]</text></g><g class="handoff-annotation" data-handoff-id="k-ready"><text class="handoff" x="676.7" y="432.0">K₀ seeds Kⱼ</text><text class="handoff-mech" x="676.7" y="447.0">pipeline_kv</text></g><g class="handoff-annotation" data-handoff-id="s0-ready"><text class="handoff" x="1529.9" y="603.0">S₀ ready</text><text class="handoff-mech" x="1529.9" y="618.0">mbar S/P/O[0]</text></g><g class="handoff-annotation" data-handoff-id="s1-ready"><text class="handoff" x="1752.3" y="603.0">S₁ ready</text><text class="handoff-mech" x="1752.3" y="618.0">mbar S/P/O[1]</text></g><g class="handoff-annotation" data-handoff-id="stats0-ready"><text class="handoff" x="2044.9" y="774.0">α₀ ready</text><text class="handoff-mech" x="2044.9" y="789.0">sm_stats barrier[0]</text></g><g class="handoff-annotation" data-handoff-id="stats1-ready"><text class="handoff" x="2264.4" y="976.0">α₁ ready</text><text class="handoff-mech" x="2264.4" y="991.0">sm_stats barrier[1]</text></g><g class="handoff-annotation" data-handoff-id="p0-first-ready"><text class="handoff" x="2498.5" y="774.0">¾ P₀ ready</text><text class="handoff-mech" x="2498.5" y="789.0">S/P/O release[0]</text></g><g class="handoff-annotation" data-handoff-id="p0-last-ready"><text class="handoff" x="2600.9" y="805.0">¼ P₀ ready</text><text class="handoff-mech" x="2600.9" y="820.0">P lastsplit[0]</text></g><g class="handoff-annotation" data-handoff-id="p1-first-ready"><text class="handoff" x="2717.9" y="976.0">¾ P₁ ready</text><text class="handoff-mech" x="2717.9" y="991.0">S/P/O release[1]</text></g><g class="handoff-annotation" data-handoff-id="p1-last-ready"><text class="handoff" x="2820.3" y="1007.0">¼ P₁ ready</text><text class="handoff-mech" x="2820.3" y="1022.0">P lastsplit[1]</text></g><g class="handoff-annotation" data-handoff-id="o0-rescaled"><text class="handoff" x="2235.1" y="1280.0">O₀ rescaled</text><text class="handoff-mech" x="2235.1" y="1295.0">mbar S/P/O release[0]</text></g><g class="handoff-annotation" data-handoff-id="o1-rescaled"><text class="handoff" x="2454.6" y="1280.0">O₁ rescaled</text><text class="handoff-mech" x="2454.6" y="1295.0">mbar S/P/O release[1]</text></g><g class="handoff-annotation" data-handoff-id="stats0-consumed"><text class="handoff" x="2600.9" y="1311.0">α₀ consumed; slot free</text><text class="handoff-mech" x="2600.9" y="1326.0">sm_stats consumer_release</text></g><g class="handoff-annotation" data-handoff-id="stats1-consumed"><text class="handoff" x="2820.3" y="1280.0">α₁ consumed; slot free</text><text class="handoff-mech" x="2820.3" y="1295.0">sm_stats consumer_release</text></g><g class="handoff-annotation" data-handoff-id="final-stats0-ready"><text class="handoff" x="3291.4" y="774.0">final ℓ₀ / m₀</text><text class="handoff-mech" x="3291.4" y="789.0">sm_stats barrier[0]</text></g><g class="handoff-annotation" data-handoff-id="final-stats1-ready"><text class="handoff" x="3350.0" y="976.0">final ℓ₁ / m₁</text><text class="handoff-mech" x="3350.0" y="991.0">sm_stats barrier[1]</text></g><g class="handoff-annotation" data-handoff-id="so0-ready"><text class="handoff" x="3678.5" y="1280.0">sO₀ ready</text><text class="handoff-mech" x="3678.5" y="1295.0">pipeline_o_epi[0]</text></g><g class="handoff-annotation" data-handoff-id="so1-ready"><text class="handoff" x="3854.0" y="1280.0">sO₁ ready</text><text class="handoff-mech" x="3854.0" y="1295.0">pipeline_o_epi[1]</text></g>
+  <rect x="1202.3" y="230" width="110.0" height="1242" fill="#f3f6f8"/>
+  <line class="grid" x1="1312.3" y1="230" x2="1312.3" y2="1472"/>
+  <rect x="3360.5" y="230" width="150.0" height="1242" fill="#f3f6f8"/>
+  <line class="grid" x1="3510.5" y1="230" x2="3510.5" y2="1472"/>
+  <text class="phase" data-section-id="prologue" x="851.1" y="249">PROLOGUE</text>
+  <text class="phase" data-section-id="mainloop" x="2336.4" y="249">MAINLOOP · REPEAT OVER j (ONE ITERATION + LOOP EXIT SHOWN)</text>
+  <text class="phase" data-section-id="epilogue" x="3817.8" y="249">EPILOGUE</text>
+  <line class="grid" x1="500.0" y1="230" x2="500.0" y2="1472"/>
+  <text class="axis" x="500.0" y="270">K₀ LOAD</text>
+  <line class="grid" x1="792.6" y1="230" x2="792.6" y2="1472"/>
+  <text class="axis" x="792.6" y="270">Q₀ / Q₁</text>
+  <line class="grid" x1="1085.2" y1="230" x2="1085.2" y2="1472"/>
+  <text class="axis" x="1085.2" y="270">V₀ READY</text>
+  <line class="grid" x1="1487.8" y1="230" x2="1487.8" y2="1472"/>
+  <text class="axis" x="1487.8" y="270">QK₀ · Kⱼ</text>
+  <line class="grid" x1="1780.4" y1="230" x2="1780.4" y2="1472"/>
+  <text class="axis" x="1780.4" y="270">QK₁ / PREFETCH j+1</text>
+  <line class="grid" x1="2073.0" y1="230" x2="2073.0" y2="1472"/>
+  <text class="axis" x="2073.0" y="270">α₀ READY</text>
+  <line class="grid" x1="2365.7" y1="230" x2="2365.7" y2="1472"/>
+  <text class="axis" x="2365.7" y="270">EXP / α₁ READY</text>
+  <line class="grid" x1="2658.3" y1="230" x2="2658.3" y2="1472"/>
+  <text class="axis" x="2658.3" y="270">¾ P₀ → PV₀</text>
+  <line class="grid" x1="2950.9" y1="230" x2="2950.9" y2="1472"/>
+  <text class="axis" x="2950.9" y="270">¾ P₁ → PV₁</text>
+  <line class="grid" x1="3243.5" y1="230" x2="3243.5" y2="1472"/>
+  <text class="axis" x="3243.5" y="270">FINAL STATS</text>
+  <line class="grid" x1="3686.1" y1="230" x2="3686.1" y2="1472"/>
+  <text class="axis" x="3686.1" y="270">O FINAL</text>
+  <line class="grid" x1="4125.0" y1="230" x2="4125.0" y2="1472"/>
+  <text class="axis" x="4125.0" y="270">STORE</text>
+  <text class="role" data-role-id="load" x="76" y="331">Load producer · warp 14</text>
+  <text class="role-note" x="76" y="357">Issue TMA Q/K/V loads into staged SMEM</text>
+  <line class="lane" x1="50" y1="463" x2="4150" y2="463"/>
+  <text class="role" data-role-id="mma" x="76" y="502">MMA issuer · warp 12</text>
+  <text class="role-note" x="76" y="528">Issue tcgen05 QK and PV; own TMEM allocation</text>
+  <line class="lane" x1="50" y1="634" x2="4150" y2="634"/>
+  <text class="role" data-role-id="softmax0" x="76" y="673">Softmax · Q stage 0 · warps 0–3</text>
+  <text class="role-note" x="76" y="699">Load S; mask + online max/sum; publish α and split P</text>
+  <line class="lane" x1="50" y1="836" x2="4150" y2="836"/>
+  <text class="role" data-role-id="softmax1" x="76" y="875">Softmax · Q stage 1 · warps 4–7</text>
+  <text class="role-note" x="76" y="901">Same softmax program, staggered behind Q stage 0</text>
+  <line class="lane" x1="50" y1="1038" x2="4150" y2="1038"/>
+  <text class="role" data-role-id="correction" x="76" y="1077">Output correction · warps 8–11</text>
+  <text class="role-note" x="76" y="1103">Rescale prior O and finalize TMEM O into SMEM</text>
+  <line class="lane" x1="50" y1="1342" x2="4150" y2="1342"/>
+  <text class="role" data-role-id="epilogue" x="76" y="1381">Output store · warp 13</text>
+  <text class="role-note" x="76" y="1407">Consume staged SMEM O and publish GMEM output</text>
+  <path class="ready" data-handoff-id="q0-ready" d="M845.3 402.0 H845.3 V481.0 H987.8"/>
+  <path class="ready" data-handoff-id="q1-ready" d="M1020.8 402.0 H1020.8 V481.0 H1536.7"/>
+  <path class="ready" data-handoff-id="k-ready" d="M669.7 402.0 H669.7 V481.0 H987.8"/>
+  <path class="ready" data-handoff-id="s0-ready" d="M1522.9 573.0 H1522.9 V652.0 H1522.9"/>
+  <path class="ready" data-handoff-id="s1-ready" d="M1745.3 573.0 H1745.3 V854.0 H1745.3"/>
+  <path class="ready" data-handoff-id="stats0-ready" d="M2037.9 744.0 H2037.9 V1056.0 H2037.9"/>
+  <path class="ready" data-handoff-id="stats1-ready" d="M2257.4 946.0 H2257.4 V1158.0 H2257.4"/>
+  <path class="ready" data-handoff-id="p0-first-ready" d="M2491.5 652.0 H2491.5 V573.0 H2491.5"/>
+  <path class="ready" data-handoff-id="p0-last-ready" d="M2593.9 652.0 H2593.9 V573.0 H2593.9"/>
+  <path class="ready" data-handoff-id="p1-first-ready" d="M2710.9 854.0 H2710.9 V573.0 H2794.9"/>
+  <path class="ready" data-handoff-id="p1-last-ready" d="M2813.3 854.0 H2813.3 V573.0 H2813.3"/>
+  <path class="release" data-handoff-id="o0-rescaled" d="M2228.1 1056.0 H2228.1 V573.0 H2414.5"/>
+  <path class="release" data-handoff-id="o1-rescaled" d="M2447.6 1056.0 H2447.6 V573.0 H2794.9"/>
+  <path class="release" data-handoff-id="stats0-consumed" d="M2229.0 1056.0 H2593.9 V744.0 H2604.7"/>
+  <path class="release" data-handoff-id="stats1-consumed" d="M2448.4 1056.0 H2813.3 V946.0 H2824.2"/>
+  <path class="ready" data-handoff-id="final-stats0-ready" d="M3282.4 744.0 H3284.4 V1056.0 H3515.5"/>
+  <path class="ready" data-handoff-id="final-stats1-ready" d="M3340.9 946.0 H3343.0 V1056.0 H3691.1"/>
+  <path class="ready" data-handoff-id="so0-ready" d="M3671.5 1148.0 H3671.5 V1360.0 H3691.1"/>
+  <path class="ready" data-handoff-id="so1-ready" d="M3847.0 1148.0 H3847.0 V1360.0 H3847.0"/>
+  <g class="operation" data-operation-id="load-q0">
+    <rect class="op-box" x="680.6" y="310" width="165.6" height="92" rx="10" fill="#d7e8f2"/>
+    <text class="op" x="763.3" y="353.5">TMA Q₀</text>
+    <text class="op-detail" x="763.3" y="368.5">GMEM → sQ[0]</text>
+  </g>
+  <g class="operation" data-operation-id="load-q1">
+    <rect class="op-box" x="856.1" y="310" width="165.6" height="92" rx="10" fill="#d7e8f2"/>
+    <text class="op" x="938.9" y="353.5">TMA Q₁</text>
+    <text class="op-detail" x="938.9" y="368.5">GMEM → sQ[1]</text>
+  </g>
+  <g class="operation" data-operation-id="load-k">
+    <rect class="op-box" x="505.0" y="310" width="165.6" height="92" rx="10" fill="#d7e8f2"/>
+    <text class="op" x="587.8" y="353.5">TMA K₀</text>
+    <text class="op-detail" x="587.8" y="368.5">GMEM → current K slot</text>
+  </g>
+  <g class="operation" data-operation-id="load-v">
+    <rect class="op-box" x="1031.7" y="310" width="165.6" height="92" rx="10" fill="#d7e8f2"/>
+    <text class="op" x="1114.5" y="353.5">TMA V₀</text>
+    <text class="op-detail" x="1114.5" y="368.5">GMEM → current V slot</text>
+  </g>
+  <g class="operation" data-operation-id="load-k-next">
+    <rect class="op-box" x="1668.4" y="310" width="165.6" height="92" rx="10" fill="#d7e8f2"/>
+    <text class="op" x="1751.2" y="346.0">TMA Kⱼ₊₁</text>
+    <text class="op-detail" x="1751.2" y="361.0">prefetch → KV ring</text>
+    <text class="op-detail" x="1751.2" y="376.0">slot 2</text>
+  </g>
+  <g class="operation" data-operation-id="load-v-next">
+    <rect class="op-box" x="1844.0" y="310" width="165.6" height="92" rx="10" fill="#d7e8f2"/>
+    <text class="op" x="1926.7" y="346.0">TMA Vⱼ₊₁</text>
+    <text class="op-detail" x="1926.7" y="361.0">prefetch → released</text>
+    <text class="op-detail" x="1926.7" y="376.0">slot 0</text>
+  </g>
+  <g class="operation" data-operation-id="mma-wait-q0">
+    <rect class="op-box" x="987.8" y="481" width="209.5" height="92" rx="10" fill="url(#wait-pattern)"/>
+    <text class="op" x="1092.5" y="532.0">wait Q₀/K</text>
+  </g>
+  <g class="operation" data-operation-id="mma-qk0">
+    <rect class="op-box" x="1317.3" y="481" width="209.5" height="92" rx="10" fill="#c9e6dc"/>
+    <text class="op" x="1422.0" y="524.5">tcgen05 QK₀</text>
+    <text class="op-detail" x="1422.0" y="539.5">sQ[0] × sKⱼ → TMEM S₀</text>
+  </g>
+  <g class="operation" data-operation-id="mma-qk1">
+    <rect class="op-box" x="1536.7" y="481" width="209.5" height="92" rx="10" fill="#c9e6dc"/>
+    <text class="op" x="1641.4" y="524.5">tcgen05 QK₁</text>
+    <text class="op-detail" x="1641.4" y="539.5">sQ[1] × sKⱼ → TMEM S₁</text>
+  </g>
+  <g class="operation" data-operation-id="mma-wait-p0">
+    <rect class="op-box" x="2414.5" y="481" width="77.8" height="92" rx="10" fill="url(#wait-pattern)"/>
+    <text class="op" x="2453.4" y="517.0">acquire</text>
+    <text class="op" x="2453.4" y="532.0">¾ P₀ +</text>
+    <text class="op" x="2453.4" y="547.0">O₀</text>
+  </g>
+  <g class="operation" data-operation-id="mma-pv0">
+    <rect class="op-box" x="2502.3" y="481" width="282.6" height="92" rx="10" fill="#c9e6dc"/>
+    <text class="op" x="2643.6" y="524.5">tcgen05 PV₀</text>
+    <text class="op-detail" x="2643.6" y="539.5">P₀ × Vⱼ; issue after ¾ P; final ¼ mbar</text>
+  </g>
+  <g class="operation" data-operation-id="mma-pv1">
+    <rect class="op-box" x="2794.9" y="481" width="311.9" height="92" rx="10" fill="#c9e6dc"/>
+    <text class="op" x="2950.9" y="524.5">tcgen05 PV₁</text>
+    <text class="op-detail" x="2950.9" y="539.5">P₁ × Vⱼ; issue after ¾ P; final ¼ mbar</text>
+  </g>
+  <g class="operation" data-operation-id="soft0-wait">
+    <rect class="op-box" x="1448.9" y="652" width="92.4" height="92" rx="10" fill="url(#wait-pattern)"/>
+    <text class="op" x="1495.1" y="703.0">wait S₀</text>
+  </g>
+  <g class="operation" data-operation-id="soft0-load-s">
+    <rect class="op-box" x="1551.3" y="652" width="165.6" height="92" rx="10" fill="#d9d0e8"/>
+    <text class="op" x="1634.1" y="695.5">TMEM S₀ → regs</text>
+    <text class="op-detail" x="1634.1" y="710.5">tcgen05.ld 32×32b</text>
+  </g>
+  <g class="operation" data-operation-id="soft0-rowmax">
+    <rect class="op-box" x="1726.9" y="652" width="209.5" height="92" rx="10" fill="#b4dccf"/>
+    <text class="op" x="1831.6" y="695.5">mask + row max</text>
+    <text class="op-detail" x="1831.6" y="710.5">update m₀; compute α₀</text>
+  </g>
+  <g class="operation" data-operation-id="soft0-publish-scale">
+    <rect class="op-box" x="1946.4" y="652" width="92.4" height="92" rx="10" fill="#d9d0e8"/>
+    <text class="op" x="1992.6" y="673.0">publish</text>
+    <text class="op" x="1992.6" y="688.0">α₀</text>
+    <text class="op-detail" x="1992.6" y="703.0">sScale +</text>
+    <text class="op-detail" x="1992.6" y="718.0">named</text>
+    <text class="op-detail" x="1992.6" y="733.0">barrier</text>
+  </g>
+  <g class="operation" data-operation-id="soft0-exp">
+    <rect class="op-box" x="2048.8" y="652" width="238.7" height="92" rx="10" fill="#b4dccf"/>
+    <text class="op" x="2168.1" y="695.5">subtract m₀ + exp2</text>
+    <text class="op-detail" x="2168.1" y="710.5">scores → probability regs</text>
+  </g>
+  <g class="operation" data-operation-id="soft0-p-first">
+    <rect class="op-box" x="2297.5" y="652" width="194.8" height="92" rx="10" fill="#d9d0e8"/>
+    <text class="op" x="2394.9" y="688.0">store first ¾ P₀</text>
+    <text class="op-detail" x="2394.9" y="703.0">regs → aliased TMEM;</text>
+    <text class="op-detail" x="2394.9" y="718.0">release</text>
+  </g>
+  <g class="operation" data-operation-id="soft0-p-last">
+    <rect class="op-box" x="2502.3" y="652" width="92.4" height="92" rx="10" fill="#d9d0e8"/>
+    <text class="op" x="2548.5" y="665.5">store</text>
+    <text class="op" x="2548.5" y="680.5">final ¼</text>
+    <text class="op" x="2548.5" y="695.5">P₀</text>
+    <text class="op-detail" x="2548.5" y="710.5">commit</text>
+    <text class="op-detail" x="2548.5" y="725.5">last-split</text>
+    <text class="op-detail" x="2548.5" y="740.5">mbar</text>
+  </g>
+  <g class="operation" data-operation-id="soft0-sum">
+    <rect class="op-box" x="2604.7" y="652" width="121.7" height="92" rx="10" fill="#b4dccf"/>
+    <text class="op" x="2665.6" y="680.5">update</text>
+    <text class="op" x="2665.6" y="695.5">running ℓ₀</text>
+    <text class="op-detail" x="2665.6" y="710.5">after correction</text>
+    <text class="op-detail" x="2665.6" y="725.5">consumes α₀</text>
+  </g>
+  <g class="operation" data-operation-id="soft0-final-stats">
+    <rect class="op-box" x="3175.3" y="652" width="107.0" height="92" rx="10" fill="#d9d0e8"/>
+    <text class="op" x="3228.8" y="665.5">publish</text>
+    <text class="op" x="3228.8" y="680.5">final ℓ₀ /</text>
+    <text class="op" x="3228.8" y="695.5">m₀</text>
+    <text class="op-detail" x="3228.8" y="710.5">sScale →</text>
+    <text class="op-detail" x="3228.8" y="725.5">correction</text>
+    <text class="op-detail" x="3228.8" y="740.5">barrier</text>
+  </g>
+  <g class="operation" data-operation-id="soft1-wait">
+    <rect class="op-box" x="1668.4" y="854" width="92.4" height="92" rx="10" fill="url(#wait-pattern)"/>
+    <text class="op" x="1714.6" y="905.0">wait S₁</text>
+  </g>
+  <g class="operation" data-operation-id="soft1-load-s">
+    <rect class="op-box" x="1770.8" y="854" width="165.6" height="92" rx="10" fill="#d9d0e8"/>
+    <text class="op" x="1853.6" y="897.5">TMEM S₁ → regs</text>
+    <text class="op-detail" x="1853.6" y="912.5">tcgen05.ld 32×32b</text>
+  </g>
+  <g class="operation" data-operation-id="soft1-rowmax">
+    <rect class="op-box" x="1946.4" y="854" width="209.5" height="92" rx="10" fill="#b4dccf"/>
+    <text class="op" x="2051.1" y="897.5">mask + row max</text>
+    <text class="op-detail" x="2051.1" y="912.5">update m₁; compute α₁</text>
+  </g>
+  <g class="operation" data-operation-id="soft1-publish-scale">
+    <rect class="op-box" x="2165.8" y="854" width="92.4" height="92" rx="10" fill="#d9d0e8"/>
+    <text class="op" x="2212.0" y="875.0">publish</text>
+    <text class="op" x="2212.0" y="890.0">α₁</text>
+    <text class="op-detail" x="2212.0" y="905.0">sScale +</text>
+    <text class="op-detail" x="2212.0" y="920.0">named</text>
+    <text class="op-detail" x="2212.0" y="935.0">barrier</text>
+  </g>
+  <g class="operation" data-operation-id="soft1-exp">
+    <rect class="op-box" x="2268.2" y="854" width="238.7" height="92" rx="10" fill="#b4dccf"/>
+    <text class="op" x="2387.6" y="897.5">subtract m₁ + exp2</text>
+    <text class="op-detail" x="2387.6" y="912.5">scores → probability regs</text>
+  </g>
+  <g class="operation" data-operation-id="soft1-p-first">
+    <rect class="op-box" x="2517.0" y="854" width="194.8" height="92" rx="10" fill="#d9d0e8"/>
+    <text class="op" x="2614.4" y="890.0">store first ¾ P₁</text>
+    <text class="op-detail" x="2614.4" y="905.0">regs → aliased TMEM;</text>
+    <text class="op-detail" x="2614.4" y="920.0">release</text>
+  </g>
+  <g class="operation" data-operation-id="soft1-p-last">
+    <rect class="op-box" x="2721.8" y="854" width="92.4" height="92" rx="10" fill="#d9d0e8"/>
+    <text class="op" x="2768.0" y="867.5">store</text>
+    <text class="op" x="2768.0" y="882.5">final ¼</text>
+    <text class="op" x="2768.0" y="897.5">P₁</text>
+    <text class="op-detail" x="2768.0" y="912.5">commit</text>
+    <text class="op-detail" x="2768.0" y="927.5">last-split</text>
+    <text class="op-detail" x="2768.0" y="942.5">mbar</text>
+  </g>
+  <g class="operation" data-operation-id="soft1-sum">
+    <rect class="op-box" x="2824.2" y="854" width="121.7" height="92" rx="10" fill="#b4dccf"/>
+    <text class="op" x="2885.0" y="882.5">update</text>
+    <text class="op" x="2885.0" y="897.5">running ℓ₁</text>
+    <text class="op-detail" x="2885.0" y="912.5">after correction</text>
+    <text class="op-detail" x="2885.0" y="927.5">consumes α₁</text>
+  </g>
+  <g class="operation" data-operation-id="soft1-final-stats">
+    <rect class="op-box" x="3233.8" y="854" width="107.0" height="92" rx="10" fill="#d9d0e8"/>
+    <text class="op" x="3287.4" y="867.5">publish</text>
+    <text class="op" x="3287.4" y="882.5">final ℓ₁ /</text>
+    <text class="op" x="3287.4" y="897.5">m₁</text>
+    <text class="op-detail" x="3287.4" y="912.5">sScale →</text>
+    <text class="op-detail" x="3287.4" y="927.5">correction</text>
+    <text class="op-detail" x="3287.4" y="942.5">barrier</text>
+  </g>
+  <g class="operation" data-operation-id="corr-wait0">
+    <rect class="op-box" x="1946.4" y="1056" width="92.4" height="92" rx="10" fill="url(#wait-pattern)"/>
+    <text class="op" x="1992.6" y="1107.0">wait α₀</text>
+  </g>
+  <g class="operation" data-operation-id="corr-rescale0">
+    <rect class="op-box" x="2048.8" y="1056" width="180.2" height="92" rx="10" fill="#b4dccf"/>
+    <text class="op" x="2138.9" y="1092.0">rescale O₀</text>
+    <text class="op-detail" x="2138.9" y="1107.0">TMEM → regs; release to</text>
+    <text class="op-detail" x="2138.9" y="1122.0">PV₀</text>
+  </g>
+  <g class="operation" data-operation-id="corr-wait1">
+    <rect class="op-box" x="2165.8" y="1158" width="92.4" height="92" rx="10" fill="url(#wait-pattern)"/>
+    <text class="op" x="2212.0" y="1209.0">wait α₁</text>
+  </g>
+  <g class="operation" data-operation-id="corr-rescale1">
+    <rect class="op-box" x="2268.2" y="1056" width="180.2" height="92" rx="10" fill="#b4dccf"/>
+    <text class="op" x="2358.3" y="1092.0">rescale O₁</text>
+    <text class="op-detail" x="2358.3" y="1107.0">TMEM → regs; release to</text>
+    <text class="op-detail" x="2358.3" y="1122.0">PV₁</text>
+  </g>
+  <g class="operation" data-operation-id="corr-final0">
+    <rect class="op-box" x="3515.5" y="1056" width="165.6" height="92" rx="10" fill="#d9d0e8"/>
+    <text class="op" x="3598.3" y="1099.5">final O₀</text>
+    <text class="op-detail" x="3598.3" y="1114.5">TMEM → regs → sO[0]</text>
+  </g>
+  <g class="operation" data-operation-id="corr-final1">
+    <rect class="op-box" x="3691.1" y="1056" width="165.6" height="92" rx="10" fill="#d9d0e8"/>
+    <text class="op" x="3773.9" y="1099.5">final O₁</text>
+    <text class="op-detail" x="3773.9" y="1114.5">TMEM → regs → sO[1]</text>
+  </g>
+  <g class="operation" data-operation-id="epi-wait">
+    <rect class="op-box" x="3691.1" y="1360" width="165.6" height="92" rx="10" fill="url(#wait-pattern)"/>
+    <text class="op" x="3773.9" y="1411.0">wait sO[0:1]</text>
+  </g>
+  <g class="operation" data-operation-id="epi-store">
+    <rect class="op-box" x="3866.7" y="1360" width="253.3" height="92" rx="10" fill="#f2d394"/>
+    <text class="op" x="3993.3" y="1403.5">TMA store O₀/O₁</text>
+    <text class="op-detail" x="3993.3" y="1418.5">SMEM → GMEM</text>
+  </g>
+  <g class="handoff-annotation" data-handoff-id="q0-ready">
+    <text class="handoff" x="852.3" y="432.0">Q₀ ready</text>
+    <text class="handoff-mech" x="852.3" y="447.0">pipeline_q[0]</text>
+  </g>
+  <g class="handoff-annotation" data-handoff-id="q1-ready">
+    <text class="handoff" x="1027.8" y="432.0">Q₁ ready</text>
+    <text class="handoff-mech" x="1027.8" y="447.0">pipeline_q[1]</text>
+  </g>
+  <g class="handoff-annotation" data-handoff-id="k-ready">
+    <text class="handoff" x="676.7" y="432.0">K₀ seeds Kⱼ</text>
+    <text class="handoff-mech" x="676.7" y="447.0">pipeline_kv</text>
+  </g>
+  <g class="handoff-annotation" data-handoff-id="s0-ready">
+    <text class="handoff" x="1529.9" y="603.0">S₀ ready</text>
+    <text class="handoff-mech" x="1529.9" y="618.0">mbar S/P/O[0]</text>
+  </g>
+  <g class="handoff-annotation" data-handoff-id="s1-ready">
+    <text class="handoff" x="1752.3" y="603.0">S₁ ready</text>
+    <text class="handoff-mech" x="1752.3" y="618.0">mbar S/P/O[1]</text>
+  </g>
+  <g class="handoff-annotation" data-handoff-id="stats0-ready">
+    <text class="handoff" x="2044.9" y="774.0">α₀ ready</text>
+    <text class="handoff-mech" x="2044.9" y="789.0">sm_stats barrier[0]</text>
+  </g>
+  <g class="handoff-annotation" data-handoff-id="stats1-ready">
+    <text class="handoff" x="2264.4" y="976.0">α₁ ready</text>
+    <text class="handoff-mech" x="2264.4" y="991.0">sm_stats barrier[1]</text>
+  </g>
+  <g class="handoff-annotation" data-handoff-id="p0-first-ready">
+    <text class="handoff" x="2498.5" y="774.0">¾ P₀ ready</text>
+    <text class="handoff-mech" x="2498.5" y="789.0">S/P/O release[0]</text>
+  </g>
+  <g class="handoff-annotation" data-handoff-id="p0-last-ready">
+    <text class="handoff" x="2600.9" y="805.0">¼ P₀ ready</text>
+    <text class="handoff-mech" x="2600.9" y="820.0">P lastsplit[0]</text>
+  </g>
+  <g class="handoff-annotation" data-handoff-id="p1-first-ready">
+    <text class="handoff" x="2717.9" y="976.0">¾ P₁ ready</text>
+    <text class="handoff-mech" x="2717.9" y="991.0">S/P/O release[1]</text>
+  </g>
+  <g class="handoff-annotation" data-handoff-id="p1-last-ready">
+    <text class="handoff" x="2820.3" y="1007.0">¼ P₁ ready</text>
+    <text class="handoff-mech" x="2820.3" y="1022.0">P lastsplit[1]</text>
+  </g>
+  <g class="handoff-annotation" data-handoff-id="o0-rescaled">
+    <text class="handoff" x="2235.1" y="1280.0">O₀ rescaled</text>
+    <text class="handoff-mech" x="2235.1" y="1295.0">mbar S/P/O release[0]</text>
+  </g>
+  <g class="handoff-annotation" data-handoff-id="o1-rescaled">
+    <text class="handoff" x="2454.6" y="1280.0">O₁ rescaled</text>
+    <text class="handoff-mech" x="2454.6" y="1295.0">mbar S/P/O release[1]</text>
+  </g>
+  <g class="handoff-annotation" data-handoff-id="stats0-consumed">
+    <text class="handoff" x="2600.9" y="1311.0">α₀ consumed; slot free</text>
+    <text class="handoff-mech" x="2600.9" y="1326.0">sm_stats consumer_release</text>
+  </g>
+  <g class="handoff-annotation" data-handoff-id="stats1-consumed">
+    <text class="handoff" x="2820.3" y="1280.0">α₁ consumed; slot free</text>
+    <text class="handoff-mech" x="2820.3" y="1295.0">sm_stats consumer_release</text>
+  </g>
+  <g class="handoff-annotation" data-handoff-id="final-stats0-ready">
+    <text class="handoff" x="3291.4" y="774.0">final ℓ₀ / m₀</text>
+    <text class="handoff-mech" x="3291.4" y="789.0">sm_stats barrier[0]</text>
+  </g>
+  <g class="handoff-annotation" data-handoff-id="final-stats1-ready">
+    <text class="handoff" x="3350.0" y="976.0">final ℓ₁ / m₁</text>
+    <text class="handoff-mech" x="3350.0" y="991.0">sm_stats barrier[1]</text>
+  </g>
+  <g class="handoff-annotation" data-handoff-id="so0-ready">
+    <text class="handoff" x="3678.5" y="1280.0">sO₀ ready</text>
+    <text class="handoff-mech" x="3678.5" y="1295.0">pipeline_o_epi[0]</text>
+  </g>
+  <g class="handoff-annotation" data-handoff-id="so1-ready">
+    <text class="handoff" x="3854.0" y="1280.0">sO₁ ready</text>
+    <text class="handoff-mech" x="3854.0" y="1295.0">pipeline_o_epi[1]</text>
+  </g>
   <text class="section" x="68" y="1536">ON-CHIP MEMORY LIFETIMES · SAME EVENT AXIS</text>
   <rect x="50" y="1566" width="4100" height="782" rx="12" fill="#fff" stroke="#d4e0e7" stroke-width="1.5"/>
   <line class="grid" x1="478" y1="1566" x2="478" y2="2348"/>
-<line class="grid" x1="500.0" y1="1566" x2="500.0" y2="2348"/><line class="grid" x1="792.6" y1="1566" x2="792.6" y2="2348"/><line class="grid" x1="1085.2" y1="1566" x2="1085.2" y2="2348"/><line class="grid" x1="1487.8" y1="1566" x2="1487.8" y2="2348"/><line class="grid" x1="1780.4" y1="1566" x2="1780.4" y2="2348"/><line class="grid" x1="2073.0" y1="1566" x2="2073.0" y2="2348"/><line class="grid" x1="2365.7" y1="1566" x2="2365.7" y2="2348"/><line class="grid" x1="2658.3" y1="1566" x2="2658.3" y2="2348"/><line class="grid" x1="2950.9" y1="1566" x2="2950.9" y2="2348"/><line class="grid" x1="3243.5" y1="1566" x2="3243.5" y2="2348"/><line class="grid" x1="3686.1" y1="1566" x2="3686.1" y2="2348"/><line class="grid" x1="4125.0" y1="1566" x2="4125.0" y2="2348"/><rect x="1202.3" y="1566" width="110.0" height="782" fill="#f3f6f8"/><line class="grid" x1="1312.3" y1="1566" x2="1312.3" y2="2348"/><rect x="3360.5" y="1566" width="150.0" height="782" fill="#f3f6f8"/><line class="grid" x1="3510.5" y1="1566" x2="3510.5" y2="2348"/><line class="lifecycle-event" x1="3360.5" y1="1582" x2="3360.5" y2="1688"/><text class="lifecycle-event-label" x="3353.5" y="1576">Q₀/Q₁ reusable after K/V loop · pipeline_q.consumer_release_w_index(stage)</text><text class="section" x="76" y="1609">SMEM</text><text class="memory" x="150" y="1609">Q tile · stage 0</text><text class="extent" x="150" y="1632">sQ[0] · held until the K/V loop exits</text><rect class="life-box" x="678.6" y="1582" width="2679.0" height="40" rx="8" fill="#d7e8f2"/><text class="life" x="2018.0" y="1607">Q₀ · loaded once; reused by every Q₀Kᵢ</text><line class="lane" x1="50" y1="1660" x2="4150" y2="1660"/><text class="memory" x="150" y="1675">Q tile · stage 1</text><text class="extent" x="150" y="1698">sQ[1] · held until the K/V loop exits</text><rect class="life-box" x="854.1" y="1648" width="2503.4" height="40" rx="8" fill="#d7e8f2"/><text class="life" x="2105.8" y="1673">Q₁ · loaded once; reused by every Q₁Kᵢ</text><line class="lane" x1="50" y1="1726" x2="4150" y2="1726"/><text class="memory" x="150" y="1741">K/V ring · slot 0</text><text class="extent" x="150" y="1764">logical K/V views share this physical stage</text><rect class="life-box" x="503.0" y="1714" width="1245.2" height="40" rx="8" fill="#d7e8f2"/><text class="life" x="1125.6" y="1739">Kⱼ · current tile → QK₀ + QK₁</text><rect class="life-box" x="1842.0" y="1714" width="1515.6" height="40" rx="8" fill="#d7e8f2"/><text class="life" x="2599.7" y="1739">Vⱼ₊₁ · carried into the next iteration</text><text class="reuse" x="1839.0" y="1707">REUSE</text><line class="lane" x1="50" y1="1792" x2="4150" y2="1792"/><text class="memory" x="150" y="1807">K/V ring · slot 1</text><text class="extent" x="150" y="1830">current V stage</text><rect class="life-box" x="1029.7" y="1780" width="2079.1" height="40" rx="8" fill="#d7e8f2"/><text class="life" x="2069.2" y="1805">Vⱼ · current tile → PV₀ + PV₁</text><line class="lane" x1="50" y1="1858" x2="4150" y2="1858"/><text class="memory" x="150" y="1873">K/V ring · slot 2</text><text class="extent" x="150" y="1896">next K stage prefetched during current compute</text><rect class="life-box" x="1666.4" y="1846" width="1691.1" height="40" rx="8" fill="#d7e8f2"/><text class="life" x="2512.0" y="1871">Kⱼ₊₁ · carried into the next iteration</text><line class="lane" x1="50" y1="1924" x2="4150" y2="1924"/><text class="memory" x="150" y="1939">Correction / final statistics</text><text class="extent" x="150" y="1962">per-iteration α; final row sum ℓ and optional row max m</text><rect class="life-box" x="1724.9" y="1912" width="2133.7" height="40" rx="8" fill="#f0dfaa"/><text class="life" x="2791.8" y="1937">α₀/α₁ during loop; final ℓ₀/ℓ₁ (+ m when needed)</text><line class="lane" x1="50" y1="1990" x2="4150" y2="1990"/><text class="memory" x="150" y="2005">Output stage ring</text><text class="extent" x="150" y="2028">sO[0], sO[1]</text><rect class="life-box" x="3513.5" y="1978" width="608.5" height="40" rx="8" fill="#d9d0e8"/><text class="life" x="3817.8" y="2003">O₀/O₁ · correction → TMA store</text><line class="lane" x1="50" y1="2056" x2="4150" y2="2056"/><text class="section" x="76" y="2071">TMEM</text><text class="memory" x="150" y="2071">Score / P region · stage 0</text><text class="extent" x="150" y="2094">S offset 0; P view begins at S + N/2</text><rect class="life-box" x="1315.3" y="2044" width="403.7" height="40" rx="8" fill="#c9e6dc"/><text class="life" x="1517.1" y="2069">S₀ · QK₀ → softmax 0</text><rect class="life-box" x="2295.5" y="2044" width="491.4" height="40" rx="8" fill="#b7dccc"/><text class="life" x="2541.2" y="2069">P₀ · same region → PV₀</text><text class="reuse" x="2292.5" y="2037">REUSE</text><line class="lane" x1="50" y1="2122" x2="4150" y2="2122"/><text class="memory" x="150" y="2137">Score / P region · stage 1</text><text class="extent" x="150" y="2160">S offset N; P view begins at S + N/2</text><rect class="life-box" x="1534.7" y="2110" width="403.7" height="40" rx="8" fill="#c9e6dc"/><text class="life" x="1736.5" y="2135">S₁ · QK₁ → softmax 1</text><rect class="life-box" x="2515.0" y="2110" width="593.8" height="40" rx="8" fill="#b7dccc"/><text class="life" x="2811.9" y="2135">P₁ · same region → PV₁</text><text class="reuse" x="2512.0" y="2103">REUSE</text><line class="lane" x1="50" y1="2188" x2="4150" y2="2188"/><text class="memory" x="150" y="2203">Output accumulator · stage 0</text><text class="extent" x="150" y="2226">O offset 2N</text><rect class="life-box" x="503.0" y="2176" width="3180.1" height="40" rx="8" fill="#d9d0e8"/><text class="life" x="2093.0" y="2201">O₀ · rescale → PV₀ accumulate → final</text><line class="lane" x1="50" y1="2254" x2="4150" y2="2254"/><text class="memory" x="150" y="2269">Output accumulator · stage 1</text><text class="extent" x="150" y="2292">O offset 2N + Dv</text><rect class="life-box" x="503.0" y="2242" width="3355.7" height="40" rx="8" fill="#d9d0e8"/><text class="life" x="2180.8" y="2267">O₁ · rescale → PV₁ accumulate → final</text><rect x="50" y="2382" width="4100" height="179" rx="12" fill="#fff7df" stroke="#b87912" stroke-width="1.5"/><text class="foot-strong" x="76" y="2411">RECONSTRUCTION NOTES</text><text class="foot" x="76" y="2437">• sQ and sO use separate physical allocations in this configuration (when D=128, Dv=128, split-KV=no); alternate: sQ and sO alias for D=192 with Dv≥64, or split-KV with Dv≥128.</text><text class="foot" x="76" y="2460">• Index contract: prologue primes K₀/V₀; at mainloop entry they are the j=0 instance of symbolic Kⱼ/Vⱼ; steady state prefetches Kⱼ₊₁/Vⱼ₊₁.</text><text class="foot" x="76" y="2483">• Steady-state softmax is shown: each stage publishes α before exp2, writes P as 96 + 32 columns, and updates the running row sum after correction consumes α; the first K/V iteration skips O rescale.</text><text class="foot" x="76" y="2506">• TMEM offsets: S=[0,N], P=S+N/2 (packed view), O=2N+stage×Dv; N=Dv=128 in this view.</text><text class="foot" x="76" y="2529">• The 3-stage K/V ring overlaps current Vⱼ consumption with Kⱼ₊₁/Vⱼ₊₁ prefetch; slot 0 is shown reusing Kⱼ storage for Vⱼ₊₁.</text><text class="foot" x="2850" y="2411">solid sync = ready · dashed sync = released/reusable · adjacent bars in one row = physical alias</text></svg>
+  <line class="grid" x1="500.0" y1="1566" x2="500.0" y2="2348"/>
+  <line class="grid" x1="792.6" y1="1566" x2="792.6" y2="2348"/>
+  <line class="grid" x1="1085.2" y1="1566" x2="1085.2" y2="2348"/>
+  <line class="grid" x1="1487.8" y1="1566" x2="1487.8" y2="2348"/>
+  <line class="grid" x1="1780.4" y1="1566" x2="1780.4" y2="2348"/>
+  <line class="grid" x1="2073.0" y1="1566" x2="2073.0" y2="2348"/>
+  <line class="grid" x1="2365.7" y1="1566" x2="2365.7" y2="2348"/>
+  <line class="grid" x1="2658.3" y1="1566" x2="2658.3" y2="2348"/>
+  <line class="grid" x1="2950.9" y1="1566" x2="2950.9" y2="2348"/>
+  <line class="grid" x1="3243.5" y1="1566" x2="3243.5" y2="2348"/>
+  <line class="grid" x1="3686.1" y1="1566" x2="3686.1" y2="2348"/>
+  <line class="grid" x1="4125.0" y1="1566" x2="4125.0" y2="2348"/>
+  <rect x="1202.3" y="1566" width="110.0" height="782" fill="#f3f6f8"/>
+  <line class="grid" x1="1312.3" y1="1566" x2="1312.3" y2="2348"/>
+  <rect x="3360.5" y="1566" width="150.0" height="782" fill="#f3f6f8"/>
+  <line class="grid" x1="3510.5" y1="1566" x2="3510.5" y2="2348"/>
+  <line class="lifecycle-event" x1="3360.5" y1="1582" x2="3360.5" y2="1688"/>
+  <text class="lifecycle-event-label" x="3353.5" y="1576">Q₀/Q₁ reusable after K/V loop · pipeline_q.consumer_release_w_index(stage)</text>
+  <text class="section" x="76" y="1609">SMEM</text>
+  <text class="memory" data-allocation-id="smem-q0" x="150" y="1609">Q tile · stage 0</text>
+  <text class="extent" x="150" y="1632">sQ[0] · held until the K/V loop exits</text>
+  <g class="resource-lifetime" data-resource-id="sq0">
+    <rect class="life-box" x="678.6" y="1582" width="2679.0" height="40" rx="8" fill="#d7e8f2"/>
+    <text class="life" x="2018.0" y="1607">Q₀ · loaded once; reused by every Q₀Kᵢ</text>
+  </g>
+  <line class="lane" x1="50" y1="1660" x2="4150" y2="1660"/>
+  <text class="memory" data-allocation-id="smem-q1" x="150" y="1675">Q tile · stage 1</text>
+  <text class="extent" x="150" y="1698">sQ[1] · held until the K/V loop exits</text>
+  <g class="resource-lifetime" data-resource-id="sq1">
+    <rect class="life-box" x="854.1" y="1648" width="2503.4" height="40" rx="8" fill="#d7e8f2"/>
+    <text class="life" x="2105.8" y="1673">Q₁ · loaded once; reused by every Q₁Kᵢ</text>
+  </g>
+  <line class="lane" x1="50" y1="1726" x2="4150" y2="1726"/>
+  <text class="memory" data-allocation-id="smem-kv-slot0" x="150" y="1741">K/V ring · slot 0</text>
+  <text class="extent" x="150" y="1764">logical K/V views share this physical stage</text>
+  <g class="resource-lifetime" data-resource-id="skj">
+    <rect class="life-box" x="503.0" y="1714" width="1245.2" height="40" rx="8" fill="#d7e8f2"/>
+    <text class="life" x="1125.6" y="1739">Kⱼ · current tile → QK₀ + QK₁</text>
+  </g>
+  <g class="resource-lifetime" data-resource-id="svj1">
+    <rect class="life-box" x="1842.0" y="1714" width="1515.6" height="40" rx="8" fill="#d7e8f2"/>
+    <text class="life" x="2599.7" y="1739">Vⱼ₊₁ · carried into the next iteration</text>
+  </g>
+  <text class="reuse" x="1839.0" y="1707">REUSE</text>
+  <line class="lane" x1="50" y1="1792" x2="4150" y2="1792"/>
+  <text class="memory" data-allocation-id="smem-kv-slot1" x="150" y="1807">K/V ring · slot 1</text>
+  <text class="extent" x="150" y="1830">current V stage</text>
+  <g class="resource-lifetime" data-resource-id="svj">
+    <rect class="life-box" x="1029.7" y="1780" width="2079.1" height="40" rx="8" fill="#d7e8f2"/>
+    <text class="life" x="2069.2" y="1805">Vⱼ · current tile → PV₀ + PV₁</text>
+  </g>
+  <line class="lane" x1="50" y1="1858" x2="4150" y2="1858"/>
+  <text class="memory" data-allocation-id="smem-kv-slot2" x="150" y="1873">K/V ring · slot 2</text>
+  <text class="extent" x="150" y="1896">next K stage prefetched during current compute</text>
+  <g class="resource-lifetime" data-resource-id="skj1">
+    <rect class="life-box" x="1666.4" y="1846" width="1691.1" height="40" rx="8" fill="#d7e8f2"/>
+    <text class="life" x="2512.0" y="1871">Kⱼ₊₁ · carried into the next iteration</text>
+  </g>
+  <line class="lane" x1="50" y1="1924" x2="4150" y2="1924"/>
+  <text class="memory" data-allocation-id="smem-stats" x="150" y="1939">Correction / final statistics</text>
+  <text class="extent" x="150" y="1962">per-iteration α; final row sum ℓ and optional row max m</text>
+  <g class="resource-lifetime" data-resource-id="sstats">
+    <rect class="life-box" x="1724.9" y="1912" width="2133.7" height="40" rx="8" fill="#f0dfaa"/>
+    <text class="life" x="2791.8" y="1937">α₀/α₁ during loop; final ℓ₀/ℓ₁ (+ m when needed)</text>
+  </g>
+  <line class="lane" x1="50" y1="1990" x2="4150" y2="1990"/>
+  <text class="memory" data-allocation-id="smem-output" x="150" y="2005">Output stage ring</text>
+  <text class="extent" x="150" y="2028">sO[0], sO[1]</text>
+  <g class="resource-lifetime" data-resource-id="so">
+    <rect class="life-box" x="3513.5" y="1978" width="608.5" height="40" rx="8" fill="#d9d0e8"/>
+    <text class="life" x="3817.8" y="2003">O₀/O₁ · correction → TMA store</text>
+  </g>
+  <line class="lane" x1="50" y1="2056" x2="4150" y2="2056"/>
+  <text class="section" x="76" y="2071">TMEM</text>
+  <text class="memory" data-allocation-id="tmem-sp0" x="150" y="2071">Score / P region · stage 0</text>
+  <text class="extent" x="150" y="2094">S offset 0; P view begins at S + N/2</text>
+  <g class="resource-lifetime" data-resource-id="ts0">
+    <rect class="life-box" x="1315.3" y="2044" width="403.7" height="40" rx="8" fill="#c9e6dc"/>
+    <text class="life" x="1517.1" y="2069">S₀ · QK₀ → softmax 0</text>
+  </g>
+  <g class="resource-lifetime" data-resource-id="tp0">
+    <rect class="life-box" x="2295.5" y="2044" width="491.4" height="40" rx="8" fill="#b7dccc"/>
+    <text class="life" x="2541.2" y="2069">P₀ · same region → PV₀</text>
+  </g>
+  <text class="reuse" x="2292.5" y="2037">REUSE</text>
+  <line class="lane" x1="50" y1="2122" x2="4150" y2="2122"/>
+  <text class="memory" data-allocation-id="tmem-sp1" x="150" y="2137">Score / P region · stage 1</text>
+  <text class="extent" x="150" y="2160">S offset N; P view begins at S + N/2</text>
+  <g class="resource-lifetime" data-resource-id="ts1">
+    <rect class="life-box" x="1534.7" y="2110" width="403.7" height="40" rx="8" fill="#c9e6dc"/>
+    <text class="life" x="1736.5" y="2135">S₁ · QK₁ → softmax 1</text>
+  </g>
+  <g class="resource-lifetime" data-resource-id="tp1">
+    <rect class="life-box" x="2515.0" y="2110" width="593.8" height="40" rx="8" fill="#b7dccc"/>
+    <text class="life" x="2811.9" y="2135">P₁ · same region → PV₁</text>
+  </g>
+  <text class="reuse" x="2512.0" y="2103">REUSE</text>
+  <line class="lane" x1="50" y1="2188" x2="4150" y2="2188"/>
+  <text class="memory" data-allocation-id="tmem-o0" x="150" y="2203">Output accumulator · stage 0</text>
+  <text class="extent" x="150" y="2226">O offset 2N</text>
+  <g class="resource-lifetime" data-resource-id="to0">
+    <rect class="life-box" x="503.0" y="2176" width="3180.1" height="40" rx="8" fill="#d9d0e8"/>
+    <text class="life" x="2093.0" y="2201">O₀ · rescale → PV₀ accumulate → final</text>
+  </g>
+  <line class="lane" x1="50" y1="2254" x2="4150" y2="2254"/>
+  <text class="memory" data-allocation-id="tmem-o1" x="150" y="2269">Output accumulator · stage 1</text>
+  <text class="extent" x="150" y="2292">O offset 2N + Dv</text>
+  <g class="resource-lifetime" data-resource-id="to1">
+    <rect class="life-box" x="503.0" y="2242" width="3355.7" height="40" rx="8" fill="#d9d0e8"/>
+    <text class="life" x="2180.8" y="2267">O₁ · rescale → PV₁ accumulate → final</text>
+  </g>
+  <rect x="50" y="2382" width="4100" height="179" rx="12" fill="#fff7df" stroke="#b87912" stroke-width="1.5"/>
+  <text class="foot-strong" x="76" y="2411">RECONSTRUCTION NOTES</text>
+  <text class="foot" x="76" y="2437">• sQ and sO use separate physical allocations in this configuration (when D=128, Dv=128, split-KV=no); alternate: sQ and sO alias for D=192 with Dv≥64, or split-KV with Dv≥128.</text>
+  <text class="foot" x="76" y="2460">• Index contract: prologue primes K₀/V₀; at mainloop entry they are the j=0 instance of symbolic Kⱼ/Vⱼ; steady state prefetches Kⱼ₊₁/Vⱼ₊₁.</text>
+  <text class="foot" x="76" y="2483">• Steady-state softmax is shown: each stage publishes α before exp2, writes P as 96 + 32 columns, and updates the running row sum after correction consumes α; the first K/V iteration skips O rescale.</text>
+  <text class="foot" x="76" y="2506">• TMEM offsets: S=[0,N], P=S+N/2 (packed view), O=2N+stage×Dv; N=Dv=128 in this view.</text>
+  <text class="foot" x="76" y="2529">• The 3-stage K/V ring overlaps current Vⱼ consumption with Kⱼ₊₁/Vⱼ₊₁ prefetch; slot 0 is shown reusing Kⱼ storage for Vⱼ₊₁.</text>
+  <text class="foot" x="2850" y="2411">solid sync = ready · dashed sync = released/reusable · adjacent bars in one row = physical alias</text>
+</svg>

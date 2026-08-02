@@ -1,13 +1,14 @@
 # Kernel graph visual grammar
 
-Kernel diagrams are generated from semantic specifications. Coordinates,
-colors, and SVG markup do not belong in kernel specifications.
+Kernel diagrams are authored directly as SVG by an AI/LLM after it reconstructs
+and validates a semantic specification from implementation code. Coordinates,
+colors, and SVG markup belong in the SVG, not in the kernel specification.
 
 ## Composition is a projection
 
 The semantic specification does not prescribe graph shape, size, orientation,
-or panel count. A renderer chooses the composition that best exposes the
-kernel's dominant structure. Multiple coordinated views may be generated from
+or panel count. The authoring LLM chooses the composition that best exposes the
+kernel's dominant structure. Multiple coordinated SVG views may be authored from
 one specification, with exactly one designated as the primary infographic.
 
 Useful compositions include cyclic mainloops, aligned role timelines,

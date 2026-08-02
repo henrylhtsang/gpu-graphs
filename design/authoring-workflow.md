@@ -59,18 +59,27 @@ the graph notes automatically; do not duplicate them in free-form notes. Encode
 the selected relation's applicability as typed configuration predicates, not a
 prose condition, so changing a variant invalidates stale storage claims.
 
-## 7. Validate, render, and inspect
+## 7. Validate, author the SVG, and inspect
 
-Before rendering, declare one or more views of the same semantic model. Exactly
-one view is primary. Choose its renderer according to the kernel's structure:
-a cycle for a repeated pipeline, a timeline for overlap, a floorplan for
-physical placement, a dependency graph for synchronization, or a custom
-composition when those forms are insufficient. Width, height, orientation, and
-panel count are not schema constraints.
+Declare one or more views of the same semantic model. Exactly one view is
+primary. Choose the composition according to the kernel's structure: a cycle for
+a repeated pipeline, a timeline for overlap, a floorplan for physical placement,
+a dependency graph for synchronization, or a custom composition when those
+forms are insufficient. Assign the applicable automated `qa_profile`. Width,
+height, orientation, and panel count are not schema constraints.
 
 Secondary views may expose denser reconstruction detail without forcing it into
-the primary infographic. View declarations select renderers and output paths;
+the primary infographic. View declarations select QA profiles and output paths;
 they do not duplicate operations, resources, lifetimes, or storage decisions.
+
+The AI/LLM authors each SVG directly from the validated spec and this
+repository's visual grammar. Do not build or invoke a script, renderer, plotting
+library, or template engine that emits the SVG. The SVG is an editable
+presentation source, not a generated projection. Keep stable semantic classes
+and `data-*` IDs on important marks so automated QA can relate geometry back to
+spec records. Follow [`llm-svg-authoring.md`](llm-svg-authoring.md) for the
+authoring packet, direct-SVG rules, semantic join contract, and completion
+standard.
 
 Run the complete production loop:
 
@@ -78,10 +87,11 @@ Run the complete production loop:
 make qa
 ```
 
-This validates the spec, regenerates deterministic SVG views, applies generic
-and renderer-specific layout QA, renders PNG companions, and verifies SVG/PNG
-dimension parity. See [`qa-workflow.md`](qa-workflow.md) for the gate contracts,
-failure routing, and manual visual-review checklist.
+This validates the spec, inspects the existing LLM-authored SVG with generic and
+layout-profile QA, renders PNG companions, and verifies SVG/PNG dimension
+parity. It does not create or rewrite the SVG. See
+[`qa-workflow.md`](qa-workflow.md) for the gate contracts, failure routing, and
+manual visual-review checklist.
 
 The validator enforces these invariants:
 

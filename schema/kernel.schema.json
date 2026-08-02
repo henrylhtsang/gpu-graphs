@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://gpu-graphs.local/schema/kernel-0.2.json",
+  "$id": "https://gpu-graphs.local/schema/kernel-0.3.json",
   "title": "GPU kernel graph specification",
   "$defs": {
     "id": {
@@ -74,6 +74,7 @@
     "title",
     "architecture",
     "views",
+    "sources",
     "timeline",
     "roles",
     "operations",
@@ -82,7 +83,7 @@
     "resources"
   ],
   "properties": {
-    "schema_version": { "const": "0.2" },
+    "schema_version": { "const": "0.3" },
     "id": { "$ref": "#/$defs/id" },
     "topic": { "$ref": "#/$defs/id" },
     "title": { "type": "string", "minLength": 1 },
@@ -93,16 +94,43 @@
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["id", "renderer", "output", "primary"],
+        "required": ["id", "qa_profile", "output", "primary", "authoring"],
         "properties": {
           "id": { "$ref": "#/$defs/id" },
-          "renderer": { "$ref": "#/$defs/id" },
+          "qa_profile": { "$ref": "#/$defs/id" },
           "output": {
             "type": "string",
             "pattern": "^graphs/[a-z0-9][a-z0-9/-]*/[a-z0-9][a-z0-9-]*\\.svg$"
           },
           "primary": { "type": "boolean" },
-          "width": { "type": "integer", "minimum": 2400 }
+          "width": { "type": "integer", "minimum": 2400 },
+          "authoring": {
+            "type": "object",
+            "required": ["goal", "audience", "reading_order", "required_content", "excluded_content"],
+            "properties": {
+              "goal": { "type": "string", "minLength": 1 },
+              "audience": { "type": "string", "minLength": 1 },
+              "composition_hint": { "type": "string", "minLength": 1 },
+              "reading_order": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": { "type": "string", "minLength": 1 }
+              },
+              "required_content": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": { "type": "string", "minLength": 1 }
+              },
+              "excluded_content": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": { "type": "string", "minLength": 1 }
+              }
+            },
+            "additionalProperties": false
+          }
         },
         "additionalProperties": false
       }
@@ -123,11 +151,13 @@
     },
     "sources": {
       "type": "array",
+      "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["id", "label", "url"],
+        "required": ["id", "kind", "label", "url"],
         "properties": {
           "id": { "$ref": "#/$defs/id" },
+          "kind": { "enum": ["implementation", "documentation", "paper"] },
           "label": { "type": "string", "minLength": 1 },
           "url": { "type": "string", "minLength": 1 },
           "observed": { "type": "string" }

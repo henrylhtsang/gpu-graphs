@@ -9,7 +9,7 @@ Blackwell GPUs.
 - `forward-sm100-kernel-structure.svg`: three-phase timeline for the
   representative dense-TMA, `q_stage=2`, head-dimension-128 path. It aligns
   prologue, repeated mainloop, epilogue, warp-role handoffs, and physical
-  SMEM/TMEM lifetimes on one semantic event axis. It is generated from
+  SMEM/TMEM lifetimes on one semantic event axis. It is authored from
   [`specs/kernels/flash-attention-4/forward-sm100.json`](../../specs/kernels/flash-attention-4/forward-sm100.json).
   The prologue uses concrete `K0`/`V0` seed names; the representative mainloop
   consumes symbolic `Kj`/`Vj` while the TMA producer prefetches `Kj+1`/`Vj+1`.

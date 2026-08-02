@@ -3,18 +3,18 @@
 Use one repeatable production loop for every specification-backed kernel graph:
 
 ```text
-edit semantic spec
+read kernel code and edit semantic spec
         ↓
 validate schema + kernel invariants
         ↓
-generate deterministic SVG
+LLM authors or revises SVG directly
         ↓
-run generic + renderer-specific SVG QA
+run generic + layout-profile SVG QA
         ↓
 render PNG companion and verify artifact parity
         ↓
 inspect the graph visually
-        ↺ fix the spec or renderer, then run the loop again
+        ↺ fix the spec or SVG, then run the loop again
 ```
 
 The canonical command is:
@@ -31,14 +31,15 @@ failure in an earlier one.
 | Gate | Automated checks | Correct place to fix a failure |
 | --- | --- | --- |
 | Spec | Schema, references, operation/resource causality, loop residency, storage reuse, evidence | Kernel spec or semantic validator |
-| Generation | Every declared view uses a registered renderer and the checked-in SVG exactly matches deterministic renderer output | Renderer or generated SVG |
-| Generic SVG | Parseability, canvas/viewBox agreement, minimum declared width, title, description, accessible root | Shared renderer infrastructure |
-| Renderer-specific SVG | Semantic coverage, operation and lifetime box collisions, text containment, handoff annotation collisions, canvas bounds | Renderer layout algorithm; shorten spec text only when meaning is preserved |
+| SVG authorship | Every declared view has an LLM-authored SVG; no script creates or rewrites its composition | SVG source |
+| Generic SVG | Parseability, canvas/viewBox agreement, minimum declared width, title, description, accessible root | SVG source or shared QA rule |
+| Layout-profile SVG | Semantic coverage, operation and lifetime box collisions, text containment, handoff annotation collisions, canvas bounds | SVG source; shorten spec text only when meaning is preserved |
 | PNG parity | Companion exists and has exactly the SVG canvas dimensions | PNG rendering command or stale artifact |
-| Visual review | Information density, arrow routing, phase readability, color/shape clarity, and whether the reconstruction story is understandable | Usually renderer; spec when the semantic story itself is incomplete |
+| Visual review | Information density, arrow routing, phase readability, color/shape clarity, and whether the reconstruction story is understandable | SVG; spec when the semantic story itself is incomplete |
 
-`make svg-qa` runs only generated-SVG checks. `make artifact-qa` checks PNG
-companions. These narrower commands are useful while developing a renderer;
+`make svg-qa` checks the existing LLM-authored SVG without rewriting it.
+`make artifact-qa` checks PNG companions. These narrower commands are useful
+while iterating on the SVG;
 `make qa` is the pre-commit gate.
 
 ## Feedback rule
@@ -46,15 +47,16 @@ companions. These narrower commands are useful while developing a renderer;
 Classify the problem before editing:
 
 - Missing or incorrect kernel fact: fix the specification.
-- A fact is present but not visible: fix semantic coverage in the renderer.
-- Boxes, labels, or arrows collide: fix the renderer's layout policy, not one
-  generated SVG.
+- A fact is present but not visible: fix the SVG and strengthen semantic-
+  coverage QA when the omission can recur.
+- Boxes, labels, or arrows collide: revise the SVG directly and add a regression
+  rule when the geometry failure can recur.
 - One label is needlessly verbose: simplify the spec label while keeping full
   evidence and detail in the spec or README.
 - PNG differs from SVG: regenerate the artifact; never edit the PNG directly.
 
-This division keeps kernel knowledge in the spec and presentation policy in the
-renderer, so corrections benefit every graph using the same projection.
+This division keeps kernel knowledge in the spec, presentation in the
+LLM-authored SVG, and reusable safeguards in QA and authoring guidance.
 
 ## Visual review checklist
 
@@ -73,15 +75,14 @@ Visual review is the only manual gate. Record a discovered layout failure as an
 automated regression whenever it can be expressed as geometry or semantic
 coverage.
 
-## Adding another renderer
+## Adding another layout profile
 
-1. Register it in `src/gpu_graph/renderers.py`.
-2. Add its renderer-specific checker to `SVG_QA_CHECKERS` in
-   `src/gpu_graph/qa.py`.
+1. Add its checker to `SVG_QA_PROFILES` in `src/gpu_graph/qa.py`.
+2. Reference the profile from the view's `qa_profile` field in the kernel spec.
 3. Give important marks stable classes or `data-*` IDs so QA can connect SVG
    geometry back to semantic IDs.
 4. Add a passing reference test and at least one deliberately broken fixture
    that proves the checker detects its main failure mode.
 
-Generation fails when a view names an unknown renderer. SVG QA fails when a
-registered renderer lacks a QA contract.
+SVG QA fails when a view names an unknown QA profile. The profile checks an SVG
+that the LLM has already authored; it never generates or rewrites SVG markup.

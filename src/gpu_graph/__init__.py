@@ -1,3 +1,3 @@
-"""Schema-driven GPU kernel graph renderer."""
+"""Semantic validation and artifact QA for LLM-authored GPU kernel graphs."""
 
-SCHEMA_VERSION = "0.2"
+SCHEMA_VERSION = "0.3"

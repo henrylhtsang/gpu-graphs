@@ -1,8 +1,9 @@
-"""Automated QA contracts for generated kernel graph artifacts."""
+"""Automated QA contracts for LLM-authored kernel graph artifacts."""
 
 from __future__ import annotations
 
 import struct
+from collections import Counter
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
@@ -65,24 +66,74 @@ def _check_pairwise_overlap(boxes: list[Box], check: str) -> list[str]:
     return issues
 
 
+def _identity_issues(
+    expected: set[str],
+    elements: list[ElementTree.Element],
+    attribute: str,
+    check: str,
+) -> list[str]:
+    values = [element.get(attribute, "") for element in elements]
+    counts = Counter(values)
+    rendered = set(values)
+    missing = sorted(expected - rendered)
+    extra = sorted(rendered - expected)
+    duplicates = sorted(value for value, count in counts.items() if value and count > 1)
+    if not missing and not extra and not duplicates:
+        return []
+    return [
+        f"{check}: missing={missing or 'none'}, extra={extra or 'none'}, "
+        f"duplicates={duplicates or 'none'}"
+    ]
+
+
 def _timeline_issues(
     spec: dict[str, Any],
     root: ElementTree.Element,
     canvas: Box,
 ) -> list[str]:
     issues: list[str] = []
+    expected_section_ids = {
+        section["id"] for section in spec["timeline"].get("sections", [])
+    }
+    issues.extend(
+        _identity_issues(
+            expected_section_ids,
+            _class_elements(root, "text", "phase"),
+            "data-section-id",
+            "timeline.section-coverage",
+        )
+    )
+
+    expected_role_ids = {role["id"] for role in spec["roles"]}
+    issues.extend(
+        _identity_issues(
+            expected_role_ids,
+            _class_elements(root, "text", "role"),
+            "data-role-id",
+            "timeline.role-coverage",
+        )
+    )
+
+    expected_allocation_ids = {allocation["id"] for allocation in spec["allocations"]}
+    issues.extend(
+        _identity_issues(
+            expected_allocation_ids,
+            _class_elements(root, "text", "memory"),
+            "data-allocation-id",
+            "timeline.allocation-coverage",
+        )
+    )
+
     expected_operation_ids = {operation["id"] for operation in spec["operations"]}
     operation_groups = _class_elements(root, "g", "operation")
-    rendered_operation_ids = {
-        group.get("data-operation-id", "") for group in operation_groups
-    }
-    if rendered_operation_ids != expected_operation_ids:
-        missing = sorted(expected_operation_ids - rendered_operation_ids)
-        extra = sorted(rendered_operation_ids - expected_operation_ids)
-        issues.append(
-            "timeline.operation-coverage: "
-            f"missing={missing or 'none'}, extra={extra or 'none'}"
+    issues.extend(
+        _identity_issues(
+            expected_operation_ids,
+            operation_groups,
+            "data-operation-id",
+            "timeline.operation-coverage",
         )
+    )
 
     operation_boxes: list[Box] = []
     for group in operation_groups:
@@ -121,16 +172,14 @@ def _timeline_issues(
 
     expected_handoff_ids = {handoff["id"] for handoff in spec["handoffs"]}
     handoff_groups = _class_elements(root, "g", "handoff-annotation")
-    rendered_handoff_ids = {
-        group.get("data-handoff-id", "") for group in handoff_groups
-    }
-    if rendered_handoff_ids != expected_handoff_ids:
-        missing = sorted(expected_handoff_ids - rendered_handoff_ids)
-        extra = sorted(rendered_handoff_ids - expected_handoff_ids)
-        issues.append(
-            "timeline.handoff-coverage: "
-            f"missing={missing or 'none'}, extra={extra or 'none'}"
+    issues.extend(
+        _identity_issues(
+            expected_handoff_ids,
+            handoff_groups,
+            "data-handoff-id",
+            "timeline.handoff-coverage",
         )
+    )
 
     handoff_boxes: list[Box] = []
     for group in handoff_groups:
@@ -165,21 +214,35 @@ def _timeline_issues(
         for element in root.iter(f"{SVG_NAMESPACE}path")
         if element.get("class") in {"ready", "release"}
     ]
-    if len(sync_paths) != len(spec["handoffs"]):
-        issues.append(
-            "timeline.handoff-paths: "
-            f"rendered {len(sync_paths)}, expected {len(spec['handoffs'])}"
+    issues.extend(
+        _identity_issues(
+            expected_handoff_ids,
+            sync_paths,
+            "data-handoff-id",
+            "timeline.handoff-paths",
         )
+    )
 
-    lifetime_boxes = [
-        _rect_box(element, f"lifetime-{index}")
-        for index, element in enumerate(_class_elements(root, "rect", "life-box"))
-    ]
-    if len(lifetime_boxes) != len(spec["resources"]):
-        issues.append(
-            "timeline.lifetime-coverage: "
-            f"rendered {len(lifetime_boxes)}, expected {len(spec['resources'])}"
+    expected_resource_ids = {resource["id"] for resource in spec["resources"]}
+    lifetime_groups = _class_elements(root, "g", "resource-lifetime")
+    issues.extend(
+        _identity_issues(
+            expected_resource_ids,
+            lifetime_groups,
+            "data-resource-id",
+            "timeline.lifetime-coverage",
         )
+    )
+    lifetime_boxes: list[Box] = []
+    for group in lifetime_groups:
+        resource_id = group.get("data-resource-id", "unknown-resource")
+        rects = _class_elements(group, "rect", "life-box")
+        if len(rects) != 1:
+            issues.append(
+                f"timeline.lifetime-box: {resource_id} has {len(rects)} boxes; expected 1"
+            )
+            continue
+        lifetime_boxes.append(_rect_box(rects[0], resource_id))
     issues.extend(_check_pairwise_overlap(lifetime_boxes, "timeline.lifetime-overlap"))
     return issues
 
@@ -189,7 +252,7 @@ def _overview_issues(
     root: ElementTree.Element,
     canvas: Box,
 ) -> list[str]:
-    """Apply the baseline layout contract to the cyclic overview renderer."""
+    """Apply the baseline layout contract to a cyclic overview SVG."""
     issues: list[str] = []
     nodes = [
         _rect_box(element, f"node-{index}")
@@ -215,14 +278,14 @@ def _overview_issues(
 
 SvgQaChecker = Callable[[dict[str, Any], ElementTree.Element, Box], list[str]]
 
-SVG_QA_CHECKERS: dict[str, SvgQaChecker] = {
+SVG_QA_PROFILES: dict[str, SvgQaChecker] = {
     "attention-cycle-overview": _overview_issues,
     "reconstruction-timeline": _timeline_issues,
 }
 
 
 def inspect_svg(spec: dict[str, Any], view: dict[str, Any], content: str) -> list[str]:
-    """Return actionable QA issues for one generated SVG view."""
+    """Return actionable QA issues for one LLM-authored SVG view."""
     try:
         root = ElementTree.fromstring(content)
     except ElementTree.ParseError as error:
@@ -264,12 +327,23 @@ def inspect_svg(spec: dict[str, Any], view: dict[str, Any], content: str) -> lis
         issues.append("svg.accessibility: missing a non-empty description")
     if root.get("role") != "img" or not root.get("aria-labelledby"):
         issues.append("svg.accessibility: root requires role=img and aria-labelledby")
+    metadata_expectations = {
+        "data-kernel-id": spec["id"],
+        "data-view-id": view["id"],
+        "data-qa-profile": view["qa_profile"],
+    }
+    for attribute, expected in metadata_expectations.items():
+        if root.get(attribute) != expected:
+            issues.append(
+                f"svg.semantic-root: {attribute} must be {expected!r}, "
+                f"found {root.get(attribute)!r}"
+            )
 
     canvas = Box("canvas", 0, 0, width, height)
-    checker = SVG_QA_CHECKERS.get(view["renderer"])
+    checker = SVG_QA_PROFILES.get(view["qa_profile"])
     if checker is None:
         issues.append(
-            f"svg.qa-contract: renderer {view['renderer']} has no registered QA checker"
+            f"svg.qa-profile: {view['qa_profile']} has no registered QA checker"
         )
     else:
         issues.extend(checker(spec, root, canvas))

@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="2400"
+     height="1400"
+     viewBox="0 0 2400 1400"
+     role="img"
+     aria-labelledby="title desc"
+     data-kernel-id="replace-with-spec-id"
+     data-view-id="replace-with-view-id"
+     data-qa-profile="replace-with-qa-profile">
+  <title id="title">Replace with the graph title</title>
+  <desc id="desc">Replace with a concise description of the reconstruction.</desc>
+
+  <defs>
+    <style>
+      text { font-family: Inter, ui-sans-serif, system-ui, sans-serif; fill: #172734; }
+      .op-box, .life-box { stroke: #294251; stroke-width: 1.5; }
+      .ready { fill: none; stroke: #ad7616; stroke-width: 2.2; }
+      .release { fill: none; stroke: #ad7616; stroke-width: 2.2; stroke-dasharray: 7 5; }
+    </style>
+  </defs>
+
+  <!-- The LLM chooses all geometry. Repeat these semantic groups as required. -->
+  <text class="phase" data-section-id="replace-with-section-id" x="200" y="140">phase label</text>
+  <text class="role" data-role-id="replace-with-role-id" x="40" y="250">role label</text>
+
+  <g class="operation" data-operation-id="replace-with-operation-id">
+    <rect class="op-box" x="200" y="200" width="260" height="90" rx="10" fill="#d7e8f2"/>
+    <text class="op" x="330" y="250" text-anchor="middle">operation label</text>
+  </g>
+
+  <path class="ready"
+        data-handoff-id="replace-with-handoff-id"
+        d="M460 245 H700"/>
+  <g class="handoff-annotation" data-handoff-id="replace-with-handoff-id">
+    <text class="handoff" x="520" y="225">ready label</text>
+    <text class="handoff-mech" x="520" y="242">barrier or pipeline</text>
+  </g>
+
+  <g class="resource-lifetime" data-resource-id="replace-with-resource-id">
+    <rect class="life-box" x="200" y="900" width="800" height="42" rx="8" fill="#c9e6dc"/>
+    <text class="life" x="600" y="927" text-anchor="middle">resource lifetime</text>
+  </g>
+  <text class="memory" data-allocation-id="replace-with-allocation-id" x="40" y="927">allocation label</text>
+</svg>

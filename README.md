@@ -19,7 +19,6 @@ graphs/
       <graph-name>.svg           # editable source of truth
       <graph-name>.png           # generated from the SVG
 scripts/
-  generate-kernel-graphs.py
   qa-kernel-graphs.py
   render-svg.sh
 schema/
@@ -29,13 +28,14 @@ specs/
 src/gpu_graph/
   model.py              # loading and lifecycle resolution
   validation.py         # causal, loop-residency, and storage checks
-  renderers.py          # renderer registry shared by generation and QA
-  render_svg.py         # dense reconstruction-timeline projection
-  render_overview_svg.py # cyclic attention overview projection
-  qa.py                 # generic and renderer-specific artifact QA
+  qa.py                 # generic and layout-profile SVG artifact QA
 design/
-  authoring-workflow.md # scalable spec construction and enforced invariants
-  qa-workflow.md        # spec -> SVG -> QA -> PNG feedback loop
+  authoring-workflow.md # code-derived spec and LLM SVG authoring workflow
+  llm-svg-authoring.md  # direct-SVG contract and semantic ID requirements
+  qa-workflow.md        # spec -> LLM-authored SVG -> QA -> PNG loop
+templates/
+  kernel-spec.template.jsonc # starter semantic specification
+  kernel-svg.template.svg    # starter semantic SVG structure, not a fixed layout
 ```
 
 Use lowercase kebab-case for topic directories and graph filenames. A topic can
@@ -52,30 +52,33 @@ reasonable system fallbacks.
 3. Run `make png` to generate the PNG companion.
 4. Commit the SVG and PNG together.
 
-New reconstruction-oriented kernel diagrams should be backed by a versioned
-specification under `specs/kernels/`. Run `make generate` to validate those
-specifications and regenerate their SVG sources before rendering PNG companions.
-The generator discovers every JSON specification below `specs/kernels/` and
-renders every declared view; no per-kernel output registration is required.
-Each spec may select multiple renderers and output paths while sharing one
-validated semantic model. See
-[`design/authoring-workflow.md`](design/authoring-workflow.md) before adding one.
+New reconstruction-oriented kernel diagrams must be backed by a versioned
+specification under `specs/kernels/`. The AI/LLM derives that specification by
+reading the target kernel implementation and relevant helpers, then authors the
+SVG directly from the validated semantic model. Scripts validate and rasterize
+the SVG; they do not generate its composition or markup. See
+[`design/authoring-workflow.md`](design/authoring-workflow.md) and
+[`design/llm-svg-authoring.md`](design/llm-svg-authoring.md) before adding one.
 
 Before committing a specification-backed graph, run `make qa`. It executes the
-ordered spec → generated SVG → automated layout QA → PNG parity loop. The QA
-contract and visual-review checklist are in
+ordered spec → LLM-authored SVG → automated layout QA → PNG parity loop. The QA
+profiles and visual-review checklist are in
 [`design/qa-workflow.md`](design/qa-workflow.md).
 
 ```text
-specification
+read kernel implementation
+    → evidence-backed specification
     → semantic validation
-    → deterministic SVG generation
-    → generic + renderer-specific SVG QA
+    → LLM authors SVG directly
+    → generic + layout-profile SVG QA
     → PNG rendering
     → SVG/PNG artifact parity
     → visual review
-    ↺ fix the spec or renderer and repeat
+    ↺ fix the spec or SVG and repeat
 ```
+
+`make generate` exists only for older, non-specification diagram collections.
+Do not use it to author a specification-backed kernel SVG.
 
 The PNG must be regenerated after **every** SVG change. `make png` only rebuilds
 PNG files whose SVG sources are newer; use `make png-force` to regenerate all of

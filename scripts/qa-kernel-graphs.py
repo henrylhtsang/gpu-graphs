@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run generated-artifact QA for every specification-backed kernel graph."""
+"""Run artifact QA for every specification-backed, LLM-authored kernel graph."""
 
 from __future__ import annotations
 
@@ -13,7 +13,6 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from gpu_graph.model import load_spec  # noqa: E402
 from gpu_graph.qa import inspect_png, inspect_svg  # noqa: E402
-from gpu_graph.renderers import render_view  # noqa: E402
 from gpu_graph.validation import validate_spec  # noqa: E402
 
 
@@ -23,7 +22,7 @@ def main() -> None:
         "--stage",
         choices=("svg", "artifacts", "all"),
         default="all",
-        help="QA generated SVGs, PNG companions, or both",
+        help="QA LLM-authored SVGs, PNG companions, or both",
     )
     parser.add_argument(
         "specs",
@@ -51,11 +50,6 @@ def main() -> None:
             svg_content = svg_path.read_text(encoding="utf-8")
 
             if args.stage in {"svg", "all"}:
-                expected = render_view(spec, view)
-                if svg_content != expected:
-                    failures.append(
-                        f"{label}: svg.stale: run make generate to refresh {view['output']}"
-                    )
                 failures.extend(
                     f"{label}: {issue}" for issue in inspect_svg(spec, view, svg_content)
                 )

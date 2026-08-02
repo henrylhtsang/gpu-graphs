@@ -1,0 +1,63 @@
+{
+  "schema_version": "0.3",
+  "id": "replace-with-kernel-view-id",
+  "topic": "replace-with-topic",
+  "title": "Replace with kernel title",
+  "subtitle": "What the reader should learn",
+  "architecture": "Replace with target architecture",
+  "views": [
+    {
+      "id": "primary-view",
+      "qa_profile": "reconstruction-timeline",
+      "output": "graphs/replace-with-topic/replace-with-name.svg",
+      "primary": true,
+      "width": 3000,
+      "authoring": {
+        "goal": "State what a reader should be able to reconstruct.",
+        "audience": "State the expected GPU background.",
+        "composition_hint": "Offer a useful composition without fixing coordinates.",
+        "reading_order": [
+          "first visual question",
+          "second visual question"
+        ],
+        "required_content": [
+          "one concrete fact the view must show",
+          "another concrete fact the view must show"
+        ],
+        "excluded_content": [
+          "one detail that should stay out of the primary graph"
+        ]
+      }
+    }
+  ],
+  "configuration": [],
+  "sources": [
+    {
+      "id": "implementation-source",
+      "kind": "implementation",
+      "label": "Target kernel implementation",
+      "url": "replace-with-primary-source-location",
+      "observed": "YYYY-MM-DD"
+    }
+  ],
+  "timeline": {
+    "start": 0,
+    "end": 3,
+    "label": "semantic event order, not cycle time",
+    "sections": [
+      { "id": "prologue", "label": "PROLOGUE", "start": 0, "end": 1 },
+      { "id": "mainloop", "label": "MAINLOOP", "start": 1, "end": 2 },
+      { "id": "epilogue", "label": "EPILOGUE", "start": 2, "end": 3 }
+    ],
+    "ticks": []
+  },
+  "loops": [],
+  "events": [],
+  "roles": [],
+  "operations": [],
+  "handoffs": [],
+  "allocations": [],
+  "resources": [],
+  "storage_relations": [],
+  "reconstruction_notes": []
+}

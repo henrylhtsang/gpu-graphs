@@ -112,8 +112,8 @@ def _resolve_checked_point(
 
 def validate_spec(spec: dict[str, Any]) -> None:
     """Validate causal references, loop residency, and physical storage reuse."""
-    if spec.get("schema_version") != "0.2":
-        raise SpecError("schema_version must be 0.2")
+    if spec.get("schema_version") != "0.3":
+        raise SpecError("schema_version must be 0.3")
 
     timeline = spec.get("timeline", {})
     start = timeline.get("start")
@@ -123,6 +123,14 @@ def validate_spec(spec: dict[str, Any]) -> None:
 
     configuration = _unique(spec.get("configuration", []), "configuration entry")
     sources = _unique(spec.get("sources", []), "source")
+    if not sources:
+        raise SpecError("at least one source is required")
+    allowed_source_kinds = {"implementation", "documentation", "paper"}
+    for source in sources.values():
+        if source.get("kind") not in allowed_source_kinds:
+            raise SpecError(f'{source["id"]}: source kind must identify its evidence type')
+    if not any(source["kind"] == "implementation" for source in sources.values()):
+        raise SpecError("at least one implementation source is required")
     views = _unique(spec.get("views", []), "view")
     sections = _unique(timeline.get("sections", []), "timeline section")
     loops = _unique(spec.get("loops", []), "loop")
@@ -141,6 +149,30 @@ def validate_spec(spec: dict[str, Any]) -> None:
         raise SpecError("exactly one view must be primary")
     view_outputs: set[str] = set()
     for view in views.values():
+        if "renderer" in view:
+            raise SpecError(f'{view["id"]}: scripted renderers are not allowed; use qa_profile')
+        qa_profile = view.get("qa_profile")
+        if not isinstance(qa_profile, str) or ID_PATTERN.fullmatch(qa_profile) is None:
+            raise SpecError(f'{view["id"]}: view requires a valid qa_profile')
+        authoring = view.get("authoring")
+        if not isinstance(authoring, dict):
+            raise SpecError(f'{view["id"]}: view requires an authoring brief')
+        for field in ("goal", "audience"):
+            if not isinstance(authoring.get(field), str) or not authoring[field].strip():
+                raise SpecError(f'{view["id"]}: authoring.{field} must be non-empty')
+        for field, allow_empty in (
+            ("reading_order", False),
+            ("required_content", False),
+            ("excluded_content", True),
+        ):
+            values = authoring.get(field)
+            if (
+                not isinstance(values, list)
+                or (not allow_empty and not values)
+                or any(not isinstance(value, str) or not value.strip() for value in values)
+                or len(values) != len(set(values))
+            ):
+                raise SpecError(f'{view["id"]}: authoring.{field} must contain unique text entries')
         output = view.get("output", "")
         path = PurePosixPath(output)
         if path.is_absolute() or not path.parts or path.parts[0] != "graphs" or ".." in path.parts:
