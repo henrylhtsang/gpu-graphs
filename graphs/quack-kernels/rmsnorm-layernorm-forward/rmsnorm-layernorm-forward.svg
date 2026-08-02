@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1500" viewBox="0 0 2400 1500" role="img" aria-labelledby="title desc">
+<svg data-authoring="llm-direct" data-authoring-profile="direct-role-memory" data-topic-id="quack-kernels" data-graph-id="rmsnorm-layernorm-forward" data-source-id="quack" xmlns="http://www.w3.org/2000/svg" width="2400" height="1500" viewBox="0 0 2400 1500" role="img" aria-labelledby="title desc">
   <title id="title">QuACK RMSNorm / LayerNorm forward · clustered row pipeline</title>
   <desc id="desc">QuACK RMSNorm / LayerNorm forward · clustered row pipeline. One configurable kernel handles residual fusion, affine terms, RMSNorm, and LayerNorm. LayerNorm uses two ordered reductions; RMSNorm skips mean and reduces x² directly.</desc>
   <defs>

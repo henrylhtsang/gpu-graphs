@@ -395,3 +395,90 @@ def validate_spec(spec: dict[str, Any]) -> None:
                     f'({configuration_id}={actual!r})'
                 )
         _validate_evidence(relation["id"], relation.get("evidence", []), sources, required=True)
+
+
+def validate_topic_spec(spec: dict[str, Any]) -> None:
+    """Validate a topic-wide direct-SVG authoring and QA contract."""
+    if spec.get("schema_version") != "topic-0.1":
+        raise SpecError("topic schema_version must be topic-0.1")
+
+    topic_id = spec.get("id")
+    if not isinstance(topic_id, str) or ID_PATTERN.fullmatch(topic_id) is None:
+        raise SpecError("topic id must be lowercase kebab-case")
+
+    coverage = spec.get("coverage")
+    graph_glob = coverage.get("glob") if isinstance(coverage, dict) else None
+    expected_prefix = f"graphs/{topic_id}/"
+    if (
+        not isinstance(graph_glob, str)
+        or not graph_glob.startswith(expected_prefix)
+        or not graph_glob.endswith(".svg")
+        or ".." in PurePosixPath(graph_glob).parts
+    ):
+        raise SpecError(f"{topic_id}: coverage glob must stay below {expected_prefix}")
+
+    sources = _unique(spec.get("sources", []), "topic source")
+    if not sources:
+        raise SpecError(f"{topic_id}: at least one implementation source is required")
+    for source in sources.values():
+        if source.get("kind") != "implementation":
+            raise SpecError(f'{source["id"]}: topic sources must be implementation code')
+        if not isinstance(source.get("repository"), str) or not source["repository"].strip():
+            raise SpecError(f'{source["id"]}: repository is required')
+        if not isinstance(source.get("commit"), str) or len(source["commit"].strip()) < 7:
+            raise SpecError(f'{source["id"]}: pinned commit is required')
+        paths = source.get("paths")
+        if not isinstance(paths, list) or not paths or any(
+            not isinstance(path, str) or not path.strip() for path in paths
+        ):
+            raise SpecError(f'{source["id"]}: inspected source paths are required')
+        if not isinstance(source.get("evidence"), str) or not source["evidence"].strip():
+            raise SpecError(f'{source["id"]}: code-inspection evidence is required')
+
+    authoring = spec.get("authoring")
+    if not isinstance(authoring, dict):
+        raise SpecError(f"{topic_id}: authoring brief is required")
+    for field in ("goal", "audience"):
+        if not isinstance(authoring.get(field), str) or not authoring[field].strip():
+            raise SpecError(f"{topic_id}: authoring.{field} must be non-empty")
+    for field, allow_empty in (
+        ("reading_order", False),
+        ("required_content", False),
+        ("excluded_content", True),
+    ):
+        values = authoring.get(field)
+        if (
+            not isinstance(values, list)
+            or (not allow_empty and not values)
+            or any(not isinstance(value, str) or not value.strip() for value in values)
+            or len(values) != len(set(values))
+        ):
+            raise SpecError(f"{topic_id}: authoring.{field} must contain unique text entries")
+
+    qa = spec.get("qa")
+    if not isinstance(qa, dict) or qa.get("profile") != "direct-role-memory":
+        raise SpecError(f"{topic_id}: qa.profile must be direct-role-memory")
+    if not isinstance(qa.get("min_width"), int) or qa["min_width"] < 2400:
+        raise SpecError(f"{topic_id}: qa.min_width must be at least 2400")
+    required_classes = qa.get("required_classes")
+    if not isinstance(required_classes, list):
+        raise SpecError(f"{topic_id}: qa.required_classes must be a list")
+    seen_classes: set[str] = set()
+    for requirement in required_classes:
+        class_name = requirement.get("class") if isinstance(requirement, dict) else None
+        minimum = requirement.get("minimum") if isinstance(requirement, dict) else None
+        if (
+            not isinstance(class_name, str)
+            or not class_name.strip()
+            or class_name in seen_classes
+            or not isinstance(minimum, int)
+            or minimum < 1
+        ):
+            raise SpecError(f"{topic_id}: invalid or duplicate required SVG class")
+        seen_classes.add(class_name)
+    source_classes = qa.get("source_text_classes", [])
+    if not isinstance(source_classes, list) or any(
+        not isinstance(class_name, str) or not class_name.strip()
+        for class_name in source_classes
+    ):
+        raise SpecError(f"{topic_id}: qa.source_text_classes must contain class names")

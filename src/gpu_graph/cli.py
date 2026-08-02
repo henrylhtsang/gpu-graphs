@@ -6,7 +6,7 @@ import argparse
 from pathlib import Path
 
 from .model import load_spec
-from .validation import validate_spec
+from .validation import validate_spec, validate_topic_spec
 
 
 def main() -> None:
@@ -15,7 +15,10 @@ def main() -> None:
     args = parser.parse_args()
 
     spec = load_spec(args.spec)
-    validate_spec(spec)
+    if spec.get("schema_version") == "topic-0.1":
+        validate_topic_spec(spec)
+    else:
+        validate_spec(spec)
     print(f"validated {args.spec}")
 
 

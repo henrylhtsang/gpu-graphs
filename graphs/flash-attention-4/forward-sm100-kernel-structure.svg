@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="4200" height="2596" viewBox="0 0 4200 2596" role="img" aria-labelledby="title desc" data-kernel-id="forward-sm100-kernel-structure" data-view-id="timeline" data-qa-profile="reconstruction-timeline">
+<svg data-authoring="llm-direct" data-authoring-profile="direct-role-memory" data-topic-id="flash-attention-4" data-graph-id="forward-sm100-kernel-structure" data-source-id="flash-attention" xmlns="http://www.w3.org/2000/svg" width="4200" height="2596" viewBox="0 0 4200 2596" role="img" aria-labelledby="title desc" data-kernel-id="forward-sm100-kernel-structure" data-view-id="timeline" data-qa-profile="reconstruction-timeline">
   <title id="title">FlashAttention-4 forward · SM100 kernel structure</title>
   <desc id="desc">Who does the work, which events connect the roles, and when SMEM/TMEM storage can be reused. Warp-role operations, cross-role synchronization, and aligned SMEM/TMEM lifetimes.</desc>
   <defs>

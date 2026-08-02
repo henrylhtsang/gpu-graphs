@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1500" viewBox="0 0 2400 1500" role="img" aria-labelledby="title desc">
+<svg data-authoring="llm-direct" data-authoring-profile="direct-role-memory" data-topic-id="quack-kernels" data-graph-id="split-k-reduce" data-source-id="quack" xmlns="http://www.w3.org/2000/svg" width="2400" height="1500" viewBox="0 0 2400 1500" role="img" aria-labelledby="title desc">
   <title id="title">QuACK split-K reduction · deterministic sum and one epilogue</title>
   <desc id="desc">QuACK split-K reduction · deterministic sum and one epilogue. Workspace partials are accumulated in ascending split order before the linear epilogue runs once. Applying the epilogue after—not within—split accumulation preserves its semantics and avoids repeated bias terms.</desc>
   <defs>

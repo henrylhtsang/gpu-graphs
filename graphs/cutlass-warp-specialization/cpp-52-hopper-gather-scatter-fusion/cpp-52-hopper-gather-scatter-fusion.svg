@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1500" viewBox="0 0 2400 1500" role="img" aria-labelledby="title desc">
+<svg data-authoring="llm-direct" data-authoring-profile="direct-role-memory" data-topic-id="cutlass-warp-specialization" data-graph-id="cpp-52-hopper-gather-scatter-fusion" data-source-id="cutlass" xmlns="http://www.w3.org/2000/svg" width="2400" height="1500" viewBox="0 0 2400 1500" role="img" aria-labelledby="title desc">
   <title id="title">CUTLASS 52 hopper gather scatter fusion warp-specialization timeline</title>
   <desc id="desc">Warp and warp-group role timeline plus SMEM and TMEM partition for CUTLASS examples/52_hopper_gather_scatter_fusion. Focus: gather/scatter address transforms around the GEMM pipeline.</desc>
   <defs>

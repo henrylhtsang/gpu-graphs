@@ -22,6 +22,9 @@
 - The kernel spec is the semantic source of truth. The SVG is the presentation
   source of truth and must be authored directly by the AI/LLM from that spec;
   the PNG alone is generated. Never edit a PNG independently.
+- Every SVG must be owned by exactly one `specs/topics/<topic>.json` authoring
+  contract. Detailed reconstruction graphs must additionally be owned by a
+  `specs/kernels/**/*.json` semantic spec.
 
 ## SVG and PNG pairs
 
@@ -41,9 +44,10 @@
 - Keep SVG text as text when practical, embed required styles, include a
   meaningful `<title>` and `<desc>`, and use a `viewBox` so the graph scales.
 
-## Required AI/LLM workflow for specification-backed graphs
+## Required AI/LLM workflow for every graph
 
-AI agents must use this production loop for every specification-backed graph:
+AI agents must use this production loop for every graph. Collection overviews
+use a topic spec; reconstruction views use both a topic spec and a kernel spec:
 
 ```text
 read target kernel code + relevant helpers
@@ -70,8 +74,8 @@ and rasterize the completed SVG to PNG; it may not generate the kernel SVG.
 Follow these steps in order:
 
 1. Inspect before editing.
-   - Read this file, the topic README, the kernel spec, and the relevant files
-     under `design/`.
+   - Read this file, the topic README, its `specs/topics/<topic>.json` authoring
+     spec, any applicable kernel spec, and the relevant files under `design/`.
    - For SVG work, read `design/llm-svg-authoring.md` and the view's structured
      `authoring` brief before choosing a composition.
    - Locate and read the target kernel implementation. Follow the helpers,
@@ -81,6 +85,8 @@ Follow these steps in order:
    - Run `git status --short` and preserve unrelated user changes.
    - Identify whether the graph is hand-authored or specification-backed.
 2. Put each change in its owning layer.
+   - Topic-wide code provenance, authoring goals, required content, exclusions,
+     and minimum visual structure belong in `specs/topics/*.json`.
    - Kernel facts, role ownership, operations, synchronization, and memory
      lifetimes belong in `specs/kernels/**/*.json`.
    - Composition, geometry, wrapping, routing, and visual encoding belong in the
@@ -111,6 +117,10 @@ Follow these steps in order:
    - If the required implementation or helper code cannot be inspected, do not
      create or revise an authoritative kernel spec from memory. Report the
      missing source and leave the unsupported facts unresolved.
+   - A topic overview may summarize a configuration family, but it must label
+     configuration-dependent content as such. Do not promote an archetype
+     overview to a reconstruction spec without inspecting and encoding the
+     concrete operation, synchronization, and lifetime facts.
 4. Use the fast feedback loop while authoring.
 
    ```sh

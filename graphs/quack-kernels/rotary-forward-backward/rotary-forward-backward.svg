@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1500" viewBox="0 0 2400 1500" role="img" aria-labelledby="title desc">
+<svg data-authoring="llm-direct" data-authoring-profile="direct-role-memory" data-topic-id="quack-kernels" data-graph-id="rotary-forward-backward" data-source-id="quack" xmlns="http://www.w3.org/2000/svg" width="2400" height="1500" viewBox="0 0 2400 1500" role="img" aria-labelledby="title desc">
   <title id="title">QuACK rotary embedding · forward and conjugate backward</title>
   <desc id="desc">QuACK rotary embedding · forward and conjugate backward. The same kernel rotates forward or backward; backward negates sin via conjugate=True. Negating sin applies the inverse 2×2 rotation, so one device kernel serves autograd forward and backward.</desc>
   <defs>

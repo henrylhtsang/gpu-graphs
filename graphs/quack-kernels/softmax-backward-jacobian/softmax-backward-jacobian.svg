@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1500" viewBox="0 0 2400 1500" role="img" aria-labelledby="title desc">
+<svg data-authoring="llm-direct" data-authoring-profile="direct-role-memory" data-topic-id="quack-kernels" data-graph-id="softmax-backward-jacobian" data-source-id="quack" xmlns="http://www.w3.org/2000/svg" width="2400" height="1500" viewBox="0 0 2400 1500" role="img" aria-labelledby="title desc">
   <title id="title">QuACK softmax backward · fused Jacobian-vector product</title>
   <desc id="desc">QuACK softmax backward · fused Jacobian-vector product. The dense Jacobian is never materialized: dxᵢ = yᵢ(dyᵢ − Σⱼ dyⱼyⱼ). Saved forward output y is sufficient; no logits, exponentials, or full Jacobian are reloaded.</desc>
   <defs>

@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1500" viewBox="0 0 2400 1500" role="img" aria-labelledby="title desc">
+<svg data-authoring="llm-direct" data-authoring-profile="direct-role-memory" data-topic-id="cutlass-warp-specialization" data-graph-id="cpp-93-blackwell-low-latency-gqa" data-source-id="cutlass" xmlns="http://www.w3.org/2000/svg" width="2400" height="1500" viewBox="0 0 2400 1500" role="img" aria-labelledby="title desc">
   <title id="title">CUTLASS 93 blackwell low latency gqa warp-specialization timeline</title>
   <desc id="desc">Warp and warp-group role timeline plus SMEM and TMEM partition for CUTLASS examples/93_blackwell_low_latency_gqa. Focus: low-latency grouped-query attention with DMA-Q, DMA-KV, MMA, and epilogue warps.</desc>
   <defs>

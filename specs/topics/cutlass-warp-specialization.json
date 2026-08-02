@@ -1,0 +1,52 @@
+{
+  "schema_version": "topic-0.1",
+  "id": "cutlass-warp-specialization",
+  "title": "CUTLASS warp-specialized examples and tutorials",
+  "coverage": {
+    "glob": "graphs/cutlass-warp-specialization/**/*.svg"
+  },
+  "sources": [
+    {
+      "id": "cutlass",
+      "kind": "implementation",
+      "repository": "https://github.com/NVIDIA/cutlass",
+      "commit": "2802e228",
+      "paths": ["examples/"],
+      "evidence": "Each SVG names the inspected C++ example directory or runnable CuTeDSL Python file. Role branches, schedule selection, shared storage, and architecture-specific memory were inspected in the pinned local checkout."
+    }
+  ],
+  "authoring": {
+    "goal": "Explain the source-selected warp-specialized schedule, handoffs, and SMEM/TMEM partition for each runnable CUTLASS example without implying cycle-accurate timing.",
+    "audience": "GPU kernel engineers comparing CUTLASS warp-specialization designs.",
+    "reading_order": [
+      "source and architecture",
+      "warp or warp-group roles",
+      "major per-role operations and handoffs",
+      "SMEM and TMEM partition",
+      "source-specific design delta and configuration caveats"
+    ],
+    "required_content": [
+      "name the inspected source path and pinned commit",
+      "show role ownership and major waits or handoffs",
+      "show the applicable SMEM partition",
+      "show TMEM usage or explicitly state that TMEM is unavailable or unused",
+      "separate code-observed facts from configuration-dependent interpretation"
+    ],
+    "excluded_content": [
+      "unmeasured cycle timing",
+      "host argument parsing",
+      "claims copied only from filenames without code inspection"
+    ]
+  },
+  "qa": {
+    "profile": "direct-role-memory",
+    "min_width": 2400,
+    "required_classes": [
+      { "class": "phase", "minimum": 4 },
+      { "class": "role", "minimum": 4 },
+      { "class": "node", "minimum": 16 },
+      { "class": "mem", "minimum": 1 }
+    ],
+    "source_text_classes": ["source"]
+  }
+}

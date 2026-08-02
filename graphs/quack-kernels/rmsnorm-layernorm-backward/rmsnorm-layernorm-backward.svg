@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1500" viewBox="0 0 2400 1500" role="img" aria-labelledby="title desc">
+<svg data-authoring="llm-direct" data-authoring-profile="direct-role-memory" data-topic-id="quack-kernels" data-graph-id="rmsnorm-layernorm-backward" data-source-id="quack" xmlns="http://www.w3.org/2000/svg" width="2400" height="1500" viewBox="0 0 2400 1500" role="img" aria-labelledby="title desc">
   <title id="title">QuACK RMSNorm / LayerNorm backward · pipelined rows and reductions</title>
   <desc id="desc">QuACK RMSNorm / LayerNorm backward · pipelined rows and reductions. Persistent CTAs overlap X/dO movement with correction reductions and partial parameter gradients. The shared-memory stage ring and reduction-buffer stage ring advance in lockstep across persistent row work.</desc>
   <defs>

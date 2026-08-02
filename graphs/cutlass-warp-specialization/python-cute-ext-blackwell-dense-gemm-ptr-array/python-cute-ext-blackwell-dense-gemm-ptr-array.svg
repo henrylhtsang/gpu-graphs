@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1500" viewBox="0 0 2400 1500" role="img" aria-labelledby="title desc">
+<svg data-authoring="llm-direct" data-authoring-profile="direct-role-memory" data-topic-id="cutlass-warp-specialization" data-graph-id="python-cute-ext-blackwell-dense-gemm-ptr-array" data-source-id="cutlass" xmlns="http://www.w3.org/2000/svg" width="2400" height="1500" viewBox="0 0 2400 1500" role="img" aria-labelledby="title desc">
   <title id="title">CUTLASS dense gemm ptr array warp-specialization timeline</title>
   <desc id="desc">Warp and warp-group role timeline plus SMEM and TMEM partition for CUTLASS examples/python/CuTeDSL/cute_ext/blackwell/dense_gemm_ptr_array.py. Focus: pointer-array operands selected by the producer warp.</desc>
   <defs>

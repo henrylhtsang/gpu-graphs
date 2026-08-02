@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1500" viewBox="0 0 2400 1500" role="img" aria-labelledby="title desc">
+<svg data-authoring="llm-direct" data-authoring-profile="direct-role-memory" data-topic-id="quack-kernels" data-graph-id="top-k-forward-bitonic" data-source-id="quack" xmlns="http://www.w3.org/2000/svg" width="2400" height="1500" viewBox="0 0 2400 1500" role="img" aria-labelledby="title desc">
   <title id="title">QuACK top-k forward · bitonic select with stable ties</title>
   <desc id="desc">QuACK top-k forward · bitonic select with stable ties. Power-of-two N and k≤128; values and indices stay in registers through selection. Tie-breaking is encoded into otherwise discarded mantissa bits so earlier columns win deterministically.</desc>
   <defs>

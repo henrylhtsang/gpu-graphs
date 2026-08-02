@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1500" viewBox="0 0 2400 1500" role="img" aria-labelledby="title desc">
+<svg data-authoring="llm-direct" data-authoring-profile="direct-role-memory" data-topic-id="quack-kernels" data-graph-id="top-k-backward-scatter" data-source-id="quack" xmlns="http://www.w3.org/2000/svg" width="2400" height="1500" viewBox="0 0 2400 1500" role="img" aria-labelledby="title desc">
   <title id="title">QuACK top-k backward · sparse scatter through shared memory</title>
   <desc id="desc">QuACK top-k backward · sparse scatter through shared memory. Selected gradients are transformed, scattered into a zero tile, then written densely. Shared memory turns irregular k-way writes into a coalesced dense dx store without global atomics.</desc>
   <defs>

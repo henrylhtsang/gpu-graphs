@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1750" viewBox="0 0 2400 1750" role="img" aria-labelledby="title desc">
+<svg data-authoring="llm-direct" data-authoring-profile="direct-role-memory" data-topic-id="flash-attention-4-softmax" data-graph-id="sm100-softmax-warpgroup" data-source-id="flash-attention" xmlns="http://www.w3.org/2000/svg" width="2400" height="1750" viewBox="0 0 2400 1750" role="img" aria-labelledby="title desc">
   <title id="title">What the FlashAttention-4 SM100 softmax warpgroup does</title>
   <desc id="desc">For head dimension 128 and q stage 2, four softmax warps wait for a score tile in tensor memory, load scores into registers, apply score modifications and masking, update the online row maximum, publish the accumulator rescale factor to a separate correction warpgroup, exponentiate and convert probabilities, store the first three quarters of P to tensor memory so PV can begin, store the final quarter, then update the online row sum. A second four-warp group runs the same program for the other Q stage.</desc>
   <defs>

@@ -1,43 +1,32 @@
 SVG_FILES := $(shell find graphs -type f -name '*.svg' | sort)
 PNG_FILES := $(SVG_FILES:.svg=.png)
 
-CUTLASS_ROOT ?= $(HOME)/cutlass
-
-.PHONY: help generate check svg-qa artifact-qa qa check-cutlass-inventory png png-force
+.PHONY: help check svg-qa artifact-qa qa png png-force
 
 help:
 	@echo "make png        Render missing or outdated PNG companions"
 	@echo "make png-force  Regenerate every PNG companion"
-	@echo "make generate   Regenerate legacy non-specification diagrams"
-	@echo "make check      Validate schema-backed kernel graph specifications"
+	@echo "make check      Validate kernel and topic authoring specifications"
 	@echo "make svg-qa     Check LLM-authored SVG coverage, bounds, and collisions"
 	@echo "make qa         Run the spec -> LLM-authored SVG -> QA -> PNG artifact loop"
-	@echo "make check-cutlass-inventory  Audit warp-specialized CUTLASS coverage"
-
-generate:
-	@python3 scripts/generate-quack-infographs.py
-	@python3 scripts/generate-cutlass-warp-specialization.py
 
 check:
-	@set -e; for spec in $$(find specs/kernels -type f -name '*.json' | sort); do \
+	@set -e; for spec in $$(find specs -type f -name '*.json' | sort); do \
 		PYTHONPATH=src python3 -m gpu_graph.cli "$$spec"; \
 	done
 	@python3 -m unittest discover -s tests
 
 svg-qa:
-	@python3 scripts/qa-kernel-graphs.py --stage svg
+	@python3 scripts/qa-graphs.py --stage svg
 
 artifact-qa:
-	@python3 scripts/qa-kernel-graphs.py --stage artifacts
+	@python3 scripts/qa-graphs.py --stage artifacts
 
 qa:
 	@$(MAKE) --no-print-directory check
 	@$(MAKE) --no-print-directory svg-qa
 	@$(MAKE) --no-print-directory png
 	@$(MAKE) --no-print-directory artifact-qa
-
-check-cutlass-inventory:
-	@python3 scripts/generate-cutlass-warp-specialization.py --check "$(CUTLASS_ROOT)"
 
 png: $(PNG_FILES)
 

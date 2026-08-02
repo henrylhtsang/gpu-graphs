@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1500" viewBox="0 0 2400 1500" role="img" aria-labelledby="title desc">
+<svg data-authoring="llm-direct" data-authoring-profile="direct-role-memory" data-topic-id="cutlass-warp-specialization" data-graph-id="python-cute-blackwell-kernel-attention-mixed-input-fmha-mixed-input-fmha-decode" data-source-id="cutlass" xmlns="http://www.w3.org/2000/svg" width="2400" height="1500" viewBox="0 0 2400 1500" role="img" aria-labelledby="title desc">
   <title id="title">CUTLASS mixed input fmha decode warp-specialization timeline</title>
   <desc id="desc">Warp and warp-group role timeline plus SMEM and TMEM partition for CUTLASS examples/python/CuTeDSL/cute/blackwell/kernel/attention/mixed_input_fmha/mixed_input_fmha_decode.py. Focus: attention decode role split and persistent K/V traversal.</desc>
   <defs>

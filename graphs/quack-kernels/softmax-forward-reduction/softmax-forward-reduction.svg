@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1500" viewBox="0 0 2400 1500" role="img" aria-labelledby="title desc">
+<svg data-authoring="llm-direct" data-authoring-profile="direct-role-memory" data-topic-id="quack-kernels" data-graph-id="softmax-forward-reduction" data-source-id="quack" xmlns="http://www.w3.org/2000/svg" width="2400" height="1500" viewBox="0 0 2400 1500" role="img" aria-labelledby="title desc">
   <title id="title">QuACK softmax forward · row/cluster reduction</title>
   <desc id="desc">QuACK softmax forward · row/cluster reduction. One CTA tile per row group; wide rows span a CTA cluster along N. Invariant: the same predicate covers load and store; OOB logits cannot enter max or denominator.</desc>
   <defs>

@@ -19,12 +19,14 @@ graphs/
       <graph-name>.svg           # editable source of truth
       <graph-name>.png           # generated from the SVG
 scripts/
-  qa-kernel-graphs.py
+  qa-graphs.py
   render-svg.sh
 schema/
   kernel.schema.json
+  topic.schema.json
 specs/
   kernels/<topic>/<kernel>.json
+  topics/<topic>.json
 src/gpu_graph/
   model.py              # loading and lifecycle resolution
   validation.py         # causal, loop-residency, and storage checks
@@ -60,6 +62,13 @@ the SVG; they do not generate its composition or markup. See
 [`design/authoring-workflow.md`](design/authoring-workflow.md) and
 [`design/llm-svg-authoring.md`](design/llm-svg-authoring.md) before adding one.
 
+Every topic, including overview collections, must also have a topic authoring
+spec under `specs/topics/`. It pins the inspected implementation repository and
+commit, defines the authoring brief, owns every SVG in the topic, and declares
+the minimum semantic structure QA expects. A reconstruction graph is covered by
+both layers: its topic spec enforces repository-wide direct authorship, while
+its kernel spec enforces exact operation, synchronization, and lifetime facts.
+
 Before committing a specification-backed graph, run `make qa`. It executes the
 ordered spec → LLM-authored SVG → automated layout QA → PNG parity loop. The QA
 profiles and visual-review checklist are in
@@ -77,8 +86,9 @@ read kernel implementation
     ↺ fix the spec or SVG and repeat
 ```
 
-`make generate` exists only for older, non-specification diagram collections.
-Do not use it to author a specification-backed kernel SVG.
+There is no SVG generation target. Every SVG in `graphs/` is literal,
+LLM-authored source; repository automation only validates it and renders its PNG
+companion.
 
 The PNG must be regenerated after **every** SVG change. `make png` only rebuilds
 PNG files whose SVG sources are newer; use `make png-force` to regenerate all of

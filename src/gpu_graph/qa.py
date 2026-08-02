@@ -350,6 +350,95 @@ def inspect_svg(spec: dict[str, Any], view: dict[str, Any], content: str) -> lis
     return issues
 
 
+def inspect_direct_svg(
+    topic_spec: dict[str, Any],
+    svg_path: Path,
+    content: str,
+) -> list[str]:
+    """Check the direct-authoring contract shared by every graph in a topic."""
+    try:
+        root = ElementTree.fromstring(content)
+    except ElementTree.ParseError as error:
+        return [f"svg.parse: {error}"]
+    if root.tag != f"{SVG_NAMESPACE}svg":
+        return ["svg.root: document root is not an SVG element"]
+
+    issues: list[str] = []
+    try:
+        width = float(root.get("width", "0"))
+        height = float(root.get("height", "0"))
+    except ValueError:
+        return ["svg.dimensions: width and height must be numeric"]
+    if width < topic_spec["qa"]["min_width"]:
+        issues.append(
+            f"svg.width: {width:g}px is below topic minimum "
+            f"{topic_spec['qa']['min_width']}px"
+        )
+    if height <= 0:
+        issues.append("svg.height: rendered height must be positive")
+
+    view_box = root.get("viewBox", "").split()
+    if len(view_box) != 4:
+        issues.append("svg.viewbox: viewBox must contain four numbers")
+    else:
+        try:
+            _, _, view_width, view_height = (float(value) for value in view_box)
+            if view_width != width or view_height != height:
+                issues.append("svg.viewbox: viewBox dimensions must match width and height")
+        except ValueError:
+            issues.append("svg.viewbox: viewBox must contain numeric values")
+
+    titles = list(root.iter(f"{SVG_NAMESPACE}title"))
+    descriptions = list(root.iter(f"{SVG_NAMESPACE}desc"))
+    if not titles or not (titles[0].text or "").strip():
+        issues.append("svg.accessibility: missing a non-empty title")
+    if not descriptions or not (descriptions[0].text or "").strip():
+        issues.append("svg.accessibility: missing a non-empty description")
+    if root.get("role") != "img" or not root.get("aria-labelledby"):
+        issues.append("svg.accessibility: root requires role=img and aria-labelledby")
+
+    source_ids = {source["id"] for source in topic_spec["sources"]}
+    metadata_expectations = {
+        "data-authoring": "llm-direct",
+        "data-authoring-profile": topic_spec["qa"]["profile"],
+        "data-topic-id": topic_spec["id"],
+        "data-graph-id": svg_path.stem,
+    }
+    for attribute, expected in metadata_expectations.items():
+        if root.get(attribute) != expected:
+            issues.append(
+                f"svg.direct-root: {attribute} must be {expected!r}, "
+                f"found {root.get(attribute)!r}"
+            )
+    if root.get("data-source-id") not in source_ids:
+        issues.append(
+            "svg.direct-root: data-source-id must name a registered implementation source"
+        )
+
+    class_counts: Counter[str] = Counter()
+    elements_by_class: dict[str, list[ElementTree.Element]] = {}
+    for element in root.iter():
+        for class_name in element.get("class", "").split():
+            class_counts[class_name] += 1
+            elements_by_class.setdefault(class_name, []).append(element)
+    for requirement in topic_spec["qa"]["required_classes"]:
+        class_name = requirement["class"]
+        actual = class_counts[class_name]
+        if actual < requirement["minimum"]:
+            issues.append(
+                f"svg.semantic-class: {class_name!r} count {actual} is below "
+                f"required minimum {requirement['minimum']}"
+            )
+
+    for class_name in topic_spec["qa"].get("source_text_classes", []):
+        elements = elements_by_class.get(class_name, [])
+        if not elements or not any("".join(element.itertext()).strip() for element in elements):
+            issues.append(
+                f"svg.source-trace: class {class_name!r} must expose inspected code"
+            )
+    return issues
+
+
 def png_dimensions(path: Path) -> tuple[int, int]:
     """Read PNG dimensions from its IHDR header without external packages."""
     data = path.read_bytes()[:24]

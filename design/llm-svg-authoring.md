@@ -10,16 +10,18 @@ Before touching the SVG, load all of the following:
 
 1. `AGENTS.md`;
 2. the target kernel implementation and relevant helper/template code;
-3. the kernel JSON spec;
-4. the view's `authoring` brief;
+3. the topic JSON spec and, for a reconstruction view, the kernel JSON spec;
+4. the applicable `authoring` brief or briefs;
 5. `design/information-policy.md`;
 6. `design/visual-grammar.md`;
 7. the applicable QA profile in `src/gpu_graph/qa.py`;
 8. the topic README and any existing SVG being revised.
 
-The kernel code establishes facts. The spec records those facts. The authoring
-brief states what this particular view must communicate. The visual grammar
-guides composition. The QA profile defines machine-checkable SVG structure.
+The kernel code establishes facts. The topic spec pins code provenance and the
+shared communication contract. A kernel spec records reconstruction-level
+facts. The authoring brief states what this view must communicate. The visual
+grammar guides composition. The QA profile defines machine-checkable SVG
+structure.
 
 ## Direct-SVG rule
 
@@ -30,6 +32,11 @@ may revise any coordinate, path, label, grouping, or style directly.
 
 The starter in `templates/kernel-svg.template.svg` demonstrates the semantic
 hooks required by QA without prescribing a graph shape.
+
+Every direct-authored root also carries `data-authoring="llm-direct"`,
+`data-authoring-profile`, `data-topic-id`, `data-graph-id`, and
+`data-source-id`. Topic QA uses these attributes to prove that all checked-in
+SVGs are owned by a code-provenanced authoring contract.
 
 ## Semantic join contract
 

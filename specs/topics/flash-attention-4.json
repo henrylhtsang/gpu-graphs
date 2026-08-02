@@ -1,0 +1,29 @@
+{
+  "schema_version": "topic-0.1",
+  "id": "flash-attention-4",
+  "title": "FlashAttention-4 SM100",
+  "coverage": { "glob": "graphs/flash-attention-4/*.svg" },
+  "sources": [
+    {
+      "id": "flash-attention",
+      "kind": "implementation",
+      "repository": "https://github.com/Dao-AILab/flash-attention",
+      "commit": "2402cb0",
+      "paths": ["flash_attn/cute/flash_fwd_sm100.py"],
+      "evidence": "Warp roles, TMA order, QK/PV issue order, softmax/correction handoffs, and SMEM/TMEM layouts were inspected in the SM100 forward implementation and recorded in the reconstruction spec."
+    }
+  ],
+  "authoring": {
+    "goal": "Explain both the compact dependency story and the complete three-phase SM100 forward reconstruction.",
+    "audience": "GPU kernel engineers familiar with Blackwell TMA, tcgen05, SMEM, and TMEM.",
+    "reading_order": ["warp roles", "prologue/mainloop/epilogue operation order", "ready and release handoffs", "SMEM/TMEM lifetimes and reuse"],
+    "required_content": ["two Q stages", "separate QK and PV issues", "split softmax publication", "correction role", "SMEM/TMEM reuse"],
+    "excluded_content": ["cycle-accurate timing", "host launch plumbing"]
+  },
+  "qa": {
+    "profile": "direct-role-memory",
+    "min_width": 2400,
+    "required_classes": [],
+    "source_text_classes": []
+  }
+}

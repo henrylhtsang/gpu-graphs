@@ -1,17 +1,24 @@
 # CUTLASS warp-specialized examples and tutorials
 
-Large role-timeline diagrams for every runnable example or tutorial detected as
-warp-specialized in the local CUTLASS checkout at commit `2802e228`.
+Large, directly authored role-timeline diagrams for every runnable example or
+tutorial inspected as warp-specialized in the local CUTLASS checkout at commit
+`2802e228`.
 Each figure includes an SMEM/TMEM partition; Hopper figures explicitly note that
 TMEM is unavailable.
 
-Coverage is source-auditable: `scripts/generate-cutlass-warp-specialization.py
---check ~/cutlass` rescans numbered C++ example directories and runnable
-CuTeDSL Python files. Selection requires an explicit warp-specialization marker
-or multiple distinct warp-role branches. Elected initialization-only warps do
-not qualify. The C++ tutorial `wgmma_tma_sm90.cu` is excluded because its own
-comment points to warp specialization as a more advanced strategy rather than
-implementing it.
+Coverage and the shared authoring brief are recorded in
+[`specs/topics/cutlass-warp-specialization.json`](../../specs/topics/cutlass-warp-specialization.json).
+The source inventory was obtained by inspecting numbered C++ example
+directories and runnable CuTeDSL Python files. Selection requires an explicit
+warp-specialization marker or multiple distinct warp-role branches. Elected
+initialization-only warps do not qualify. The C++ tutorial `wgmma_tma_sm90.cu`
+is excluded because its own comment points to warp specialization as a more
+advanced strategy rather than implementing it.
+
+Each checked-in SVG is now the direct presentation source. No inventory or
+rendering script is allowed to recreate it; an LLM revises the SVG after reading
+the pinned implementation, then `make qa` validates topic ownership, source
+traceability, semantic structure, accessibility, and its PNG companion.
 
 The diagrams intentionally describe role ownership and memory handoffs rather
 than freezing one command-line tile shape. Notes identify configuration-dependent

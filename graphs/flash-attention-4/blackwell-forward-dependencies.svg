@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1750" viewBox="0 0 2400 1750" role="img" aria-labelledby="title desc">
+<svg data-authoring="llm-direct" data-authoring-profile="direct-role-memory" data-topic-id="flash-attention-4" data-graph-id="blackwell-forward-dependencies" data-source-id="flash-attention" xmlns="http://www.w3.org/2000/svg" width="2400" height="1750" viewBox="0 0 2400 1750" role="img" aria-labelledby="title desc">
 <title id="title">FlashAttention-4 forward: Blackwell overlap and dependencies</title>
 <desc id="desc">A swimlane dependency graph showing loads, QK and PV matrix operations, two softmax warp groups, and output correction during the FlashAttention-4 forward pass.</desc>
 <defs><style>

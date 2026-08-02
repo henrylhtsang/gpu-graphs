@@ -3,6 +3,10 @@
 Diagrams explaining the CUTLASS implementation of FlashAttention-3 on NVIDIA
 Hopper GPUs.
 
+The direct-SVG authoring brief and inspected Hopper-mainloop provenance are in
+[`specs/topics/flash-attention-3-cutlass.json`](../../specs/topics/flash-attention-3-cutlass.json).
+The SVG is authored directly by an LLM; no layout generator is used.
+
 - `hopper-forward-overlap.svg`: the head-dimension-128 forward path with two
   consumer warpgroups, RS-PV, and intra-warpgroup QK/PV overlap.
 

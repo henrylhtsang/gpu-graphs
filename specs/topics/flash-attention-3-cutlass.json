@@ -1,0 +1,33 @@
+{
+  "schema_version": "topic-0.1",
+  "id": "flash-attention-3-cutlass",
+  "title": "FlashAttention-3 CUTLASS SM90",
+  "coverage": { "glob": "graphs/flash-attention-3-cutlass/*.svg" },
+  "sources": [
+    {
+      "id": "flash-attention",
+      "kind": "implementation",
+      "repository": "https://github.com/Dao-AILab/flash-attention",
+      "commit": "2402cb0",
+      "paths": ["hopper/mainloop_fwd_sm90_tma_gmma_ws.hpp"],
+      "evidence": "The D=128 RS-PV path, named barriers, WGMMA issue order, wait groups, and K/V pipelines were inspected in the Hopper forward mainloop."
+    }
+  ],
+  "authoring": {
+    "goal": "Reconstruct the Hopper forward role overlap and distinguish scheduler-token ping-pong from the K/V stage ring.",
+    "audience": "GPU kernel engineers familiar with CUTLASS Hopper attention.",
+    "reading_order": ["producer pipeline", "consumer warpgroup roles", "QK/PV issue and wait order", "register and SMEM residency"],
+    "required_content": ["two consumer warpgroups", "RS-PV", "named-barrier token", "two-stage K/V pipeline", "SM90 has no TMEM"],
+    "excluded_content": ["cycle-accurate widths", "non-D=128 variants"]
+  },
+  "qa": {
+    "profile": "direct-role-memory",
+    "min_width": 2400,
+    "required_classes": [
+      { "class": "lane-title", "minimum": 5 },
+      { "class": "box-text", "minimum": 30 },
+      { "class": "grid", "minimum": 10 }
+    ],
+    "source_text_classes": []
+  }
+}

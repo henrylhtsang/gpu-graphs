@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1500" viewBox="0 0 2400 1500" role="img" aria-labelledby="title desc">
+<svg data-authoring="llm-direct" data-authoring-profile="direct-role-memory" data-topic-id="quack-kernels" data-graph-id="hadamard-forward-backward" data-source-id="quack" xmlns="http://www.w3.org/2000/svg" width="2400" height="1500" viewBox="0 0 2400 1500" role="img" aria-labelledby="title desc">
   <title id="title">QuACK Hadamard transform · hierarchical butterfly exchange</title>
   <desc id="desc">QuACK Hadamard transform · hierarchical butterfly exchange. Forward and backward reuse the same self-inverse transform, with caller-selected scaling. H(H(x)) = N·x; autograd invokes the same kernel again with the matching normalization scale.</desc>
   <defs>

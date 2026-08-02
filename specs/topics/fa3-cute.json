@@ -1,0 +1,33 @@
+{
+  "schema_version": "topic-0.1",
+  "id": "fa3-cute",
+  "title": "FlashAttention-4 CuTeDSL SM90",
+  "coverage": { "glob": "graphs/fa3-cute/*.svg" },
+  "sources": [
+    {
+      "id": "flash-attention",
+      "kind": "implementation",
+      "repository": "https://github.com/Dao-AILab/flash-attention",
+      "commit": "2402cb0",
+      "paths": ["flash_attn/cute/flash_fwd_sm90.py"],
+      "evidence": "The role split and overlap were inspected around mma_one_n_block_intrawg_overlap and its producer, pipeline, and storage setup."
+    }
+  ],
+  "authoring": {
+    "goal": "Reconstruct the dense D=128 SM90 forward overlap between the TMA producer and two consumer warpgroups.",
+    "audience": "GPU kernel engineers familiar with Hopper WGMMA and TMA pipelines.",
+    "reading_order": ["producer loads", "consumer token alternation", "intra-warpgroup QK/PV overlap", "SMEM lifetime and register residency"],
+    "required_content": ["two-stage K/V ring", "two consumer warpgroups", "named-barrier scheduler token", "wait-group semantics", "SM90 has no TMEM"],
+    "excluded_content": ["cycle-accurate widths", "unselected head dimensions"]
+  },
+  "qa": {
+    "profile": "direct-role-memory",
+    "min_width": 2400,
+    "required_classes": [
+      { "class": "lane-title", "minimum": 5 },
+      { "class": "outline", "minimum": 19 },
+      { "class": "token-arrow", "minimum": 6 }
+    ],
+    "source_text_classes": ["code"]
+  }
+}

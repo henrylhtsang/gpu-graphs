@@ -1,0 +1,52 @@
+{
+  "schema_version": "topic-0.1",
+  "id": "quack-kernels",
+  "title": "QuACK CuTe DSL kernels",
+  "coverage": {
+    "glob": "graphs/quack-kernels/**/*.svg"
+  },
+  "sources": [
+    {
+      "id": "quack",
+      "kind": "implementation",
+      "repository": "https://github.com/Dao-AILab/quack",
+      "commit": "b66e4ec",
+      "paths": ["quack/"],
+      "evidence": "Every launchable @cute.kernel entry point was inspected in the pinned local checkout, including its device body, reductions or pipelines, shared storage, and architecture-specific GEMM helpers."
+    }
+  ],
+  "authoring": {
+    "goal": "Give enough execution, synchronization, and on-chip-memory detail to reconstruct the displayed QuACK kernel path from its CuTeDSL implementation.",
+    "audience": "GPU kernel engineers familiar with CuTeDSL, cooperative reductions, TMA, WGMMA, and UMMA.",
+    "reading_order": [
+      "entry point and active execution roles",
+      "major operation sequence",
+      "synchronization or reduction boundaries",
+      "SMEM and TMEM usage",
+      "the implementation-specific invariant that distinguishes the kernel"
+    ],
+    "required_content": [
+      "name the inspected kernel entry point",
+      "state whether execution is cooperative or warp-specialized",
+      "show major data movement and compute operations",
+      "show synchronization or reduction boundaries",
+      "show SMEM and TMEM usage, including explicit non-use"
+    ],
+    "excluded_content": [
+      "host wrappers and framework bindings",
+      "every scalar arithmetic instruction",
+      "unmeasured performance claims"
+    ]
+  },
+  "qa": {
+    "profile": "direct-role-memory",
+    "min_width": 2400,
+    "required_classes": [
+      { "class": "phase", "minimum": 4 },
+      { "class": "lane", "minimum": 4 },
+      { "class": "node", "minimum": 16 },
+      { "class": "mem-node", "minimum": 4 }
+    ],
+    "source_text_classes": ["source"]
+  }
+}

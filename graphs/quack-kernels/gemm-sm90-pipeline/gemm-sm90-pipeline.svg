@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1500" viewBox="0 0 2400 1500" role="img" aria-labelledby="title desc">
+<svg data-authoring="llm-direct" data-authoring-profile="direct-role-memory" data-topic-id="quack-kernels" data-graph-id="gemm-sm90-pipeline" data-source-id="quack" xmlns="http://www.w3.org/2000/svg" width="2400" height="1500" viewBox="0 0 2400 1500" role="img" aria-labelledby="title desc">
   <title id="title">QuACK GEMM SM90 · TMA producer, WGMMA consumer, TMA epilogue</title>
   <desc id="desc">QuACK GEMM SM90 · TMA producer, WGMMA consumer, TMA epilogue. Persistent Hopper tiles flow through staged A/B, register accumulators, and staged output stores. Load warps and MMA warpgroups use different register budgets; pipeline barriers carry ownership between them.</desc>
   <defs>

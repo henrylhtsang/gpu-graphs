@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1500" viewBox="0 0 2400 1500" role="img" aria-labelledby="title desc">
+<svg data-authoring="llm-direct" data-authoring-profile="direct-role-memory" data-topic-id="quack-kernels" data-graph-id="cross-entropy-forward-fused" data-source-id="quack" xmlns="http://www.w3.org/2000/svg" width="2400" height="1500" viewBox="0 0 2400 1500" role="img" aria-labelledby="title desc">
   <title id="title">QuACK cross entropy forward · loss, LSE, optional dx</title>
   <desc id="desc">QuACK cross entropy forward · loss, LSE, optional dx. One reduction over logits feeds loss, log-sum-exp, and an optional fused gradient. When dx is requested the implementation keeps exp(x−max), avoiding a second logits kernel.</desc>
   <defs>

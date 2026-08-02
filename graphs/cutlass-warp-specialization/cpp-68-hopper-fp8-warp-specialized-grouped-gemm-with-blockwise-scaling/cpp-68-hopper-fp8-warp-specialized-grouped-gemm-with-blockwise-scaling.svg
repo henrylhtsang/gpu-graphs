@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1500" viewBox="0 0 2400 1500" role="img" aria-labelledby="title desc">
+<svg data-authoring="llm-direct" data-authoring-profile="direct-role-memory" data-topic-id="cutlass-warp-specialization" data-graph-id="cpp-68-hopper-fp8-warp-specialized-grouped-gemm-with-blockwise-scaling" data-source-id="cutlass" xmlns="http://www.w3.org/2000/svg" width="2400" height="1500" viewBox="0 0 2400 1500" role="img" aria-labelledby="title desc">
   <title id="title">CUTLASS 68 hopper fp8 warp specialized grouped gemm with blockwise scaling warp-specialization timeline</title>
   <desc id="desc">Warp and warp-group role timeline plus SMEM and TMEM partition for CUTLASS examples/68_hopper_fp8_warp_specialized_grouped_gemm_with_blockwise_scaling. Focus: grouped-problem metadata scheduling across persistent tiles.</desc>
   <defs>

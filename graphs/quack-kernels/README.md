@@ -42,6 +42,9 @@ Primary source files:
 - [gemm_sm100.py](https://github.com/Dao-AILab/quack/blob/b66e4ec8b364b54c8f7f147a29524d3dcdf4fe15/quack/gemm_sm100.py)
 - [gemm_sm120.py](https://github.com/Dao-AILab/quack/blob/b66e4ec8b364b54c8f7f147a29524d3dcdf4fe15/quack/gemm_sm120.py)
 
-SVG is the editable source of truth. The generator in `scripts/` keeps the
-shared visual grammar synchronized; after any SVG change, regenerate the PNG
-companions with `make png` (or `make png-force`).
+Each SVG is directly authored by an LLM after inspecting the pinned kernel code;
+no script generates its markup or layout. The shared code-provenance, content,
+and QA contract is in
+[`specs/topics/quack-kernels.json`](../../specs/topics/quack-kernels.json).
+After any SVG change, run `make qa` to validate the direct source and regenerate
+its PNG companion when the rendered pixels change.
